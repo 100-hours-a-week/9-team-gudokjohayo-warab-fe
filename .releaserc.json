@@ -1,0 +1,116 @@
+{
+    "branches": ["develop", "main"],
+    "plugins": [
+      [
+        "@semantic-release/commit-analyzer",
+        {
+          "preset": "conventionalcommits",
+          "releaseRules": [
+            { "type": "breaking", "release": "major" },
+            { "type": "no-release", "release": false },
+            { "type": "build", "release": false },
+            { "type": "chore", "release": false },
+            { "type": "content", "release": "patch" },
+            { "type": "docs", "release": "patch" },
+            { "type": "feat", "release": "minor" },
+            { "type": "fix", "release": "patch" },
+            { "type": "refactor", "release": "patch" },
+            { "type": "style", "release": "patch" },
+            { "type": "test", "release": false },
+            { "type": "deploy", "release": "patch" }
+          ],
+          "parserOpts": {
+            "noteKeywords": ["BREAKING CHANGE", "BREAKING CHANGES"]
+          }
+        }
+      ],
+      [
+        "@semantic-release/release-notes-generator",
+        {
+          "preset": "conventionalcommits",
+          "presetConfig": {
+            "types": [
+              {
+                "type": "build",
+                "section": "⚙️ SYSTEM BUILD & EXTERNAL PACKAGES",
+                "hidden": true
+              },
+              {
+                "type": "chore",
+                "section": "📦 CHORES",
+                "hidden": true
+              },
+              {
+                "type": "content",
+                "section": "📝 CONTENT UPDATES",
+                "hidden": false
+              },
+              {
+                "type": "docs",
+                "section": "📚 DOCUMENTATION",
+                "hidden": false
+              },
+              {
+                "type": "feat",
+                "section": "🚀 NEW FEATURES",
+                "hidden": false
+              },
+              {
+                "type": "fix",
+                "section": "🐛 BUG FIXES",
+                "hidden": false
+              },
+              {
+                "type": "refactor",
+                "section": "♻️ REFACTORING",
+                "hidden": false
+              },
+              {
+                "type": "style",
+                "section": "🎨 STYLES",
+                "hidden": false
+              },
+              {
+                "type": "test",
+                "section": "✅ TESTING",
+                "hidden": true
+              },
+              {
+                "type": "deploy",
+                "section": "🚀 DEPLOYMENTS",
+                "hidden": false
+              }
+            ]
+          },
+          "parserOpts": {
+            "noteKeywords": ["BREAKING CHANGE", "BREAKING CHANGES"]
+          },
+          "writerOpts": {
+            "commitsSort": ["subject", "scope"]
+          }
+        }
+      ],
+      [
+        "@semantic-release/changelog",
+        {
+          "changelogFile": "CHANGELOG.md",
+          "changelogTitle": "# CHANGELOG"
+        }
+      ],
+      [
+        "@semantic-release/npm",
+        {
+          "pkgRoot": ".",
+          "tarball": "dist"
+        }
+      ],
+      "@semantic-release/github",
+      [
+        "@semantic-release/git",
+        {
+          "assets": ["package.json", "package-lock.json", "CHANGELOG.md"],
+          "message": "chore: ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+        }
+      ]
+    ]
+  }
