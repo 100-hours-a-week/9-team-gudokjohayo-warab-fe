@@ -2,11 +2,31 @@
   "name": "9-team-gudokjohayo-warab-fe",
   "version": "1.0.0",
   "description": "",
+  "private": false,
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "format": "prettier --write .",
+    "lint": "eslint . --fix",
+    "test": "echo \"Error: no test specified, skip test.\"",
+    "prepare": "husky install"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^11.0.1",
+    "@semantic-release/npm": "^12.0.1",
+    "@semantic-release/release-notes-generator": "^14.0.3",
+    "eslint": "^9.22.0",
+    "husky": "^8.0.0",
+    "prettier": "^3.5.3",
+    "semantic-release": "^24.2.3"
+  },
+  "dependencies": {
+    "@commitlint/cli": "^19.8.0",
+    "@commitlint/config-conventional": "^19.8.0"
+  }
 }
