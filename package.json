@@ -45,7 +45,7 @@
         "@types/react": "^19.0.10",
         "@types/react-dom": "^19.0.4",
         "autoprefixer": "^10.4.21",
-        "eslint": "^9.22.0",
+        "eslint": "8.57.1",
         "husky": "^8.0.0",
         "postcss": "^8.5.3",
         "prettier": "^3.5.3",
