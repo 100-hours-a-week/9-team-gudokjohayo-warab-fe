@@ -3,6 +3,7 @@
     "version": "1.0.0",
     "description": "",
     "private": false,
+    "type": "module",
     "main": "index.tsx",
     "scripts": {
         "start": "react-scripts start",
