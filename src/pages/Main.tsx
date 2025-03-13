@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import Header from "../components/Header";
+import { useNavigate } from "react-router-dom";
 
 interface Game {
     id: string;
@@ -121,7 +122,7 @@ const GameSlider: React.FC<GameSliderProps> = ({
                     {games.map((game) => (
                         <div
                             key={game.id}
-                            className="flex-shrink-0"
+                            className="flex-shrink-0 cursor-pointer"
                             style={{ width: `${100 / games.length}%` }}
                             onClick={() => onGameClick(game.id)}
                         >
@@ -204,6 +205,7 @@ const GameSlider: React.FC<GameSliderProps> = ({
 
 const MainPage: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState<string>("");
+    const navigate = useNavigate();
 
     // Mock data for featured games
     const discountedGames: Game[] = Array.from({ length: 10 }, (_, i) => ({
@@ -242,15 +244,18 @@ const MainPage: React.FC = () => {
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        // Navigate to search page (would use router in real implementation)
-        console.log(`Searching for: ${searchQuery}`);
-        // For example: router.push(`/search?query=${encodeURIComponent(searchQuery)}`);
+        // Navigate to search page with query parameter
+        if (searchQuery.trim()) {
+            navigate(`/search?query=${encodeURIComponent(searchQuery)}`);
+        } else {
+            navigate("/search");
+        }
     };
 
     const handleGameClick = (gameId: string) => {
         // Navigate to game detail page
-        console.log(`Navigating to game: ${gameId}`);
-        // For example: router.push(`/game/${gameId}`);
+        // navigate(`/detail/${gameId}`);
+        navigate(`/detail`);
     };
 
     return (

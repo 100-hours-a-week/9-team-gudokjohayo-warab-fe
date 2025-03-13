@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Header from "../components/Header";
 import FilterModal, { FilterOptions } from "../components/FilterModal";
+import { useNavigate } from "react-router-dom"; // Import for navigation
 
 interface Game {
     id: string;
@@ -19,6 +20,7 @@ interface SearchPageProps {
 }
 
 const SearchPage: React.FC<SearchPageProps> = () => {
+    const navigate = useNavigate(); // Initialize navigate hook
     const [searchQuery, setSearchQuery] = useState<string>("");
     const [games, setGames] = useState<Game[]>([]);
     const [discountFilter, setDiscountFilter] = useState<boolean>(false);
@@ -133,9 +135,9 @@ const SearchPage: React.FC<SearchPageProps> = () => {
 
     // Navigate to game detail page
     const handleGameClick = (gameId: string) => {
-        // In a real app, you would use router navigation
-        console.log(`Navigating to game detail: ${gameId}`);
-        // For example: router.push(`/game/${gameId}`);
+        // Navigate to the detail page with the game ID
+        navigate(`/detail/`);
+        // navigate(`/detail/${gameId}`);
     };
 
     // Function to parse player count range
