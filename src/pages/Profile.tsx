@@ -3,12 +3,14 @@ import Header from "../components/Header";
 import ToastMessage from "../components/ToastMessage";
 import CategoryModal from "../components/CategoryModal";
 import ConfirmationModal from "../components/ConfirmationModal";
+import { useNavigate } from "react-router-dom"; // Import for navigation
 
 interface ProfilePageProps {
     // Add any props if needed
 }
 
 const ProfilePage: React.FC<ProfilePageProps> = () => {
+    const navigate = useNavigate(); // Initialize navigate hook
     const [nickname, setNickname] = useState<string>("조이줄");
     const [discordUrl, setDiscordUrl] = useState<string>("https://discord.com");
     const [showToast, setShowToast] = useState<boolean>(false);
@@ -53,9 +55,9 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
     };
 
     const handleCancelConfirm = () => {
-        // Handle cancel confirmation (e.g., navigate back or reset form)
+        // Handle cancel confirmation - navigate to main page after discarding changes
         setShowCancelConfirmation(false);
-        // Additional logic for cancellation can be added here
+        navigate("/main"); // Navigate to main page
     };
 
     const handleCancelDismiss = () => {
@@ -68,9 +70,9 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
     };
 
     const handleLogoutConfirm = () => {
-        // Handle logout confirmation (e.g., clear session, navigate to login)
+        // Handle logout confirmation - navigate to login page
         setShowLogoutConfirmation(false);
-        // Additional logout logic can be added here
+        navigate("/login"); // Navigate to login page
     };
 
     const handleLogoutDismiss = () => {

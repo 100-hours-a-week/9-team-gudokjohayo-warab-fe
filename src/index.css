@@ -1,3 +1,8 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@font-face {
+    font-family: "DNFBitBitv2";
+    src: url("/public/fonts/DNFBitBitv2.ttf");
+}
