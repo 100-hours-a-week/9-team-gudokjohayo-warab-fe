@@ -30,7 +30,7 @@ const GameSlider: React.FC<GameSliderProps> = ({
     const [touchEnd, setTouchEnd] = useState<number | null>(null);
     const sliderRef = useRef<HTMLDivElement>(null);
 
-    // Step size is 1 for single item navigation regardless of itemsPerView
+    // 항상 1개씩만 이동하도록 수정
     const stepSize = 1;
     const maxIndex = Math.max(0, games.length - itemsPerView);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -38,8 +38,8 @@ const GameSlider: React.FC<GameSliderProps> = ({
     useEffect(() => {
         if (autoSlideInterval > 0) {
             intervalRef.current = setInterval(() => {
-                setCurrentIndex((prevIndex) =>
-                    prevIndex >= maxIndex ? 0 : prevIndex + stepSize
+                setCurrentIndex(
+                    (prevIndex) => (prevIndex >= maxIndex ? 0 : prevIndex + 1) // 항상 1개씩만 이동
                 );
             }, autoSlideInterval);
         }
@@ -49,18 +49,18 @@ const GameSlider: React.FC<GameSliderProps> = ({
                 clearInterval(intervalRef.current);
             }
         };
-    }, [maxIndex, autoSlideInterval, stepSize]);
+    }, [maxIndex, autoSlideInterval]);
 
     const handleNext = () => {
         setCurrentIndex((prevIndex) => {
-            const newIndex = prevIndex + stepSize;
+            const newIndex = prevIndex + 1; // 항상 1개씩만 이동
             return newIndex > maxIndex ? maxIndex : newIndex;
         });
     };
 
     const handlePrev = () => {
         setCurrentIndex((prevIndex) => {
-            const newIndex = prevIndex - stepSize;
+            const newIndex = prevIndex - 1; // 항상 1개씩만 이동
             return newIndex < 0 ? 0 : newIndex;
         });
     };
@@ -93,9 +93,6 @@ const GameSlider: React.FC<GameSliderProps> = ({
         setTouchEnd(null);
     };
 
-    // Get visible games based on current index
-    const visibleGames = games.slice(currentIndex, currentIndex + itemsPerView);
-
     return (
         <div
             className="relative"
@@ -113,9 +110,7 @@ const GameSlider: React.FC<GameSliderProps> = ({
                 <div
                     className="flex transition-transform duration-300 ease-in-out"
                     style={{
-                        transform: `translateX(-${
-                            (currentIndex * 100) / itemsPerView
-                        }%)`,
+                        transform: `translateX(-${currentIndex * (100 / games.length)}%)`, // 개별 아이템 너비에 맞게 이동하도록 수정
                         width: `${(games.length / itemsPerView) * 100}%`,
                     }}
                 >
