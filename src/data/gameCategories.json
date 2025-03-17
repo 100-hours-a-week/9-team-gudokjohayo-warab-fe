@@ -1,0 +1,167 @@
+[
+    {
+        "title": "이런 게임은 어떠세요?",
+        "games": [
+            {
+                "id": "rec-1",
+                "title": "Hogwarts Legacy",
+                "thumbnailUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/990080/header.jpg?t=1738007476"
+            },
+            {
+                "id": "rec-2",
+                "title": "Dota 2",
+                "thumbnailUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/570/header.jpg?t=1739210483"
+            },
+            {
+                "id": "rec-3",
+                "title": "Tom Clancy's Rainbow Six® Siege",
+                "thumbnailUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/359550/header.jpg?t=1741637898"
+            },
+            {
+                "id": "rec-4",
+                "title": "Crab Game",
+                "thumbnailUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1782210/header.jpg?t=1638221608"
+            },
+            {
+                "id": "rec-5",
+                "title": "FragPunk",
+                "thumbnailUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2943650/34ec73c3b90db8becc8a656c25c56aacb99ad18d/header.jpg?t=1741787169"
+            },
+            {
+                "id": "rec-6",
+                "title": "EA SPORTS FC™ 25",
+                "thumbnailUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2669320/header.jpg?t=1740132694"
+            },
+            {
+                "id": "rec-7",
+                "title": "Destiny 2",
+                "thumbnailUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1085660/header.jpg?t=1738688481"
+            },
+            {
+                "id": "rec-8",
+                "title": "VRChat",
+                "thumbnailUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/438100/header.jpg?t=1733413042"
+            },
+            {
+                "id": "rec-9",
+                "title": "7 Days to Die",
+                "thumbnailUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/251570/header.jpg?t=1736194886"
+            },
+            {
+                "id": "rec-10",
+                "title": "Rocket Rats",
+                "thumbnailUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/3069810/header.jpg?t=1734440410"
+            }
+        ]
+    },
+    {
+        "title": "레이싱 장르를 선호하시는군요?",
+        "games": [
+            {
+                "id": "racing-1",
+                "title": "Slay the Spire",
+                "thumbnailUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/646570/header.jpg?t=1732020340"
+            },
+            {
+                "id": "racing-2",
+                "title": "Cookie Clicker",
+                "thumbnailUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1454400/header.jpg?t=1739389079"
+            },
+            {
+                "id": "racing-3",
+                "title": "Stellaris",
+                "thumbnailUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/281990/header.jpg?t=1738000689"
+            },
+            {
+                "id": "racing-4",
+                "title": "Brawlhalla",
+                "thumbnailUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/291550/2323f5dcf5cc3067cee13dc4ec0715a08accf621/header.jpg?t=1741184966"
+            },
+            {
+                "id": "racing-5",
+                "title": "Europa Universalis IV",
+                "thumbnailUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/236850/header.jpg?t=1738000732"
+            },
+            {
+                "id": "racing-6",
+                "title": "DOOM Eternal",
+                "thumbnailUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/782330/header.jpg?t=1702308063"
+            },
+            {
+                "id": "racing-7",
+                "title": "It Takes Two",
+                "thumbnailUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1426210/header.jpg?t=1730911936"
+            },
+            {
+                "id": "racing-8",
+                "title": "IdleOn - The Idle RPG",
+                "thumbnailUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1476970/header.jpg?t=1741024848"
+            },
+            {
+                "id": "racing-9",
+                "title": "AI LIMIT",
+                "thumbnailUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2407270/header.jpg?t=1741742025"
+            },
+            {
+                "id": "racing-10",
+                "title": "FINAL FANTASY VII REMAKE INTERGRADE",
+                "thumbnailUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1462040/header.jpg?t=1737643021"
+            }
+        ]
+    },
+    {
+        "title": "점잖신 Stardew Valley와 비슷한 게임이에요",
+        "games": [
+            {
+                "id": "farming-1",
+                "title": "NARAKA: BLADEPOINT",
+                "thumbnailUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1203220/header.jpg?t=1737540792"
+            },
+            {
+                "id": "farming-2",
+                "title": "Bongo Cat",
+                "thumbnailUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/3419430/header.jpg?t=1741339647"
+            },
+            {
+                "id": "farming-3",
+                "title": "ARK: Survival Evolved",
+                "thumbnailUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2399830/header.jpg?t=1739705878"
+            },
+            {
+                "id": "farming-4",
+                "title": "Sid Meier's Civilization VII",
+                "thumbnailUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1295660/header.jpg?t=1741195489"
+            },
+            {
+                "id": "farming-5",
+                "title": "Don't Starve Together",
+                "thumbnailUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/322330/c74982e70b76b5bec159242263cb394e4190f93f/header_alt_assets_48.jpg?t=1741895207"
+            },
+            {
+                "id": "farming-6",
+                "title": "Fallout 4",
+                "thumbnailUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/377160/header.jpg?t=1726758475a"
+            },
+            {
+                "id": "farming-7",
+                "title": "Fate/Samurai Remnant",
+                "thumbnailUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1902690/header.jpg?t=1737445859"
+            },
+            {
+                "id": "farming-8",
+                "title": "ORDER 13",
+                "thumbnailUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2259310/4b116c0e73e060141d3fe899f01b383c561718ef/header.jpg?t=1741784383"
+            },
+            {
+                "id": "farming-9",
+                "title": "Keep Driving",
+                "thumbnailUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2756920/header.jpg?t=1740138493"
+            },
+            {
+                "id": "farming-10",
+                "title": "Indiana Jones and the Great Circle",
+                "thumbnailUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2677660/header.jpg?t=1741288657"
+            }
+        ]
+    }
+]

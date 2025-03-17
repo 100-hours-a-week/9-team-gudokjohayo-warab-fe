@@ -1,12 +1,19 @@
 import React, { useState, useEffect, useRef } from "react";
 import Header from "../components/Header";
 import { useNavigate } from "react-router-dom";
+import discountedGamesData from "../data/discountedGames.json";
+import gameCategoriesData from "../data/gameCategories.json";
 
 interface Game {
     id: string;
     title: string;
     thumbnailUrl: string;
     discountRate?: number;
+}
+
+interface GameCategory {
+    title: string;
+    games: Game[];
 }
 
 interface GameSliderProps {
@@ -30,7 +37,7 @@ const GameSlider: React.FC<GameSliderProps> = ({
     const [touchEnd, setTouchEnd] = useState<number | null>(null);
     const sliderRef = useRef<HTMLDivElement>(null);
 
-    // Step size is 1 for single item navigation regardless of itemsPerView
+    // 항상 1개씩만 이동하도록 수정
     const stepSize = 1;
     const maxIndex = Math.max(0, games.length - itemsPerView);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -38,8 +45,8 @@ const GameSlider: React.FC<GameSliderProps> = ({
     useEffect(() => {
         if (autoSlideInterval > 0) {
             intervalRef.current = setInterval(() => {
-                setCurrentIndex((prevIndex) =>
-                    prevIndex >= maxIndex ? 0 : prevIndex + stepSize
+                setCurrentIndex(
+                    (prevIndex) => (prevIndex >= maxIndex ? 0 : prevIndex + 1) // 항상 1개씩만 이동
                 );
             }, autoSlideInterval);
         }
@@ -49,18 +56,18 @@ const GameSlider: React.FC<GameSliderProps> = ({
                 clearInterval(intervalRef.current);
             }
         };
-    }, [maxIndex, autoSlideInterval, stepSize]);
+    }, [maxIndex, autoSlideInterval]);
 
     const handleNext = () => {
         setCurrentIndex((prevIndex) => {
-            const newIndex = prevIndex + stepSize;
+            const newIndex = prevIndex + 1; // 항상 1개씩만 이동
             return newIndex > maxIndex ? maxIndex : newIndex;
         });
     };
 
     const handlePrev = () => {
         setCurrentIndex((prevIndex) => {
-            const newIndex = prevIndex - stepSize;
+            const newIndex = prevIndex - 1; // 항상 1개씩만 이동
             return newIndex < 0 ? 0 : newIndex;
         });
     };
@@ -93,9 +100,6 @@ const GameSlider: React.FC<GameSliderProps> = ({
         setTouchEnd(null);
     };
 
-    // Get visible games based on current index
-    const visibleGames = games.slice(currentIndex, currentIndex + itemsPerView);
-
     return (
         <div
             className="relative"
@@ -113,9 +117,7 @@ const GameSlider: React.FC<GameSliderProps> = ({
                 <div
                     className="flex transition-transform duration-300 ease-in-out"
                     style={{
-                        transform: `translateX(-${
-                            (currentIndex * 100) / itemsPerView
-                        }%)`,
+                        transform: `translateX(-${currentIndex * (100 / games.length)}%)`, // 개별 아이템 너비에 맞게 이동하도록 수정
                         width: `${(games.length / itemsPerView) * 100}%`,
                     }}
                 >
@@ -127,13 +129,27 @@ const GameSlider: React.FC<GameSliderProps> = ({
                             onClick={() => onGameClick(game.id)}
                         >
                             <div className="aspect-w-16 aspect-h-9 bg-gray-200 rounded-md overflow-hidden mx-1">
-                                {/* Placeholder for game thumbnails */}
-                                <div className="w-full h-full">
-                                    {/* In a real app, you would use an image here */}
-                                    <div className="w-full h-full bg-gray-300 flex items-center justify-center">
-                                        {game.title}
+                                {/* 게임 썸네일 이미지 추가 */}
+                                <img
+                                    src={game.thumbnailUrl}
+                                    alt={`${game.title} thumbnail`}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                        // 이미지 로드 실패 시 기본 이미지로 대체
+                                        (e.target as HTMLImageElement).src =
+                                            "/default-game-image.jpg";
+                                    }}
+                                />
+                                {/* 할인율 표시 (있는 경우) */}
+                                {game.discountRate && (
+                                    <div className="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold p-1 m-1 rounded">
+                                        {game.discountRate}% OFF
                                     </div>
-                                </div>
+                                )}
+                            </div>
+                            {/* 게임 제목 */}
+                            <div className="mt-1 px-1 truncate text-sm font-medium">
+                                {game.title}
                             </div>
                         </div>
                     ))}
@@ -207,40 +223,9 @@ const MainPage: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState<string>("");
     const navigate = useNavigate();
 
-    // Mock data for featured games
-    const discountedGames: Game[] = Array.from({ length: 10 }, (_, i) => ({
-        id: `game-${i + 1}`,
-        title: `Game ${i + 1}`,
-        thumbnailUrl: `/placeholder-${i + 1}.jpg`,
-        discountRate: Math.floor(Math.random() * 70) + 10, // Random discount between 10-80%
-    }));
-
-    const gameCategories = [
-        {
-            title: "이런 게임은 어떠세요?",
-            games: Array.from({ length: 8 }, (_, i) => ({
-                id: `rec-game-${i + 1}`,
-                title: `Recommended ${i + 1}`,
-                thumbnailUrl: `/rec-${i + 1}.jpg`,
-            })),
-        },
-        {
-            title: "레이싱 장르를 선호하시는군요?",
-            games: Array.from({ length: 8 }, (_, i) => ({
-                id: `racing-game-${i + 1}`,
-                title: `Racing ${i + 1}`,
-                thumbnailUrl: `/racing-${i + 1}.jpg`,
-            })),
-        },
-        {
-            title: "점잖신 Stardew Valley와 비슷한 게임이에요",
-            games: Array.from({ length: 8 }, (_, i) => ({
-                id: `similar-game-${i + 1}`,
-                title: `Similar ${i + 1}`,
-                thumbnailUrl: `/similar-${i + 1}.jpg`,
-            })),
-        },
-    ];
+    // Import game data from JSON files
+    const discountedGames: Game[] = discountedGamesData;
+    const gameCategories: GameCategory[] = gameCategoriesData;
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
