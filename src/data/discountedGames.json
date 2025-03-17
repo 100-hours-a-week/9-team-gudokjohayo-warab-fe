@@ -1,0 +1,62 @@
+[
+    {
+        "id": "game-1",
+        "title": "Portal 2",
+        "thumbnailUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/620/header.jpg?t=1725487730",
+        "discountRate": 25
+    },
+    {
+        "id": "game-2",
+        "title": "Dave the Diver",
+        "thumbnailUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1868140/header.jpg?t=1740028453",
+        "discountRate": 40
+    },
+    {
+        "id": "game-3",
+        "title": "PUBG: BATTLEGROUNDS",
+        "thumbnailUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/578080/734bcd78c74003c602049ef070ef7344988cef2b/header.jpg?t=1741766432",
+        "discountRate": 30
+    },
+    {
+        "id": "game-4",
+        "title": "Stardew Valley",
+        "thumbnailUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/413150/header.jpg?t=1711128146",
+        "discountRate": 20
+    },
+    {
+        "id": "game-5",
+        "title": "Lossless Scaling",
+        "thumbnailUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/993090/header.jpg?t=1741531660",
+        "discountRate": 50
+    },
+    {
+        "id": "game-6",
+        "title": "Yu-Gi-Oh! Master Duel",
+        "thumbnailUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1449850/header.jpg?t=1738647047",
+        "discountRate": 35
+    },
+    {
+        "id": "game-7",
+        "title": "Diablo® IV",
+        "thumbnailUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2344520/header.jpg?t=1737494669",
+        "discountRate": 60
+    },
+    {
+        "id": "game-8",
+        "title": "Party Animals",
+        "thumbnailUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1260320/header.jpg?t=1741588032",
+        "discountRate": 15
+    },
+    {
+        "id": "game-9",
+        "title": "Human Fall Flat",
+        "thumbnailUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/477160/601a86df5fb603914ec6ec06792abd0dc4abe4e8/header_alt_assets_24.jpg?t=1741867719",
+        "discountRate": 10
+    },
+    {
+        "id": "game-10",
+        "title": "Counter-Strike 2",
+        "thumbnailUrl": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/730/header.jpg?t=1729703045",
+        "discountRate": 45
+    }
+]
