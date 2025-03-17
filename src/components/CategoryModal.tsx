@@ -36,7 +36,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
         "시뮬레이션",
         "멀티플레이어",
         "슈팅",
-        "미션러 연애 시뮬레이션",
+        "미소녀 연애 시뮬레이션",
         "액션",
         "실시간 전략",
         "오픈 월드",

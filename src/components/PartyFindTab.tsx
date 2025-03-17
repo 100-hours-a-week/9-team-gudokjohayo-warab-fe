@@ -70,8 +70,8 @@ const PartyFindTab: React.FC<PartyFindTabProps> = () => {
                         key={message.id}
                         className="p-2 mb-2 bg-white rounded-lg shadow-sm"
                     >
-                        <div className="flex items-center">
-                            <div className="w-8 h-8 mr-2 flex ">
+                        <div className="flex">
+                            <div className="w-8 h-8 mr-2 flex justify-center">
                                 <img
                                     src="/images/discord.png"
                                     alt="Discord"
