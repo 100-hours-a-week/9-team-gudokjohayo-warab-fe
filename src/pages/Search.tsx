@@ -11,7 +11,7 @@ interface Game {
     imageUrl: string;
     categories?: string[];
     rating?: number;
-    playerCount?: number;
+    playerCount?: string; // Changed to string to match FilterModal
     currentPlayers?: number;
 }
 
@@ -41,7 +41,7 @@ const SearchPage: React.FC<SearchPageProps> = () => {
                 imageUrl: "/game-placeholder.jpg",
                 categories: ["시뮬레이션", "힐링", "캐주얼"],
                 rating: 5,
-                playerCount: 4,
+                playerCount: "멀티 플레이어", // Changed to string
                 currentPlayers: 500000,
             },
             {
@@ -52,7 +52,7 @@ const SearchPage: React.FC<SearchPageProps> = () => {
                 imageUrl: "/game-placeholder.jpg",
                 categories: ["카드", "전략"],
                 rating: 4,
-                playerCount: 1,
+                playerCount: "싱글 플레이어", // Changed to string
                 currentPlayers: 75000,
             },
             {
@@ -62,7 +62,7 @@ const SearchPage: React.FC<SearchPageProps> = () => {
                 imageUrl: "/game-placeholder.jpg",
                 categories: ["오픈 월드", "액션", "어드벤처"],
                 rating: 4,
-                playerCount: 1,
+                playerCount: "싱글 플레이어", // Changed to string
                 currentPlayers: 150000,
             },
             {
@@ -72,7 +72,7 @@ const SearchPage: React.FC<SearchPageProps> = () => {
                 imageUrl: "/game-placeholder.jpg",
                 categories: ["어드벤처", "오픈 월드", "액션"],
                 rating: 4,
-                playerCount: 1,
+                playerCount: "싱글 플레이어", // Changed to string
                 currentPlayers: 90000,
             },
             {
@@ -82,7 +82,7 @@ const SearchPage: React.FC<SearchPageProps> = () => {
                 imageUrl: "/game-placeholder.jpg",
                 categories: ["시뮬레이션", "캐주얼"],
                 rating: 3,
-                playerCount: 1,
+                playerCount: "싱글 플레이어", // Changed to string
                 currentPlayers: 5000,
             },
             {
@@ -92,7 +92,7 @@ const SearchPage: React.FC<SearchPageProps> = () => {
                 imageUrl: "/game-placeholder.jpg",
                 categories: ["오픈 월드", "액션", "온라인 멀티"],
                 rating: 5,
-                playerCount: 30,
+                playerCount: "멀티 플레이어", // Changed to string
                 currentPlayers: 1000000,
             },
         ];
@@ -192,10 +192,10 @@ const SearchPage: React.FC<SearchPageProps> = () => {
                     gamePrice >= minPrice && gamePrice <= maxPrice;
             }
 
-            // Filter by player count
+            // Filter by player type (changed from player count)
             if (matchesActiveFilters && game.playerCount !== undefined) {
                 matchesActiveFilters =
-                    game.playerCount >= activeFilters.playerCount;
+                    game.playerCount === activeFilters.playerCount;
             }
 
             // Filter by current player count

@@ -15,7 +15,8 @@ const DetailPage: React.FC<DetailPageProps> = () => {
     );
     const [originalPrice, setOriginalPrice] = useState<number>(24000);
     const [discountPrice, setDiscountPrice] = useState<number>(12000);
-    const [playerCount, setPlayerCount] = useState<number>(1);
+    // 플레이어 수 대신 플레이어 타입 상태로 변경
+    const [playerType, setPlayerType] = useState<string>("싱글");
     const [rating, setRating] = useState<number>(4);
     const [developer, setDeveloper] = useState<string>("MINTROCKET");
     const [publisher, setPublisher] = useState<string>("MINTROCKET");
@@ -33,7 +34,6 @@ const DetailPage: React.FC<DetailPageProps> = () => {
 
     // List of relevant game tags/categories for this game
     const relevantCategories = [
-        "멀티플레이어",
         "캐주얼",
         "온라인 협동",
         "전략",
@@ -123,8 +123,9 @@ const DetailPage: React.FC<DetailPageProps> = () => {
                                         clipRule="evenodd"
                                     />
                                 </svg>
+                                {/* 플레이어 수 대신 플레이어 타입 표시 */}
                                 <span className="text-sm text-gray-600">
-                                    {playerCount} player
+                                    {playerType}
                                 </span>
                                 <div className="text-sm">
                                     {renderStars(rating)}
