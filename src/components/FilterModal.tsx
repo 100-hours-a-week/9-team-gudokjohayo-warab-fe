@@ -12,7 +12,7 @@ export interface FilterOptions {
     categories: string[];
     rating: number;
     priceRange: [number, number];
-    playerCount: number;
+    playerCount: string; // Changed to string for player type selection
     currentPlayerCount: string;
 }
 
@@ -26,7 +26,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
         categories: [],
         rating: 4,
         priceRange: [0, 100000],
-        playerCount: 8,
+        playerCount: "싱글 플레이어", // Default value changed
         currentPlayerCount: "0~1,000명",
     };
 
@@ -40,7 +40,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
     const categoryRef = useRef<HTMLDivElement>(null);
     const ratingRef = useRef<HTMLDivElement>(null);
     const priceRef = useRef<HTMLDivElement>(null);
-    const playerCountRef = useRef<HTMLDivElement>(null);
+    const playerCountRef = useRef<HTMLDivElement>(null); // Kept original name for consistency
     const currentPlayerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -53,26 +53,44 @@ const FilterModal: React.FC<FilterModalProps> = ({
     const scrollToSection = (sectionId: string) => {
         setActiveTab(sectionId);
 
+        // ID를 사용하여 모달 컨텐츠 요소를 선택합니다
+        const modalContentElement = document.getElementById(
+            "filter-modal-content"
+        );
+
+        // 헤더 높이 (탭 포함)
+        const headerHeight = 120; // 대략적인 높이값, 필요에 따라 조정
+
+        let targetRef;
         switch (sectionId) {
             case "카테고리":
-                categoryRef.current?.scrollIntoView({ behavior: "smooth" });
+                targetRef = categoryRef.current;
                 break;
             case "평점":
-                ratingRef.current?.scrollIntoView({ behavior: "smooth" });
+                targetRef = ratingRef.current;
                 break;
             case "가격":
-                priceRef.current?.scrollIntoView({ behavior: "smooth" });
+                targetRef = priceRef.current;
                 break;
             case "인원":
-                playerCountRef.current?.scrollIntoView({ behavior: "smooth" });
+                targetRef = playerCountRef.current; // Kept original name
                 break;
             case "동접자":
-                currentPlayerRef.current?.scrollIntoView({
-                    behavior: "smooth",
-                });
+                targetRef = currentPlayerRef.current;
                 break;
             default:
-                break;
+                return;
+        }
+
+        if (targetRef && modalContentElement) {
+            // 모달 내부에서의 타겟 요소의 상대적 위치 계산
+            const targetOffsetTop = targetRef.offsetTop;
+
+            // 헤더 높이를 고려하여 스크롤 위치 계산
+            modalContentElement.scrollTo({
+                top: targetOffsetTop - headerHeight,
+                behavior: "smooth",
+            });
         }
     };
 
@@ -105,7 +123,10 @@ const FilterModal: React.FC<FilterModalProps> = ({
         "레이싱",
     ];
 
-    const playerCountOptions = [
+    // Player type options
+    const playerCountOptions = ["싱글 플레이어", "멀티 플레이어"];
+
+    const currentPlayerOptions = [
         "0~1,000명",
         "1,000~10,000명",
         "10,000~50,000명",
@@ -145,8 +166,9 @@ const FilterModal: React.FC<FilterModalProps> = ({
         setFilters({ ...filters, priceRange: [min, max] });
     };
 
-    const handlePlayerCountChange = (count: number) => {
-        setFilters({ ...filters, playerCount: count });
+    // Handler for player count (now player type)
+    const handlePlayerCountChange = (option: string) => {
+        setFilters({ ...filters, playerCount: option });
     };
 
     const handleCurrentPlayerCountChange = (option: string) => {
@@ -173,30 +195,33 @@ const FilterModal: React.FC<FilterModalProps> = ({
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end justify-center z-50">
             <div
-                className="bg-white rounded-t-lg w-full h-4/5 p-4 overflow-y-auto"
+                id="filter-modal-content"
+                className="bg-white rounded-t-lg w-full h-4/5 px-4 overflow-y-auto"
                 style={{
                     transform: isOpen ? "translateY(0)" : "translateY(100%)",
                     transition: "transform 0.3s ease-out",
                 }}
             >
-                <div className="sticky top-0 bg-white z-10 flex justify-between items-center pb-2 border-b">
-                    <h2 className="text-xl font-bold">필터</h2>
-                    <button onClick={onClose} className="p-1">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-5 w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M6 18L18 6M6 6l12 12"
-                            />
-                        </svg>
-                    </button>
+                <div className="sticky top-0 p-4 bg-white">
+                    <div className="bg-white z-10 flex justify-between items-center pb-2 border-b">
+                        <h2 className="text-xl font-bold">필터</h2>
+                        <button onClick={onClose} className="p-1">
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-5 w-5"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M6 18L18 6M6 6l12 12"
+                                />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
 
                 {/* Tab Navigation - Sticky at the top */}
@@ -274,11 +299,11 @@ const FilterModal: React.FC<FilterModalProps> = ({
                         <h3 className="text-lg font-medium my-2">가격</h3>
                         <div className="py-4">
                             <div className="flex items-center justify-between">
-                                <div className="bg-gray-200 px-4 py-2 rounded w-24 text-center">
+                                <div className="px-2 py-2 rounded w-24 text-center">
                                     {filters.priceRange[0].toLocaleString()} 원
                                 </div>
                                 <span className="mx-2">~</span>
-                                <div className="bg-gray-200 px-4 py-2 rounded w-24 text-center">
+                                <div className="px-2 py-2 rounded w-24 text-center">
                                     {filters.priceRange[1].toLocaleString()} 원
                                 </div>
                             </div>
@@ -294,44 +319,14 @@ const FilterModal: React.FC<FilterModalProps> = ({
                                         parseInt(e.target.value)
                                     )
                                 }
-                                className="w-full mt-4"
+                                className="w-full mt-4 accent-orange-500"
                             />
                         </div>
                     </div>
 
-                    {/* Player Count Section */}
+                    {/* Player Count Section - Now Player Type (modified to match currentPlayer layout) */}
                     <div ref={playerCountRef} className="pt-2 pb-6">
                         <h3 className="text-lg font-medium my-2">인원</h3>
-                        <div className="py-4">
-                            <div className="px-2">
-                                <div className="flex justify-center mb-2">
-                                    <span className="text-center">
-                                        {filters.playerCount} 명
-                                    </span>
-                                </div>
-                                <div className="flex items-center">
-                                    <span className="mr-2">0 명</span>
-                                    <input
-                                        type="range"
-                                        min="0"
-                                        max="12"
-                                        value={filters.playerCount}
-                                        onChange={(e) =>
-                                            handlePlayerCountChange(
-                                                parseInt(e.target.value)
-                                            )
-                                        }
-                                        className="flex-1 mx-2"
-                                    />
-                                    <span className="ml-2">12 명</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Current Player Count Section */}
-                    <div ref={currentPlayerRef} className="pt-2 pb-6">
-                        <h3 className="text-lg font-medium my-2">동접자</h3>
                         <div className="py-4">
                             <div className="grid grid-cols-2 gap-3">
                                 {playerCountOptions.map((option, index) => (
@@ -342,15 +337,12 @@ const FilterModal: React.FC<FilterModalProps> = ({
                                         <input
                                             type="radio"
                                             id={`player-count-${index}`}
-                                            name="playerCountRange"
+                                            name="playerCount"
                                             checked={
-                                                filters.currentPlayerCount ===
-                                                option
+                                                filters.playerCount === option
                                             }
                                             onChange={() =>
-                                                handleCurrentPlayerCountChange(
-                                                    option
-                                                )
+                                                handlePlayerCountChange(option)
                                             }
                                             className="mr-2 accent-orange-500"
                                         />
@@ -364,10 +356,46 @@ const FilterModal: React.FC<FilterModalProps> = ({
                             </div>
                         </div>
                     </div>
+
+                    {/* Current Player Count Section */}
+                    <div ref={currentPlayerRef} className="pt-2 pb-6">
+                        <h3 className="text-lg font-medium my-2">동접자</h3>
+                        <div className="py-4">
+                            <div className="grid grid-cols-2 gap-3">
+                                {currentPlayerOptions.map((option, index) => (
+                                    <div
+                                        key={index}
+                                        className="flex items-center"
+                                    >
+                                        <input
+                                            type="radio"
+                                            id={`current-player-${index}`}
+                                            name="currentPlayerCount"
+                                            checked={
+                                                filters.currentPlayerCount ===
+                                                option
+                                            }
+                                            onChange={() =>
+                                                handleCurrentPlayerCountChange(
+                                                    option
+                                                )
+                                            }
+                                            className="mr-2 accent-orange-500"
+                                        />
+                                        <label
+                                            htmlFor={`current-player-${index}`}
+                                        >
+                                            {option}
+                                        </label>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Bottom Buttons */}
-                <div className="sticky bottom-0 bg-white pt-4 flex justify-end space-x-3">
+                <div className="sticky bottom-0 bg-white pt-2 pb-2 flex justify-end space-x-3">
                     <button
                         className="px-6 py-2 rounded-full border border-gray-300 bg-white text-gray-700"
                         onClick={onClose}
