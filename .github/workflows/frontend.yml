@@ -33,7 +33,9 @@ jobs:
     
       - name: Build project
         run: |
-          PUBLIC_URL=/production npm run build
+          npm run build
+          
+# PUBLIC_URL=/production npm run build
 
       - name: Deploy to S3 (Production)
         run: |
