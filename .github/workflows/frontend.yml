@@ -29,7 +29,7 @@ jobs:
 
       - name: Create .env file
         run: |
-          echo "REACT_APP_BASENAME=/production" >> .env
+          echo "REACT_APP_BASENAME=/" >> .env
     
       - name: Build project
         run: |
