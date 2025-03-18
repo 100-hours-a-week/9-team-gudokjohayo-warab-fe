@@ -7,8 +7,10 @@ import SearchPage from "./pages/Search";
 import DetailPage from "./pages/Detail";
 
 const App: React.FC = () => {
+    const basename = process.env.REACT_APP_BASENAME || "/";
+
     return (
-        <Router>
+        <Router basename={basename}>
             <Routes>
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
