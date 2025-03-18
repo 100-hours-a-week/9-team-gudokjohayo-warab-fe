@@ -29,15 +29,15 @@ jobs:
 
       - name: Create .env file
         run: |
-          echo "REACT_APP_BASENAME=/production" >> .env
+          echo "REACT_APP_BASENAME=/" >> .env
     
       - name: Build project
         run: |
-          PUBLIC_URL=/production npm run build
+          npm run build
 #PUBLIC_URL=/production 
       - name: Deploy to S3 (Production)
         run: |
-          aws s3 sync ./build s3://${{ secrets.S3_BUCKET_NAME }}/production --delete
+          aws s3 sync ./build s3://${{ secrets.S3_BUCKET_NAME }} --delete
 
       - name: Invalidate CloudFront cache
         run: |
