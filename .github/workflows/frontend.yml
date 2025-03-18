@@ -27,13 +27,13 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      # - name: Create .env file
-      #   run: |
-      #     echo "REACT_APP_BASENAME=/production" >> .env
+      - name: Create .env file
+        run: |
+          echo "REACT_APP_BASENAME=/production" >> .env
     
       - name: Build project
         run: |
-          npm run build
+          PUBLIC_URL=/production npm run build
 #PUBLIC_URL=/production 
       - name: Deploy to S3 (Production)
         run: |
