@@ -13,7 +13,7 @@ interface PriceInfo {
 
 const PriceTab: React.FC<PriceTabProps> = () => {
     // 가격 정보 데이터
-    const [priceInfo, setPriceInfo] = useState<PriceInfo[]>([
+    const [priceInfo] = useState<PriceInfo[]>([
         {
             id: "1",
             store: "Epic games",

@@ -16,7 +16,7 @@ interface Video {
 const VideoTab: React.FC<VideoTabProps> = () => {
     // Sample video data
     // In a real implementation, this would come from the YouTube API
-    const [videos, setVideos] = useState<Video[]>([
+    const [videos] = useState<Video[]>([
         {
             id: "1",
             title: "8번 출구 | 이상 현상이 일어나는 지하도에서 출구 찾는 게임",
