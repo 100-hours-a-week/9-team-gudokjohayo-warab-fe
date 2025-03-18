@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Header from "../components/Header";
 import PartyFindTab from "../components/PartyFindTab";
 import VideoTab from "../components/VideoTab";
@@ -15,7 +15,6 @@ const DetailPage: React.FC<DetailPageProps> = () => {
     );
     const [originalPrice, setOriginalPrice] = useState<number>(24000);
     const [discountPrice, setDiscountPrice] = useState<number>(12000);
-    // 플레이어 수 대신 플레이어 타입 상태로 변경
     const [playerType, setPlayerType] = useState<string>("싱글");
     const [rating, setRating] = useState<number>(4);
     const [developer, setDeveloper] = useState<string>("MINTROCKET");
@@ -72,181 +71,205 @@ const DetailPage: React.FC<DetailPageProps> = () => {
     };
 
     return (
-        <div className="flex flex-col h-screen bg-white">
-            <Header />
+        <div className="flex justify-center items-center min-h-screen bg-white">
+            <div
+                className="relative bg-white"
+                style={{
+                    width: "402px",
+                    height: "auto", // 높이를 자동으로 조정하여 스크롤 가능하게 함
+                    maxWidth: "100vw",
+                    minHeight: "100vh", // 최소 높이를 뷰포트 높이로 설정
+                }}
+            >
+                {/* Fixed Header */}
+                <div className="sticky top-0 z-10 w-full">
+                    <Header />
+                </div>
 
-            <div className="flex-1 overflow-auto">
-                {/* Game image banner */}
-                <div className="w-full h-48 bg-gray-200"></div>
+                {/* Scrollable Content */}
+                <div className="flex-1 overflow-auto">
+                    {/* Game image banner */}
+                    <div className="w-full h-48 bg-gray-200"></div>
 
-                {/* Game title and details */}
-                <div className="p-6">
-                    <h1 className="text-2xl font-bold">{gameTitle}</h1>
+                    {/* Game title and details */}
+                    <div className="p-6">
+                        <h1 className="text-2xl font-bold">{gameTitle}</h1>
 
-                    <div className="flex justify-between items-start mt-2">
-                        <div>
-                            <div className="flex items-center space-x-2">
-                                <span className="text-gray-500 line-through">
-                                    ₩{originalPrice.toLocaleString()}
-                                </span>
-                                <span className="text-orange-500 font-bold text-xl">
-                                    ₩{discountPrice.toLocaleString()}
-                                </span>
-                                {/* External link icon instead of three dots */}
-                                <button className="ml-2">
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        className="h-5 w-5 text-gray-500"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                    >
-                                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                                        <polyline points="15 3 21 3 21 9" />
-                                        <line x1="10" y1="14" x2="21" y2="3" />
-                                    </svg>
-                                </button>
-                            </div>
-                            <div className="flex items-center space-x-2 mt-1">
-                                <svg
-                                    className="h-4 w-4 text-gray-500"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    viewBox="0 0 20 20"
-                                    fill="currentColor"
-                                >
-                                    <path
-                                        fillRule="evenodd"
-                                        d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                                        clipRule="evenodd"
-                                    />
-                                </svg>
-                                {/* 플레이어 수 대신 플레이어 타입 표시 */}
-                                <span className="text-sm text-gray-600">
-                                    {playerType}
-                                </span>
-                                <div className="text-sm">
-                                    {renderStars(rating)}
-                                </div>
-                            </div>
-                        </div>
-                        <div className="text-right text-xs text-gray-500">
+                        <div className="flex justify-between items-start mt-2">
                             <div>
-                                Developer:{" "}
-                                <span className="font-medium">{developer}</span>
-                            </div>
-                            <div>
-                                Publisher:{" "}
-                                <span className="font-medium">{publisher}</span>
-                            </div>
-                            <div>
-                                Released:{" "}
-                                <span className="font-medium">
-                                    {releaseDate}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Game description */}
-                    <div className="mt-4">
-                        <p className="text-gray-700 text-sm">
-                            An adventure, RPG, management hybrid
-                        </p>
-                        <p className="mt-2 text-sm">{gameDescription}</p>
-                    </div>
-
-                    {/* Game tags */}
-                    <div className="mt-4">
-                        <div className="flex justify-between items-center">
-                            <h2 className="text-gray-600">카테고리</h2>
-                            <button
-                                onClick={toggleCategoryExpansion}
-                                className="flex items-center justify-center w-8 h-8 bg-gray-100 rounded-md"
-                            >
-                                {isCategoryExpanded ? "-" : "+"}
-                            </button>
-                        </div>
-
-                        {/* Categories - shows only relevant categories */}
-                        <div className="overflow-x-auto pb-2 -mx-2 px-2 mt-2">
-                            <div className="flex flex-wrap gap-2">
-                                {(isCategoryExpanded
-                                    ? relevantCategories
-                                    : collapsedCategories
-                                ).map((category, index) => (
-                                    <button
-                                        key={index}
-                                        type="button"
-                                        className={`bg-gray-100 px-4 py-2 rounded-md text-sm whitespace-nowrap text-orange-500`}
-                                    >
-                                        {category}
+                                <div className="flex items-center space-x-2">
+                                    <span className="text-gray-500 line-through">
+                                        ₩{originalPrice.toLocaleString()}
+                                    </span>
+                                    <span className="text-orange-500 font-bold text-xl">
+                                        ₩{discountPrice.toLocaleString()}
+                                    </span>
+                                    {/* External link icon instead of three dots */}
+                                    <button className="ml-2">
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            className="h-5 w-5 text-gray-500"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="2"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                        >
+                                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                                            <polyline points="15 3 21 3 21 9" />
+                                            <line
+                                                x1="10"
+                                                y1="14"
+                                                x2="21"
+                                                y2="3"
+                                            />
+                                        </svg>
                                     </button>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Tabs */}
-                    <div className="mt-8">
-                        <div className="flex space-x-2">
-                            <button
-                                className={`px-4 py-2 rounded-full text-sm ${
-                                    activeTab === "price-comparison"
-                                        ? "bg-orange-500 text-white"
-                                        : "bg-gray-100 text-gray-600"
-                                }`}
-                                onClick={() =>
-                                    handleTabChange("price-comparison")
-                                }
-                            >
-                                가격 비교
-                            </button>
-                            <button
-                                className={`px-4 py-2 rounded-full text-sm ${
-                                    activeTab === "find-party"
-                                        ? "bg-orange-500 text-white"
-                                        : "bg-gray-100 text-gray-600"
-                                }`}
-                                onClick={() => handleTabChange("find-party")}
-                            >
-                                파티 찾기
-                            </button>
-                            <button
-                                className={`px-4 py-2 rounded-full text-sm ${
-                                    activeTab === "related-videos"
-                                        ? "bg-orange-500 text-white"
-                                        : "bg-gray-100 text-gray-600"
-                                }`}
-                                onClick={() =>
-                                    handleTabChange("related-videos")
-                                }
-                            >
-                                관련 영상
-                            </button>
-                        </div>
-
-                        {/* Tab content */}
-                        <div className="mt-4 py-4 border-t border-gray-200">
-                            {activeTab === "price-comparison" && (
-                                <div>
-                                    <PriceTab />
                                 </div>
-                            )}
-                            {activeTab === "find-party" && (
-                                <div>
-                                    <div>
-                                        <PartyFindTab />
+                                <div className="flex items-center space-x-2 mt-1">
+                                    <svg
+                                        className="h-4 w-4 text-gray-500"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 20 20"
+                                        fill="currentColor"
+                                    >
+                                        <path
+                                            fillRule="evenodd"
+                                            d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                                            clipRule="evenodd"
+                                        />
+                                    </svg>
+                                    <span className="text-sm text-gray-600">
+                                        {playerType}
+                                    </span>
+                                    <div className="text-sm">
+                                        {renderStars(rating)}
                                     </div>
                                 </div>
-                            )}
-                            {activeTab === "related-videos" && (
+                            </div>
+                            <div className="text-right text-xs text-gray-500">
                                 <div>
-                                    <VideoTab />
+                                    Developer:{" "}
+                                    <span className="font-medium">
+                                        {developer}
+                                    </span>
                                 </div>
-                            )}
+                                <div>
+                                    Publisher:{" "}
+                                    <span className="font-medium">
+                                        {publisher}
+                                    </span>
+                                </div>
+                                <div>
+                                    Released:{" "}
+                                    <span className="font-medium">
+                                        {releaseDate}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Game description */}
+                        <div className="mt-4">
+                            <p className="text-gray-700 text-sm">
+                                An adventure, RPG, management hybrid
+                            </p>
+                            <p className="mt-2 text-sm">{gameDescription}</p>
+                        </div>
+
+                        {/* Game tags */}
+                        <div className="mt-4">
+                            <div className="flex justify-between items-center">
+                                <h2 className="text-gray-600">카테고리</h2>
+                                <button
+                                    onClick={toggleCategoryExpansion}
+                                    className="flex items-center justify-center w-8 h-8 bg-gray-100 rounded-md"
+                                >
+                                    {isCategoryExpanded ? "-" : "+"}
+                                </button>
+                            </div>
+
+                            {/* Categories - shows only relevant categories */}
+                            <div className="overflow-x-auto pb-2 -mx-2 px-2 mt-2">
+                                <div className="flex flex-wrap gap-2">
+                                    {(isCategoryExpanded
+                                        ? relevantCategories
+                                        : collapsedCategories
+                                    ).map((category, index) => (
+                                        <button
+                                            key={index}
+                                            type="button"
+                                            className={`bg-gray-100 px-4 py-2 rounded-md text-sm whitespace-nowrap text-orange-500`}
+                                        >
+                                            {category}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Tabs */}
+                        <div className="mt-8">
+                            <div className="flex space-x-2">
+                                <button
+                                    className={`px-4 py-2 rounded-full text-sm ${
+                                        activeTab === "price-comparison"
+                                            ? "bg-orange-500 text-white"
+                                            : "bg-gray-100 text-gray-600"
+                                    }`}
+                                    onClick={() =>
+                                        handleTabChange("price-comparison")
+                                    }
+                                >
+                                    가격 비교
+                                </button>
+                                <button
+                                    className={`px-4 py-2 rounded-full text-sm ${
+                                        activeTab === "find-party"
+                                            ? "bg-orange-500 text-white"
+                                            : "bg-gray-100 text-gray-600"
+                                    }`}
+                                    onClick={() =>
+                                        handleTabChange("find-party")
+                                    }
+                                >
+                                    파티 찾기
+                                </button>
+                                <button
+                                    className={`px-4 py-2 rounded-full text-sm ${
+                                        activeTab === "related-videos"
+                                            ? "bg-orange-500 text-white"
+                                            : "bg-gray-100 text-gray-600"
+                                    }`}
+                                    onClick={() =>
+                                        handleTabChange("related-videos")
+                                    }
+                                >
+                                    관련 영상
+                                </button>
+                            </div>
+
+                            {/* Tab content */}
+                            <div className="mt-4 py-4 border-t border-gray-200">
+                                {activeTab === "price-comparison" && (
+                                    <div>
+                                        <PriceTab />
+                                    </div>
+                                )}
+                                {activeTab === "find-party" && (
+                                    <div>
+                                        <div>
+                                            <PartyFindTab />
+                                        </div>
+                                    </div>
+                                )}
+                                {activeTab === "related-videos" && (
+                                    <div>
+                                        <VideoTab />
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
