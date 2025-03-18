@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 interface LoginButtonProps {
     icon: string;
@@ -52,40 +52,52 @@ const LoginPage: React.FC<LoginPageProps> = ({
     };
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-white p-6">
-            <div className="w-full max-w-md flex flex-col items-center mb-16">
-                {/* Logo Section - Single Image */}
-                <div className="flex flex-col items-center mb-16">
-                    <img
-                        src={logoSrc}
-                        alt="Logo"
-                        className="w-64 h-auto mb-4"
-                    />
-                </div>
+        <div className="min-h-screen flex flex-col items-center justify-center bg-white">
+            <div
+                className="relative bg-white"
+                style={{
+                    width: "402px",
+                    height: "auto", // 높이를 자동으로 조정하여 스크롤 가능하게 함
+                    maxWidth: "100vw",
+                    minHeight: "100vh", // 최소 높이를 뷰포트 높이로 설정
+                }}
+            >
+                <div className="flex-1 flex flex-col items-center justify-center p-6">
+                    <div className="w-full max-w-md flex flex-col items-center">
+                        {/* Logo Section - Single Image */}
+                        <div className="flex flex-col items-center mb-16">
+                            <img
+                                src={logoSrc}
+                                alt="Logo"
+                                className="w-64 h-auto mb-4"
+                            />
+                        </div>
 
-                {/* Login Buttons Section */}
-                <div className="w-full">
-                    <LoginButton
-                        icon="/images/kakao.png"
-                        text="카카오로 3초만에 시작하기"
-                        backgroundColor="#FAE100"
-                        textColor="#3A1D1D"
-                        onClick={handleKakaoLogin}
-                    />
+                        {/* Login Buttons Section */}
+                        <div className="w-full">
+                            <LoginButton
+                                icon="/images/kakao.png"
+                                text="카카오로 3초만에 시작하기"
+                                backgroundColor="#FAE100"
+                                textColor="#3A1D1D"
+                                onClick={handleKakaoLogin}
+                            />
 
-                    <LoginButton
-                        icon="/images/discord.png"
-                        text="디스코드 계정으로 로그인하기"
-                        backgroundColor="#5F70BE"
-                        onClick={handleDiscordLogin}
-                    />
+                            <LoginButton
+                                icon="/images/discord.png"
+                                text="디스코드 계정으로 로그인하기"
+                                backgroundColor="#5F70BE"
+                                onClick={handleDiscordLogin}
+                            />
 
-                    <LoginButton
-                        icon="/images/steam.png"
-                        text="스팀 계정으로 로그인하기"
-                        backgroundColor="#101B38"
-                        onClick={handleSteamLogin}
-                    />
+                            <LoginButton
+                                icon="/images/steam.png"
+                                text="스팀 계정으로 로그인하기"
+                                backgroundColor="#101B38"
+                                onClick={handleSteamLogin}
+                            />
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

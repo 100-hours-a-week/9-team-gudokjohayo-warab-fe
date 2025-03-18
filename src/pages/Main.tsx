@@ -244,69 +244,85 @@ const MainPage: React.FC = () => {
     };
 
     return (
-        <div className="flex flex-col h-screen bg-white">
-            <Header />
+        <div className="flex items-center justify-center min-h-screen bg-white">
+            {/* 고정 비율 컨테이너 (402*874) */}
+            <div
+                className="relative bg-white"
+                style={{
+                    width: "402px",
+                    height: "auto", // 높이를 자동으로 조정하여 스크롤 가능하게 함
+                    maxWidth: "100vw",
+                    minHeight: "100vh", // 최소 높이를 뷰포트 높이로 설정
+                }}
+            >
+                {/* 헤더 고정 */}
+                <div className="sticky top-0 z-10">
+                    <Header />
+                </div>
 
-            <div className="flex-1 flex flex-col">
-                {/* Search Bar */}
-                <div className="p-4">
-                    <form onSubmit={handleSearch}>
-                        <div className="relative">
-                            <input
-                                type="text"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="게임 검색"
-                                className="w-full px-4 py-2 rounded-full bg-gray-200 focus:outline-none"
-                            />
-                            <button
-                                type="submit"
-                                className="absolute right-2 top-1/2 transform -translate-y-1/2"
-                            >
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="h-5 w-5 text-gray-500"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
+                <div className="flex flex-col">
+                    {/* Search Bar */}
+                    <div className="p-4">
+                        <form onSubmit={handleSearch}>
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={(e) =>
+                                        setSearchQuery(e.target.value)
+                                    }
+                                    placeholder="게임 검색"
+                                    className="w-full px-4 py-2 rounded-full bg-gray-200 focus:outline-none"
+                                />
+                                <button
+                                    type="submit"
+                                    className="absolute right-2 top-1/2 transform -translate-y-1/2"
                                 >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                                    />
-                                </svg>
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        className="h-5 w-5 text-gray-500"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                                        />
+                                    </svg>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
 
-                {/* Featured Discounted Games - Single Row */}
-                <div className="px-4 mb-6">
-                    <GameSlider
-                        games={discountedGames}
-                        itemsPerView={1}
-                        autoSlideInterval={5000}
-                        onGameClick={handleGameClick}
-                    />
-                </div>
+                    {/* Featured Discounted Games - Single Row */}
+                    <div className="px-4 mb-6">
+                        <GameSlider
+                            games={discountedGames}
+                            itemsPerView={1}
+                            autoSlideInterval={5000}
+                            onGameClick={handleGameClick}
+                        />
+                    </div>
 
-                {/* Game Category Sections */}
-                <div className="flex-1 overflow-y-auto px-4 space-y-8 pb-8">
-                    {gameCategories.map((category, index) => (
-                        <div key={index} className="space-y-2">
-                            <h2 className="text-lg font-medium">
-                                {category.title}
-                            </h2>
-                            <GameSlider
-                                games={category.games}
-                                itemsPerView={2}
-                                autoSlideInterval={0} // No auto-slide for category sections
-                                onGameClick={handleGameClick}
-                            />
-                        </div>
-                    ))}
+                    {/* Game Category Sections */}
+                    <div className="px-4 space-y-8 pb-8">
+                        {gameCategories.map((category, index) => (
+                            <div key={index} className="space-y-2">
+                                <h2 className="text-lg font-medium">
+                                    {category.title}
+                                </h2>
+                                <GameSlider
+                                    games={category.games}
+                                    itemsPerView={2}
+                                    autoSlideInterval={0} // No auto-slide for category sections
+                                    onGameClick={handleGameClick}
+                                />
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
         </div>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Header from "../components/Header";
 import ToastMessage from "../components/ToastMessage";
 import CategoryModal from "../components/CategoryModal";
@@ -80,134 +80,158 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
     };
 
     return (
-        <div className="flex flex-col h-screen bg-white">
-            <Header />
-
-            <div className="flex-1 p-6 flex flex-col">
-                <div className="space-y-6">
-                    <div className="space-y-2">
-                        <label
-                            className="block text-sm font-medium"
-                            htmlFor="nickname"
-                        >
-                            닉네임
-                        </label>
-                        <input
-                            id="nickname"
-                            type="text"
-                            value={nickname}
-                            onChange={(e) => setNickname(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                        />
-                        <p className="text-xs text-red-500">*helperText</p>
-                    </div>
-
-                    <div className="space-y-2">
-                        <label
-                            className="block text-sm font-medium"
-                            htmlFor="discord"
-                        >
-                            디스코드
-                        </label>
-                        <div className="relative">
-                            <input
-                                id="discord"
-                                type="text"
-                                value={discordUrl}
-                                onChange={(e) => setDiscordUrl(e.target.value)}
-                                className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md"
-                            />
-                            {discordUrl && (
-                                <button
-                                    type="button"
-                                    onClick={handleClearDiscord}
-                                    className="absolute right-2 top-1/2 transform -translate-y-1/2"
-                                >
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        className="h-5 w-5 text-gray-400"
-                                        viewBox="0 0 20 20"
-                                        fill="currentColor"
-                                    >
-                                        <path
-                                            fillRule="evenodd"
-                                            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                                            clipRule="evenodd"
-                                        />
-                                    </svg>
-                                </button>
-                            )}
-                        </div>
-                        <p className="text-xs text-red-500">*helperText</p>
-                    </div>
-
-                    <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                            <label className="block text-sm font-medium">
-                                선호 카테고리
-                            </label>
-                            <button
-                                type="button"
-                                className="bg-orange-500 text-white rounded-full py-2 px-4 text-sm"
-                                onClick={handleOpenModal}
-                            >
-                                선택 하기
-                            </button>
-                        </div>
-                        <p className="text-xs text-red-500">
-                            *선호 카테고리를 등록하지 않으면 게시 추천 기능이
-                            제한됩니다.
-                        </p>
-
-                        {selectedCategories.length > 0 && (
-                            <div className="overflow-x-auto pb-2 -mx-2 px-2">
-                                <div className="flex space-x-2 mt-4 min-w-max">
-                                    {selectedCategories.map(
-                                        (category, index) => (
-                                            <button
-                                                key={index}
-                                                type="button"
-                                                className="bg-orange-500 text-white px-4 py-2 rounded-md text-sm whitespace-nowrap"
-                                            >
-                                                {category}
-                                            </button>
-                                        )
-                                    )}
-                                </div>
-                            </div>
-                        )}
-                    </div>
+        <div className="flex justify-center items-center min-h-screen bg-white">
+            <div
+                className="relative bg-white"
+                style={{
+                    width: "402px",
+                    height: "auto", // 높이를 자동으로 조정하여 스크롤 가능하게 함
+                    maxWidth: "100vw",
+                    minHeight: "100vh", // 최소 높이를 뷰포트 높이로 설정
+                }}
+            >
+                {/* Fixed Header */}
+                <div className="sticky top-0 z-10 w-full">
+                    <Header />
                 </div>
 
-                <div className="mt-auto flex flex-col">
-                    {/* Logout text with click handler */}
-                    <p
-                        className="text-center mb-8 font-medium cursor-pointer"
-                        onClick={handleLogoutClick}
-                    >
-                        로그아웃
-                    </p>
+                {/* Scrollable Content */}
+                <div className="flex-1 overflow-auto">
+                    <div className="p-6 flex flex-col h-full">
+                        <div className="space-y-6">
+                            <div className="space-y-2">
+                                <label
+                                    className="block text-sm font-medium"
+                                    htmlFor="nickname"
+                                >
+                                    닉네임
+                                </label>
+                                <input
+                                    id="nickname"
+                                    type="text"
+                                    value={nickname}
+                                    onChange={(e) =>
+                                        setNickname(e.target.value)
+                                    }
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                />
+                                <p className="text-xs text-red-500">
+                                    *helperText
+                                </p>
+                            </div>
 
-                    {/* Fixed height container for toast to prevent layout shifts */}
-                    <div className="h-16 mb-4">
-                        {showToast && (
-                            <ToastMessage message="프로필을 수정했어요." />
-                        )}
-                    </div>
+                            <div className="space-y-2">
+                                <label
+                                    className="block text-sm font-medium"
+                                    htmlFor="discord"
+                                >
+                                    디스코드
+                                </label>
+                                <div className="relative">
+                                    <input
+                                        id="discord"
+                                        type="text"
+                                        value={discordUrl}
+                                        onChange={(e) =>
+                                            setDiscordUrl(e.target.value)
+                                        }
+                                        className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md"
+                                    />
+                                    {discordUrl && (
+                                        <button
+                                            type="button"
+                                            onClick={handleClearDiscord}
+                                            className="absolute right-2 top-1/2 transform -translate-y-1/2"
+                                        >
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                className="h-5 w-5 text-gray-400"
+                                                viewBox="0 0 20 20"
+                                                fill="currentColor"
+                                            >
+                                                <path
+                                                    fillRule="evenodd"
+                                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                                    clipRule="evenodd"
+                                                />
+                                            </svg>
+                                        </button>
+                                    )}
+                                </div>
+                                <p className="text-xs text-red-500">
+                                    *helperText
+                                </p>
+                            </div>
 
-                    <div className="flex justify-center space-x-4">
-                        <button
-                            className="px-6 py-2 rounded-full bg-white border border-gray-300 text-sm"
-                            onClick={handleCancelClick}
-                        >
-                            취소
-                        </button>
-                        <button
-                            className="px-6 py-2 rounded-full bg-orange-500 text-white text-sm"
-                            onClick={handleSave}
-                        >
-                            완료
-                        </button>
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <label className="block text-sm font-medium">
+                                        선호 카테고리
+                                    </label>
+                                    <button
+                                        type="button"
+                                        className="bg-orange-500 text-white rounded-full py-2 px-4 text-sm"
+                                        onClick={handleOpenModal}
+                                    >
+                                        선택 하기
+                                    </button>
+                                </div>
+                                <p className="text-xs text-red-500">
+                                    *선호 카테고리를 등록하지 않으면 게시 추천
+                                    기능이 제한됩니다.
+                                </p>
+
+                                {selectedCategories.length > 0 && (
+                                    <div className="overflow-x-auto pb-2 -mx-2 px-2">
+                                        <div className="flex space-x-2 mt-4 min-w-max">
+                                            {selectedCategories.map(
+                                                (category, index) => (
+                                                    <button
+                                                        key={index}
+                                                        type="button"
+                                                        className="bg-orange-500 text-white px-4 py-2 rounded-md text-sm whitespace-nowrap"
+                                                    >
+                                                        {category}
+                                                    </button>
+                                                )
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="mt-auto flex flex-col">
+                            {/* Logout text with click handler */}
+                            <p
+                                className="text-center mb-8 font-medium cursor-pointer"
+                                onClick={handleLogoutClick}
+                            >
+                                로그아웃
+                            </p>
+
+                            {/* Fixed height container for toast to prevent layout shifts */}
+                            <div className="h-16 mb-4">
+                                {showToast && (
+                                    <ToastMessage message="프로필을 수정했어요." />
+                                )}
+                            </div>
+
+                            <div className="flex justify-center space-x-4">
+                                <button
+                                    className="px-6 py-2 rounded-full bg-white border border-gray-300 text-sm"
+                                    onClick={handleCancelClick}
+                                >
+                                    취소
+                                </button>
+                                <button
+                                    className="px-6 py-2 rounded-full bg-orange-500 text-white text-sm"
+                                    onClick={handleSave}
+                                >
+                                    완료
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
