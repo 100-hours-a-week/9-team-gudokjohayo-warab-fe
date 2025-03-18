@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Header from "../components/Header";
 import PartyFindTab from "../components/PartyFindTab";
 import VideoTab from "../components/VideoTab";
@@ -10,17 +10,15 @@ interface DetailPageProps {
 
 const DetailPage: React.FC<DetailPageProps> = () => {
     // Game details state
-    const [gameTitle, setGameTitle] = useState<string>(
-        "Eddie The Tumbler: Pee Terror"
-    );
-    const [originalPrice, setOriginalPrice] = useState<number>(24000);
-    const [discountPrice, setDiscountPrice] = useState<number>(12000);
-    const [playerType, setPlayerType] = useState<string>("싱글");
-    const [rating, setRating] = useState<number>(4);
-    const [developer, setDeveloper] = useState<string>("MINTROCKET");
-    const [publisher, setPublisher] = useState<string>("MINTROCKET");
-    const [releaseDate, setReleaseDate] = useState<string>("27 OCT 2022");
-    const [gameDescription, setGameDescription] = useState<string>(
+    const [gameTitle] = useState<string>("Eddie The Tumbler: Pee Terror");
+    const [originalPrice] = useState<number>(24000);
+    const [discountPrice] = useState<number>(12000);
+    const [playerType] = useState<string>("싱글");
+    const [rating] = useState<number>(4);
+    const [developer] = useState<string>("MINTROCKET");
+    const [publisher] = useState<string>("MINTROCKET");
+    const [releaseDate] = useState<string>("27 OCT 2022");
+    const [gameDescription] = useState<string>(
         "어두운 증세 세계에서 적과 초자연적인 위협으로 가득 찬 무자비한 세계 도전이 기다리고 있습니다. 전구들과 함께 진흙의 구울을 발견하고 그것을 엘리허 저거하기 위한 결정적인 여정을 떠나십시오. 당신의 선택은 치명적인 전사와 괴물에 맞서 싸우는 새로운 세분을 결정짓게 될 것입니다."
     );
 

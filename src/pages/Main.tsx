@@ -37,8 +37,6 @@ const GameSlider: React.FC<GameSliderProps> = ({
     const [touchEnd, setTouchEnd] = useState<number | null>(null);
     const sliderRef = useRef<HTMLDivElement>(null);
 
-    // 항상 1개씩만 이동하도록 수정
-    const stepSize = 1;
     const maxIndex = Math.max(0, games.length - itemsPerView);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
