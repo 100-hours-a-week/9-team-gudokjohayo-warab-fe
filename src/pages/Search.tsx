@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Header from "../components/Header";
 import FilterModal, { FilterOptions } from "../components/FilterModal";
-import { useNavigate } from "react-router-dom"; // Import for navigation
+import { useNavigate, useSearchParams } from "react-router-dom"; // Import for navigation
 
 interface Game {
     id: string;
@@ -21,7 +21,10 @@ interface SearchPageProps {
 
 const SearchPage: React.FC<SearchPageProps> = () => {
     const navigate = useNavigate(); // Initialize navigate hook
-    const [searchQuery, setSearchQuery] = useState<string>("");
+    const [searchParams] = useSearchParams();
+    const [searchQuery, setSearchQuery] = useState<string>(
+        searchParams.get("query") || ""
+    );
     const [games, setGames] = useState<Game[]>([]);
     const [discountFilter, setDiscountFilter] = useState<boolean>(false);
     const [recommendedFilter, setRecommendedFilter] = useState<boolean>(false);
