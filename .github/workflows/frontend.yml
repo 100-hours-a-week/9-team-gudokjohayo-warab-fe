@@ -21,7 +21,7 @@ jobs:
 
       - name: Deploy to S3 (Production)
         run: |
-          aws s3 sync ./build s3://$S3_BUCKET_NAME/production --delete
+          aws s3 sync ./build s3://${{ secrets.S3_BUCKET_NAME }}/production --delete
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
