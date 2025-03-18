@@ -201,7 +201,7 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
                             </div>
                         </div>
 
-                        <div className="mt-auto flex flex-col">
+                        <div className="fixed bottom-10 left-1/2 transform -translate-x-1/2 mt-auto flex flex-col">
                             {/* Logout text with click handler */}
                             <p
                                 className="text-center mb-8 font-medium cursor-pointer"

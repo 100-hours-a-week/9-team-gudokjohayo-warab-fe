@@ -182,6 +182,42 @@ const FilterModal: React.FC<FilterModalProps> = ({
 
     if (!isOpen) return null;
 
+    const handleScroll = () => {
+        const modalContentElement = document.getElementById(
+            "filter-modal-content"
+        );
+        if (!modalContentElement) return;
+
+        const scrollTop = modalContentElement.scrollTop;
+
+        const offsets = [
+            { id: "카테고리", ref: categoryRef },
+            { id: "평점", ref: ratingRef },
+            { id: "가격", ref: priceRef },
+            { id: "인원", ref: playerCountRef },
+            { id: "동접자", ref: currentPlayerRef },
+        ];
+
+        const headerHeight = 130; // 탭과 헤더 높이 고려하여 조정
+
+        let currentTab = activeTab;
+
+        for (let i = offsets.length - 1; i >= 0; i--) {
+            const ref = offsets[i].ref.current;
+            if (ref) {
+                const offsetTop = ref.offsetTop - headerHeight;
+                if (scrollTop >= offsetTop) {
+                    currentTab = offsets[i].id;
+                    break;
+                }
+            }
+        }
+
+        if (currentTab !== activeTab) {
+            setActiveTab(currentTab);
+        }
+    };
+
     // Function to get button styling for categories
     const getCategoryButtonStyle = (category: string) => {
         const isSelected = filters.categories.includes(category);
@@ -202,6 +238,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
                     transition: "transform 0.3s ease-out",
                     width: "402px",
                 }}
+                onScroll={handleScroll}
             >
                 <div className="sticky top-0 p-4 bg-white">
                     <div className="bg-white z-10 flex justify-between items-center pb-2 border-b">

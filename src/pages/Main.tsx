@@ -241,6 +241,11 @@ const MainPage: React.FC = () => {
         navigate(`/detail`);
     };
 
+    const handleCategoryMoreClick = (categoryTitle: string) => {
+        // Navigate to search page with category as query
+        navigate(`/search?query=${encodeURIComponent(categoryTitle)}`);
+    };
+
     return (
         <div className="flex items-center justify-center min-h-screen bg-white">
             {/* 고정 비율 컨테이너 (402*874) */}
@@ -309,9 +314,22 @@ const MainPage: React.FC = () => {
                     <div className="px-4 space-y-8 pb-8">
                         {gameCategories.map((category, index) => (
                             <div key={index} className="space-y-2">
-                                <h2 className="text-lg font-medium">
-                                    {category.title}
-                                </h2>
+                                {/* Category title with "더보기" button */}
+                                <div className="flex justify-between items-center">
+                                    <h2 className="text-lg font-medium">
+                                        {category.title}
+                                    </h2>
+                                    <button
+                                        className="text-sm text-gray-500 font-medium"
+                                        onClick={() =>
+                                            handleCategoryMoreClick(
+                                                category.title
+                                            )
+                                        }
+                                    >
+                                        더보기
+                                    </button>
+                                </div>
                                 <GameSlider
                                     games={category.games}
                                     itemsPerView={2}
