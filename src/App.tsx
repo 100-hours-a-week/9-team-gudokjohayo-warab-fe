@@ -10,7 +10,7 @@ const App: React.FC = () => {
     //const basename = process.env.REACT_APP_BASENAME || "/";
 
     return (
-
+        <Router>
             <Routes>
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
@@ -18,6 +18,7 @@ const App: React.FC = () => {
                 <Route path="/search" element={<SearchPage />} />
                 <Route path="/detail" element={<DetailPage />} />
             </Routes>
+        </Router>
     );
 };
 
