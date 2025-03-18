@@ -13,7 +13,7 @@ const ToastMessage: React.FC<ToastMessageProps> = ({
 
     return (
         <div
-            className="fixed left-0 right-0 w-full flex justify-center"
+            className="absolute left-0 right-0 w-full flex justify-center"
             style={{ bottom: "10%" }}
         >
             <div className="bg-orange-500 text-white text-center py-4 px-6 rounded-full shadow-lg max-w-md mx-4">

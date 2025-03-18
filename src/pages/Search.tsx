@@ -223,164 +223,193 @@ const SearchPage: React.FC<SearchPageProps> = () => {
     };
 
     return (
-        <div className="flex flex-col h-screen bg-white">
-            <Header />
-
-            <div className="flex-1 flex flex-col">
-                {/* Search Bar - Matching Main.tsx */}
-                <div className="p-4">
-                    <form onSubmit={handleSearch}>
-                        <div className="relative">
-                            <input
-                                type="text"
-                                value={searchQuery}
-                                onChange={handleSearchChange}
-                                placeholder="게임 검색"
-                                className="w-full px-4 py-2 rounded-full bg-gray-200 focus:outline-none"
-                            />
-                            <button
-                                type="submit"
-                                className="absolute right-2 top-1/2 transform -translate-y-1/2"
-                            >
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="h-5 w-5 text-gray-500"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                                    />
-                                </svg>
-                            </button>
-                        </div>
-                    </form>
+        <div className="flex justify-center items-center min-h-screen bg-white">
+            <div
+                className="relative bg-white"
+                style={{
+                    width: "402px",
+                    height: "auto", // 높이를 자동으로 조정하여 스크롤 가능하게 함
+                    maxWidth: "100vw",
+                    minHeight: "100vh", // 최소 높이를 뷰포트 높이로 설정
+                }}
+            >
+                {/* Fixed Header */}
+                <div className="sticky top-0 z-10 w-full">
+                    <Header />
                 </div>
 
-                {/* Search Results and Filters */}
-                <div className="px-4 pb-4">
-                    {searchQuery && (
-                        <div className="mb-4">
-                            <p className="text-sm text-gray-600">
-                                SHOWING MATCHES FOR "{searchQuery}"
-                            </p>
-                        </div>
-                    )}
-
-                    <div className="flex items-center mb-4">
-                        <div className="flex space-x-2">
-                            <button
-                                className={`px-4 py-2 text-sm rounded-md border ${
-                                    discountFilter
-                                        ? "bg-orange-500 text-white border-orange-500"
-                                        : "bg-white text-black border-gray-300"
-                                }`}
-                                onClick={toggleDiscountFilter}
-                            >
-                                할인
-                            </button>
-                            <button
-                                className={`px-4 py-2 text-sm rounded-md border ${
-                                    recommendedFilter
-                                        ? "bg-orange-500 text-white border-orange-500"
-                                        : "bg-white text-black border-gray-300"
-                                }`}
-                                onClick={toggleRecommendedFilter}
-                            >
-                                추천
-                            </button>
-                        </div>
-                        <div className="ml-auto">
-                            <button
-                                className={`text-gray-500 ${
-                                    activeFilters ? "text-orange-500" : ""
-                                }`}
-                                onClick={toggleFilterModal}
-                            >
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="h-6 w-6"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+                {/* Scrollable Content */}
+                <div className="flex-1 overflow-auto">
+                    <div className="flex flex-col h-full">
+                        {/* Search Bar - Matching Main.tsx */}
+                        <div className="p-4">
+                            <form onSubmit={handleSearch}>
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        value={searchQuery}
+                                        onChange={handleSearchChange}
+                                        placeholder="게임 검색"
+                                        className="w-full px-4 py-2 rounded-full bg-gray-200 focus:outline-none"
                                     />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Game Results List */}
-                <div className="flex-1 overflow-y-auto px-4">
-                    <div className="space-y-4 pb-6">
-                        {filteredGames.length > 0 ? (
-                            filteredGames.map((game) => (
-                                <div
-                                    key={game.id}
-                                    className="flex cursor-pointer"
-                                    onClick={() => handleGameClick(game.id)}
-                                >
-                                    <div className="w-32 h-32 bg-gray-200 flex-shrink-0 rounded-md"></div>
-                                    <div className="flex-1 ml-4 flex flex-col justify-between">
-                                        <div>
-                                            <h3 className="font-medium text-lg">
-                                                {game.title}
-                                            </h3>
-                                            {game.categories && (
-                                                <div className="flex flex-wrap mt-1">
-                                                    {game.categories
-                                                        .slice(0, 3)
-                                                        .map(
-                                                            (category, idx) => (
-                                                                <span
-                                                                    key={idx}
-                                                                    className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-md mr-1 mb-1"
-                                                                >
-                                                                    {category}
-                                                                </span>
-                                                            )
-                                                        )}
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className="self-end">
-                                            {game.discountedPrice ? (
-                                                <div className="flex flex-col items-end">
-                                                    <span className="text-orange-500 font-medium">
-                                                        {formatPrice(
-                                                            game.discountedPrice
-                                                        )}
-                                                    </span>
-                                                    <span className="text-gray-500 line-through text-sm">
-                                                        {formatPrice(
-                                                            game.price
-                                                        )}
-                                                    </span>
-                                                </div>
-                                            ) : (
-                                                <div className="text-right font-medium">
-                                                    {formatPrice(game.price)}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
+                                    <button
+                                        type="submit"
+                                        className="absolute right-2 top-1/2 transform -translate-y-1/2"
+                                    >
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            className="h-5 w-5 text-gray-500"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                                            />
+                                        </svg>
+                                    </button>
                                 </div>
-                            ))
-                        ) : (
-                            <div className="py-8 text-center text-gray-500">
-                                해당 검색결과가 없습니다.
+                            </form>
+                        </div>
+
+                        {/* Search Results and Filters */}
+                        <div className="px-4 pb-4">
+                            {searchQuery && (
+                                <div className="mb-4">
+                                    <p className="text-sm text-gray-600">
+                                        SHOWING MATCHES FOR "{searchQuery}"
+                                    </p>
+                                </div>
+                            )}
+
+                            <div className="flex items-center mb-4">
+                                <div className="flex space-x-2">
+                                    <button
+                                        className={`px-4 py-2 text-sm rounded-md border ${
+                                            discountFilter
+                                                ? "bg-orange-500 text-white border-orange-500"
+                                                : "bg-white text-black border-gray-300"
+                                        }`}
+                                        onClick={toggleDiscountFilter}
+                                    >
+                                        할인
+                                    </button>
+                                    <button
+                                        className={`px-4 py-2 text-sm rounded-md border ${
+                                            recommendedFilter
+                                                ? "bg-orange-500 text-white border-orange-500"
+                                                : "bg-white text-black border-gray-300"
+                                        }`}
+                                        onClick={toggleRecommendedFilter}
+                                    >
+                                        추천
+                                    </button>
+                                </div>
+                                <div className="ml-auto">
+                                    <button
+                                        className={`text-gray-500 ${
+                                            activeFilters
+                                                ? "text-orange-500"
+                                                : ""
+                                        }`}
+                                        onClick={toggleFilterModal}
+                                    >
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            className="h-6 w-6"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+                                            />
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
-                        )}
+                        </div>
+
+                        {/* Game Results List */}
+                        <div className="flex-1 overflow-y-auto px-4">
+                            <div className="space-y-4 pb-6">
+                                {filteredGames.length > 0 ? (
+                                    filteredGames.map((game) => (
+                                        <div
+                                            key={game.id}
+                                            className="flex cursor-pointer"
+                                            onClick={() =>
+                                                handleGameClick(game.id)
+                                            }
+                                        >
+                                            <div className="w-32 h-32 bg-gray-200 flex-shrink-0 rounded-md"></div>
+                                            <div className="flex-1 ml-4 flex flex-col justify-between">
+                                                <div>
+                                                    <h3 className="font-medium text-lg">
+                                                        {game.title}
+                                                    </h3>
+                                                    {game.categories && (
+                                                        <div className="flex flex-wrap mt-1">
+                                                            {game.categories
+                                                                .slice(0, 3)
+                                                                .map(
+                                                                    (
+                                                                        category,
+                                                                        idx
+                                                                    ) => (
+                                                                        <span
+                                                                            key={
+                                                                                idx
+                                                                            }
+                                                                            className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-md mr-1 mb-1"
+                                                                        >
+                                                                            {
+                                                                                category
+                                                                            }
+                                                                        </span>
+                                                                    )
+                                                                )}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="self-end">
+                                                    {game.discountedPrice ? (
+                                                        <div className="flex flex-col items-end">
+                                                            <span className="text-orange-500 font-medium">
+                                                                {formatPrice(
+                                                                    game.discountedPrice
+                                                                )}
+                                                            </span>
+                                                            <span className="text-gray-500 line-through text-sm">
+                                                                {formatPrice(
+                                                                    game.price
+                                                                )}
+                                                            </span>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="text-right font-medium">
+                                                            {formatPrice(
+                                                                game.price
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="py-8 text-center text-gray-500">
+                                        해당 검색결과가 없습니다.
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

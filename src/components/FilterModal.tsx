@@ -200,6 +200,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
                 style={{
                     transform: isOpen ? "translateY(0)" : "translateY(100%)",
                     transition: "transform 0.3s ease-out",
+                    width: "402px",
                 }}
             >
                 <div className="sticky top-0 p-4 bg-white">
@@ -411,11 +412,11 @@ const FilterModal: React.FC<FilterModalProps> = ({
                 </div>
 
                 {/* Toast Message Container */}
-                <div className="h-16 fixed bottom-4 left-0 right-0 flex justify-center">
-                    {showToast && (
-                        <ToastMessage message="카테고리는 5개까지 선택할 수 있어요." />
-                    )}
-                </div>
+            </div>
+            <div className="h-16 mb-4 z-10">
+                {showToast && (
+                    <ToastMessage message="카테고리는 5개까지 선택할 수 있어요." />
+                )}
             </div>
         </div>
     );

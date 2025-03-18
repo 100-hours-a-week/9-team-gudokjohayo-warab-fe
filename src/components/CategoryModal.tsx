@@ -92,7 +92,10 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg w-full max-w-md mx-4 p-6">
+            <div
+                className="bg-white rounded-lg w-full max-w-md mx-4 p-6"
+                style={{ width: "360px" }}
+            >
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-bold">선호 카테고리</h2>
                 </div>
@@ -118,13 +121,11 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
                         선택 완료
                     </button>
                 </div>
-
-                {/* Fixed height container for toast to prevent layout shifts */}
-                <div className="h-16 absolute bottom-0 left-0 right-0 flex justify-center">
-                    {showToast && (
-                        <ToastMessage message="카테고리는 5개까지 선택할 수 있어요." />
-                    )}
-                </div>
+            </div>
+            <div className="h-16 mb-4 z-10">
+                {showToast && (
+                    <ToastMessage message="카테고리는 5개까지 선택할 수 있어요." />
+                )}
             </div>
         </div>
     );
