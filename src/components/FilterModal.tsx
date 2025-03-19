@@ -6,10 +6,13 @@ interface FilterModalProps {
     onClose: () => void;
     onApply: (filters: FilterOptions) => void;
     initialFilters?: FilterOptions;
+    categories: { id: number; name: string }[];
+    categoriesLoading: boolean;
 }
 
 export interface FilterOptions {
     categories: string[];
+    categoryIds?: number[]; // Added to store category IDs
     rating: number;
     priceRange: [number, number];
     playerCount: string; // Changed to string for player type selection
@@ -21,9 +24,12 @@ const FilterModal: React.FC<FilterModalProps> = ({
     onClose,
     onApply,
     initialFilters,
+    categories,
+    categoriesLoading,
 }) => {
     const defaultFilters: FilterOptions = {
         categories: [],
+        categoryIds: [],
         rating: 4,
         priceRange: [0, 100000],
         playerCount: "싱글 플레이어", // Default value changed
@@ -96,33 +102,6 @@ const FilterModal: React.FC<FilterModalProps> = ({
 
     const tabs = ["카테고리", "평점", "가격", "인원", "동접자"];
 
-    const categories = [
-        "타이쿤",
-        "온라인 멀티",
-        "공포",
-        "추리",
-        "퍼즐",
-        "스포츠",
-        "어드벤처",
-        "심인",
-        "VR",
-        "시뮬레이션",
-        "멀티플레이어",
-        "슈팅",
-        "미소녀 연애 시뮬레이션",
-        "액션",
-        "실시간 전략",
-        "오픈 월드",
-        "핵 앤 슬래시",
-        "전략",
-        "캐주얼",
-        "카드",
-        "힐링",
-        "격투",
-        "리듬",
-        "레이싱",
-    ];
-
     // Player type options
     const playerCountOptions = ["싱글 플레이어", "멀티 플레이어"];
 
@@ -135,19 +114,37 @@ const FilterModal: React.FC<FilterModalProps> = ({
         "500,000명 이상",
     ];
 
-    const toggleCategory = (category: string) => {
+    const toggleCategory = (categoryName: string, categoryId: number) => {
         const newCategories = [...filters.categories];
+        const newCategoryIds = [...(filters.categoryIds || [])];
 
-        if (newCategories.includes(category)) {
+        if (newCategories.includes(categoryName)) {
             // Remove the category if already selected
-            const index = newCategories.indexOf(category);
+            const index = newCategories.indexOf(categoryName);
             newCategories.splice(index, 1);
-            setFilters({ ...filters, categories: newCategories });
+
+            // Remove the category ID
+            const idIndex = newCategoryIds.indexOf(categoryId);
+            if (idIndex !== -1) {
+                newCategoryIds.splice(idIndex, 1);
+            }
+
+            setFilters({
+                ...filters,
+                categories: newCategories,
+                categoryIds: newCategoryIds,
+            });
         } else {
             // Add the category if not already selected and less than 5 categories selected
             if (newCategories.length < 5) {
-                newCategories.push(category);
-                setFilters({ ...filters, categories: newCategories });
+                newCategories.push(categoryName);
+                newCategoryIds.push(categoryId);
+
+                setFilters({
+                    ...filters,
+                    categories: newCategories,
+                    categoryIds: newCategoryIds,
+                });
             } else {
                 // Show toast when trying to select more than 5 categories
                 setShowToast(true);
@@ -219,8 +216,8 @@ const FilterModal: React.FC<FilterModalProps> = ({
     };
 
     // Function to get button styling for categories
-    const getCategoryButtonStyle = (category: string) => {
-        const isSelected = filters.categories.includes(category);
+    const getCategoryButtonStyle = (categoryName: string) => {
+        const isSelected = filters.categories.includes(categoryName);
         return `px-3 py-2 text-sm rounded-md whitespace-nowrap text-center ${
             isSelected
                 ? "bg-orange-500 text-white"
@@ -285,20 +282,31 @@ const FilterModal: React.FC<FilterModalProps> = ({
                     <div ref={categoryRef} className="pt-2 pb-6">
                         <h3 className="text-lg font-medium my-2">카테고리</h3>
                         <div className="py-4">
-                            <div className="flex flex-wrap gap-2">
-                                {categories.map((category, index) => (
-                                    <button
-                                        key={index}
-                                        type="button"
-                                        className={getCategoryButtonStyle(
-                                            category
-                                        )}
-                                        onClick={() => toggleCategory(category)}
-                                    >
-                                        {category}
-                                    </button>
-                                ))}
-                            </div>
+                            {categoriesLoading ? (
+                                <div className="flex justify-center">
+                                    <p>카테고리를 불러오는 중...</p>
+                                </div>
+                            ) : (
+                                <div className="flex flex-wrap gap-2">
+                                    {categories.map((category) => (
+                                        <button
+                                            key={category.id}
+                                            type="button"
+                                            className={getCategoryButtonStyle(
+                                                category.name
+                                            )}
+                                            onClick={() =>
+                                                toggleCategory(
+                                                    category.name,
+                                                    category.id
+                                                )
+                                            }
+                                        >
+                                            {category.name}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
 

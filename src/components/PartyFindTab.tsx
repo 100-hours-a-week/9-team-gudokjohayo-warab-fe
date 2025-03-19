@@ -1,31 +1,64 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import { getComments, createComment } from "../services/commentService";
+import { getUserProfile } from "../services/userService";
 
 interface PartyFindTabProps {
-    // Add any props if needed
+    gameId?: number;
 }
 
-interface Message {
-    id: string;
-    user: string;
+interface Comment {
+    comment_id: number;
+    user_id: number;
     content: string;
+    created_at: string;
+    updated_at: string;
+    delete_at: null | string;
+    nickname?: string; // 사용자 닉네임 (API에서 따로 가져옴)
 }
 
-const PartyFindTab: React.FC<PartyFindTabProps> = () => {
-    // Messages state
-    const [messages, setMessages] = useState<Message[]>([
-        { id: "1", user: "ivan", content: "소통해요 ^^" },
-        { id: "2", user: "mona", content: "실력 챌린전데 팀온 때문에 브론즈" },
-        {
-            id: "3",
-            user: "dylan",
-            content:
-                "하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하",
-        },
-        { id: "4", user: "eddie", content: "팀원 구해요~^^" },
-    ]);
+interface UserProfile {
+    nickname: string;
+    discord_link: string;
+}
+
+const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId = 1 }) => {
+    // Comments state
+    const [comments, setComments] = useState<Comment[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
+    const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
     // Current user message
     const [currentMessage, setCurrentMessage] = useState<string>("");
+
+    // Fetch comments on component mount
+    useEffect(() => {
+        const fetchComments = async () => {
+            try {
+                setLoading(true);
+                const commentsData = await getComments(gameId);
+                setComments(commentsData);
+                setLoading(false);
+            } catch (err) {
+                setError("댓글을 불러오는 데 실패했습니다.");
+                setLoading(false);
+                console.error("Error fetching comments:", err);
+            }
+        };
+
+        const fetchUserProfile = async () => {
+            try {
+                const profileData = await getUserProfile();
+                setUserProfile(profileData.data);
+            } catch (err) {
+                console.error("Error fetching user profile:", err);
+            }
+        };
+
+        fetchComments();
+        fetchUserProfile();
+    }, [gameId]);
 
     // Handle input change
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -33,17 +66,32 @@ const PartyFindTab: React.FC<PartyFindTabProps> = () => {
     };
 
     // Handle send message
-    const handleSendMessage = () => {
+    const handleSendMessage = async () => {
         if (currentMessage.trim() === "") return;
 
-        const newMessage: Message = {
-            id: `${messages.length + 1}`,
-            user: "me", // You can change this to the current user name
-            content: currentMessage,
-        };
+        try {
+            await createComment(gameId, currentMessage);
 
-        setMessages([...messages, newMessage]);
-        setCurrentMessage("");
+            // Optimistic update of UI
+            const newComment: Comment = {
+                comment_id: Date.now(), // 임시 ID
+                user_id: -1, // 임시 사용자 ID
+                content: currentMessage,
+                created_at: new Date().toISOString().split("T")[0],
+                updated_at: new Date().toISOString().split("T")[0],
+                delete_at: null,
+                nickname: userProfile?.nickname || "나",
+            };
+
+            setComments([...comments, newComment]);
+            setCurrentMessage("");
+
+            // 실제 데이터로 UI 업데이트
+            const updatedComments = await getComments(gameId);
+            setComments(updatedComments);
+        } catch (error) {
+            console.error("Error sending comment:", error);
+        }
     };
 
     // Handle key press (Enter to send)
@@ -61,39 +109,68 @@ const PartyFindTab: React.FC<PartyFindTabProps> = () => {
         return username;
     };
 
+    // Find nickname for user_id (in a real app, you'd fetch this from the API)
+    const getNickname = (userId: number) => {
+        // 이 부분은 실제 구현에서는 사용자 정보를 API에서 가져오거나
+        // 댓글 API 응답에 사용자 정보가 포함되도록 수정하는 것이 좋습니다.
+        const userMap: Record<number, string> = {
+            1: "ivan",
+            5: "mona",
+        };
+
+        return userMap[userId] || `user${userId}`;
+    };
+
+    if (loading) {
+        return <div className="p-4 text-center">댓글을 불러오는 중...</div>;
+    }
+
+    if (error) {
+        return <div className="p-4 text-center text-red-500">{error}</div>;
+    }
+
     return (
         <div className="flex flex-col h-full">
             {/* Chat messages */}
             <div className="flex-1 overflow-y-auto mb-3">
-                {messages.map((message) => (
-                    <div
-                        key={message.id}
-                        className="p-2 mb-2 bg-white rounded-lg shadow-sm"
-                    >
-                        <div className="flex">
-                            <div className="w-8 h-8 mr-2 flex justify-center">
-                                <img
-                                    src="/images/discord.png"
-                                    alt="Discord"
-                                    className="w-5 h-5"
-                                />
-                            </div>
-                            <div className="flex flex-1">
-                                <div className="w-20 min-w-20 mr-2">
-                                    <span className="font-medium text-gray-800 truncate block text-xs">
-                                        {formatUsername(message.user)}
+                {comments.length === 0 ? (
+                    <div className="p-4 text-center text-gray-500">
+                        아직 댓글이 없습니다. 첫 번째 댓글을 작성해보세요!
+                    </div>
+                ) : (
+                    comments.map((comment) => (
+                        <div
+                            key={comment.comment_id}
+                            className="p-2 mb-2 bg-white rounded-lg shadow-sm"
+                        >
+                            <div className="flex">
+                                <div className="w-8 h-8 mr-2 flex justify-center">
+                                    <img
+                                        src="/images/discord.png"
+                                        alt="Discord"
+                                        className="w-5 h-5"
+                                    />
+                                </div>
+                                <div className="flex flex-1">
+                                    <div className="w-20 min-w-20 mr-2">
+                                        <span className="font-medium text-gray-800 truncate block text-xs">
+                                            {formatUsername(
+                                                comment.nickname ||
+                                                    getNickname(comment.user_id)
+                                            )}
+                                        </span>
+                                    </div>
+                                    <span className="text-gray-400 mr-2 text-xs">
+                                        |
+                                    </span>
+                                    <span className="text-gray-600 flex-1 break-words text-xs">
+                                        {comment.content}
                                     </span>
                                 </div>
-                                <span className="text-gray-400 mr-2 text-xs">
-                                    |
-                                </span>
-                                <span className="text-gray-600 flex-1 break-words text-xs">
-                                    {message.content}
-                                </span>
                             </div>
                         </div>
-                    </div>
-                ))}
+                    ))
+                )}
             </div>
 
             {/* Message input */}

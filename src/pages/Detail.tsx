@@ -1,8 +1,25 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Header from "../components/Header";
 import PartyFindTab from "../components/PartyFindTab";
 import VideoTab from "../components/VideoTab";
 import PriceTab from "../components/PriceTab";
+import { getGameDetails } from "../services/gameService";
+
+interface GameDetail {
+    title: string;
+    thumbnail: string;
+    price: number;
+    discount_price: number;
+    description: string;
+    release_date: string;
+    developer: string;
+    publisher: string;
+    rating: number;
+    player_count: string;
+    recent_player: number;
+    categories: string[];
+    updated_at: string;
+}
 
 interface DetailPageProps {
     // Add any props if needed
@@ -10,17 +27,9 @@ interface DetailPageProps {
 
 const DetailPage: React.FC<DetailPageProps> = () => {
     // Game details state
-    const [gameTitle] = useState<string>("Eddie The Tumbler: Pee Terror");
-    const [originalPrice] = useState<number>(24000);
-    const [discountPrice] = useState<number>(12000);
-    const [playerType] = useState<string>("싱글");
-    const [rating] = useState<number>(4);
-    const [developer] = useState<string>("MINTROCKET");
-    const [publisher] = useState<string>("MINTROCKET");
-    const [releaseDate] = useState<string>("27 OCT 2022");
-    const [gameDescription] = useState<string>(
-        "어두운 증세 세계에서 적과 초자연적인 위협으로 가득 찬 무자비한 세계 도전이 기다리고 있습니다. 전구들과 함께 진흙의 구울을 발견하고 그것을 엘리허 저거하기 위한 결정적인 여정을 떠나십시오. 당신의 선택은 치명적인 전사와 괴물에 맞서 싸우는 새로운 세분을 결정짓게 될 것입니다."
-    );
+    const [gameDetail, setGameDetail] = useState<GameDetail | null>(null);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
 
     // Category state for accordion
     const [isCategoryExpanded, setIsCategoryExpanded] =
@@ -29,18 +38,22 @@ const DetailPage: React.FC<DetailPageProps> = () => {
     // Tab state
     const [activeTab, setActiveTab] = useState<string>("price-comparison");
 
-    // List of relevant game tags/categories for this game
-    const relevantCategories = [
-        "캐주얼",
-        "온라인 협동",
-        "전략",
-        "어드벤처",
-        "RPG",
-        "액션",
-    ];
+    useEffect(() => {
+        const fetchGameDetails = async () => {
+            try {
+                setLoading(true);
+                const data = await getGameDetails("1");
+                setGameDetail(data);
+                setLoading(false);
+            } catch (err) {
+                setError("게임 정보를 불러오는 데 실패했습니다.");
+                setLoading(false);
+                console.error("Error fetching game details:", err);
+            }
+        };
 
-    // Collapsed view only shows the first 4 categories
-    const collapsedCategories = relevantCategories.slice(0, 4);
+        fetchGameDetails();
+    }, []);
 
     const toggleCategoryExpansion = () => {
         setIsCategoryExpanded(!isCategoryExpanded);
@@ -52,15 +65,31 @@ const DetailPage: React.FC<DetailPageProps> = () => {
 
     // Render stars based on rating
     const renderStars = (rating: number) => {
+        const fullStars = Math.floor(rating / 2);
+        const halfStar = rating % 2 >= 1 ? 1 : 0;
+        const emptyStars = 5 - fullStars - halfStar;
+
         const stars = [];
-        for (let i = 1; i <= 5; i++) {
+        // Full stars
+        for (let i = 0; i < fullStars; i++) {
             stars.push(
-                <span
-                    key={i}
-                    className={
-                        i <= rating ? "text-yellow-400" : "text-gray-300"
-                    }
-                >
+                <span key={`full-${i}`} className="text-yellow-400">
+                    ★
+                </span>
+            );
+        }
+        // Half star
+        if (halfStar) {
+            stars.push(
+                <span key="half" className="text-yellow-400">
+                    ★
+                </span>
+            );
+        }
+        // Empty stars
+        for (let i = 0; i < emptyStars; i++) {
+            stars.push(
+                <span key={`empty-${i}`} className="text-gray-300">
                     ★
                 </span>
             );
@@ -68,15 +97,70 @@ const DetailPage: React.FC<DetailPageProps> = () => {
         return stars;
     };
 
+    // Format date from string to desired format (already in the right format in the API response)
+    const formatDate = (dateString: string) => {
+        // Check if the date is already in the desired format (DD MMM, YYYY)
+        if (/\d{1,2} [A-Za-z]{3,}, \d{4}/.test(dateString)) {
+            return dateString.toUpperCase();
+        }
+
+        // Otherwise parse it and format
+        const date = new Date(dateString);
+        return date
+            .toLocaleDateString("en-US", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+            })
+            .toUpperCase();
+    };
+
+    // Handle player count text
+    const getPlayerTypeText = (playerCount: string) => {
+        return playerCount === "single" ? "싱글" : "멀티";
+    };
+
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center min-h-screen bg-white">
+                <p>로딩 중...</p>
+            </div>
+        );
+    }
+
+    if (error || !gameDetail) {
+        return (
+            <div className="flex justify-center items-center min-h-screen bg-white">
+                <p>{error || "게임 정보를 불러올 수 없습니다."}</p>
+            </div>
+        );
+    }
+
+    // Get categories from API or use a fallback if empty
+    const displayCategories =
+        gameDetail.categories && gameDetail.categories.length > 0
+            ? gameDetail.categories
+            : [
+                  "액션",
+                  "RPG",
+                  "다크 판타지",
+                  "오픈 월드",
+                  "멀티플레이어",
+                  "어드벤처",
+              ];
+
+    // Collapsed view only shows the first 4 categories
+    const collapsedCategories = displayCategories.slice(0, 4);
+
     return (
         <div className="flex justify-center items-center min-h-screen bg-white">
             <div
                 className="relative bg-white"
                 style={{
                     width: "402px",
-                    height: "auto", // 높이를 자동으로 조정하여 스크롤 가능하게 함
+                    height: "auto",
                     maxWidth: "100vw",
-                    minHeight: "100vh", // 최소 높이를 뷰포트 높이로 설정
+                    minHeight: "100vh",
                 }}
             >
                 {/* Fixed Header */}
@@ -87,20 +171,31 @@ const DetailPage: React.FC<DetailPageProps> = () => {
                 {/* Scrollable Content */}
                 <div className="flex-1 overflow-auto">
                     {/* Game image banner */}
-                    <div className="w-full h-48 bg-gray-200"></div>
+                    <div className="w-full h-48 bg-gray-200">
+                        {gameDetail.thumbnail && (
+                            <img
+                                src={gameDetail.thumbnail}
+                                alt={gameDetail.title}
+                                className="w-full h-full object-cover"
+                            />
+                        )}
+                    </div>
 
                     {/* Game title and details */}
                     <div className="p-6">
-                        <h1 className="text-2xl font-bold">{gameTitle}</h1>
+                        <h1 className="text-2xl font-bold">
+                            {gameDetail.title}
+                        </h1>
 
                         <div className="flex justify-between items-start mt-2">
                             <div>
                                 <div className="flex items-center space-x-2">
                                     <span className="text-gray-500 line-through">
-                                        ₩{originalPrice.toLocaleString()}
+                                        ₩{gameDetail.price.toLocaleString()}
                                     </span>
                                     <span className="text-orange-500 font-bold text-xl">
-                                        ₩{discountPrice.toLocaleString()}
+                                        ₩
+                                        {gameDetail.discount_price.toLocaleString()}
                                     </span>
                                     {/* External link icon instead of three dots */}
                                     <button className="ml-2">
@@ -139,10 +234,12 @@ const DetailPage: React.FC<DetailPageProps> = () => {
                                         />
                                     </svg>
                                     <span className="text-sm text-gray-600">
-                                        {playerType}
+                                        {getPlayerTypeText(
+                                            gameDetail.player_count
+                                        )}
                                     </span>
                                     <div className="text-sm">
-                                        {renderStars(rating)}
+                                        {renderStars(gameDetail.rating)}
                                     </div>
                                 </div>
                             </div>
@@ -150,19 +247,19 @@ const DetailPage: React.FC<DetailPageProps> = () => {
                                 <div>
                                     Developer:{" "}
                                     <span className="font-medium">
-                                        {developer}
+                                        {gameDetail.developer}
                                     </span>
                                 </div>
                                 <div>
                                     Publisher:{" "}
                                     <span className="font-medium">
-                                        {publisher}
+                                        {gameDetail.publisher}
                                     </span>
                                 </div>
                                 <div>
                                     Released:{" "}
                                     <span className="font-medium">
-                                        {releaseDate}
+                                        {formatDate(gameDetail.release_date)}
                                     </span>
                                 </div>
                             </div>
@@ -170,10 +267,9 @@ const DetailPage: React.FC<DetailPageProps> = () => {
 
                         {/* Game description */}
                         <div className="mt-4">
-                            <p className="text-gray-700 text-sm">
-                                An adventure, RPG, management hybrid
+                            <p className="mt-2 text-sm">
+                                {gameDetail.description}
                             </p>
-                            <p className="mt-2 text-sm">{gameDescription}</p>
                         </div>
 
                         {/* Game tags */}
@@ -192,7 +288,7 @@ const DetailPage: React.FC<DetailPageProps> = () => {
                             <div className="overflow-x-auto pb-2 -mx-2 px-2 mt-2">
                                 <div className="flex flex-wrap gap-2">
                                     {(isCategoryExpanded
-                                        ? relevantCategories
+                                        ? displayCategories
                                         : collapsedCategories
                                     ).map((category, index) => (
                                         <button

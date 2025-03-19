@@ -1,7 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import Header from "../components/Header";
 import { useNavigate } from "react-router-dom";
-import discountedGamesData from "../data/discountedGames.json";
+import {
+    searchGames,
+    Game as ApiGame,
+    convertFiltersToParams,
+} from "../services/searchService";
 import gameCategoriesData from "../data/gameCategories.json";
 
 interface Game {
@@ -9,9 +13,12 @@ interface Game {
     title: string;
     thumbnailUrl: string;
     discountRate?: number;
+    price?: number;
+    lowestPrice?: number;
 }
 
 interface GameCategory {
+    id: number;
     title: string;
     games: Game[];
 }
@@ -217,13 +224,82 @@ const GameSlider: React.FC<GameSliderProps> = ({
     );
 };
 
+// Function to convert API game format to component format
+const convertApiGameToComponentGame = (apiGame: ApiGame): Game => {
+    // Calculate discount rate if applicable
+    let discountRate = undefined;
+    if (apiGame.price > apiGame.lowest_price) {
+        discountRate = Math.round(
+            ((apiGame.price - apiGame.lowest_price) / apiGame.price) * 100
+        );
+    }
+
+    return {
+        id: apiGame.game_id.toString(),
+        title: apiGame.title,
+        thumbnailUrl: apiGame.thumbnail,
+        discountRate,
+        price: apiGame.price,
+        lowestPrice: apiGame.lowest_price,
+    };
+};
+
 const MainPage: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState<string>("");
+    const [discountedGames, setDiscountedGames] = useState<Game[]>([]);
+    const [gameCategories, setGameCategories] = useState<GameCategory[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
     const navigate = useNavigate();
 
-    // Import game data from JSON files
-    const discountedGames: Game[] = discountedGamesData;
-    const gameCategories: GameCategory[] = gameCategoriesData;
+    // Define categories
+    const categories = [
+        { id: 1, title: "액션" },
+        { id: 2, title: "어드벤처" },
+        { id: 3, title: "RPG" },
+        { id: 4, title: "전략" },
+        { id: 5, title: "시뮬레이션" },
+    ];
+
+    useEffect(() => {
+        const fetchGames = async () => {
+            setLoading(true);
+            try {
+                // Fetch discounted games
+                const discountParams = convertFiltersToParams(
+                    {},
+                    "",
+                    "discount"
+                );
+                const discountedApiGames = await searchGames(discountParams);
+                const formattedDiscountedGames = discountedApiGames.map(
+                    convertApiGameToComponentGame
+                );
+                setDiscountedGames(formattedDiscountedGames);
+
+                // Fetch games for each category
+                const categoryPromises = categories.map(async (category) => {
+                    const categoryParams = convertFiltersToParams({
+                        categoryIds: [category.id],
+                    });
+                    const categoryGames = await searchGames(categoryParams);
+                    return {
+                        id: category.id,
+                        title: category.title,
+                        games: categoryGames.map(convertApiGameToComponentGame),
+                    };
+                });
+
+                const fetchedCategories = await Promise.all(categoryPromises);
+                setGameCategories(fetchedCategories);
+            } catch (error) {
+                console.error("Error fetching games:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchGames();
+    }, []);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -237,13 +313,15 @@ const MainPage: React.FC = () => {
 
     const handleGameClick = (gameId: string) => {
         // Navigate to game detail page
-        // navigate(`/detail/${gameId}`);
-        navigate(`/detail`);
+        navigate(`/detail/${gameId}`);
     };
 
-    const handleCategoryMoreClick = (categoryTitle: string) => {
-        // Navigate to search page with category as query
-        navigate(`/search?query=${encodeURIComponent(categoryTitle)}`);
+    const handleCategoryMoreClick = (
+        categoryId: number,
+        categoryTitle: string
+    ) => {
+        // Navigate to search page with category as filter
+        navigate(`/search?category_ids=${categoryId}`);
     };
 
     return (
@@ -300,45 +378,71 @@ const MainPage: React.FC = () => {
                         </form>
                     </div>
 
-                    {/* Featured Discounted Games - Single Row */}
-                    <div className="px-4 mb-6">
-                        <GameSlider
-                            games={discountedGames}
-                            itemsPerView={1}
-                            autoSlideInterval={5000}
-                            onGameClick={handleGameClick}
-                        />
-                    </div>
-
-                    {/* Game Category Sections */}
-                    <div className="px-4 space-y-8 pb-8">
-                        {gameCategories.map((category, index) => (
-                            <div key={index} className="space-y-2">
-                                {/* Category title with "더보기" button */}
-                                <div className="flex justify-between items-center">
+                    {loading ? (
+                        <div className="flex justify-center items-center py-12">
+                            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500"></div>
+                        </div>
+                    ) : (
+                        <>
+                            {/* Featured Discounted Games - Single Row */}
+                            <div className="px-4 mb-6">
+                                <div className="mb-2">
                                     <h2 className="text-lg font-medium">
-                                        {category.title}
+                                        특가 할인 게임
                                     </h2>
-                                    <button
-                                        className="text-sm text-gray-500 font-medium"
-                                        onClick={() =>
-                                            handleCategoryMoreClick(
-                                                category.title
-                                            )
-                                        }
-                                    >
-                                        더보기
-                                    </button>
+                                    <p className="text-sm text-gray-500">
+                                        지금 가장 좋은 가격에 만나보세요
+                                    </p>
                                 </div>
                                 <GameSlider
-                                    games={category.games}
-                                    itemsPerView={2}
-                                    autoSlideInterval={0} // No auto-slide for category sections
+                                    games={discountedGames}
+                                    itemsPerView={1}
+                                    autoSlideInterval={5000}
                                     onGameClick={handleGameClick}
                                 />
                             </div>
-                        ))}
-                    </div>
+
+                            {/* Game Category Sections */}
+                            <div className="px-4 space-y-8 pb-8">
+                                {gameCategories.map((category) => (
+                                    <div
+                                        key={category.id}
+                                        className="space-y-2"
+                                    >
+                                        {/* Category title with "더보기" button */}
+                                        <div className="flex justify-between items-center">
+                                            <div>
+                                                <h2 className="text-lg font-medium">
+                                                    {category.title}
+                                                </h2>
+                                                <p className="text-sm text-gray-500">
+                                                    {category.title} 장르를
+                                                    선호하시는군요!
+                                                </p>
+                                            </div>
+                                            <button
+                                                className="text-sm text-gray-500 font-medium"
+                                                onClick={() =>
+                                                    handleCategoryMoreClick(
+                                                        category.id,
+                                                        category.title
+                                                    )
+                                                }
+                                            >
+                                                더보기
+                                            </button>
+                                        </div>
+                                        <GameSlider
+                                            games={category.games}
+                                            itemsPerView={2}
+                                            autoSlideInterval={0} // No auto-slide for category sections
+                                            onGameClick={handleGameClick}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        </>
+                    )}
                 </div>
             </div>
         </div>
