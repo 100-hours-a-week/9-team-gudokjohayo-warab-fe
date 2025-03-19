@@ -20,6 +20,7 @@
             "react-app/jest"
         ]
     },
+    "homepage": "https://d1o0m970emoglm.cloudfront.net",
     "browserslist": {
         "production": [
             ">0.2%",
