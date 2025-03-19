@@ -33,7 +33,7 @@ jobs:
     
       - name: Build project
         run: |
-          npm run build
+          PUBLIC_URL=https://d1o0m970emoglm.cloudfront.net/production/ npm run build
 #PUBLIC_URL=/production 
       - name: Deploy to S3 (Production)
         run: |
