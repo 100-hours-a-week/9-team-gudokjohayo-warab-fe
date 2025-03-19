@@ -157,7 +157,7 @@ const GameSlider: React.FC<GameSliderProps> = ({
                 {showControls && currentIndex > 0 && (
                     <button
                         onClick={handlePrev}
-                        className="absolute left-0 top-1/2 transform -translate-y-1/2"
+                        className="absolute left-0 top-[calc(50%-1rem)] transform -translate-y-1/2"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -179,7 +179,7 @@ const GameSlider: React.FC<GameSliderProps> = ({
                 {showControls && currentIndex < maxIndex && (
                     <button
                         onClick={handleNext}
-                        className="absolute right-0 top-1/2 transform -translate-y-1/2"
+                        className="absolute right-0 top-[calc(50%-1rem)] transform -translate-y-1/2"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
