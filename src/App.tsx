@@ -7,11 +7,11 @@ import SearchPage from "./pages/Search";
 import DetailPage from "./pages/Detail";
 
 const App: React.FC = () => {
-    const basename = process.env.REACT_APP_BASENAME || "/";
-    console.log("Router Basename: ", basename);
+    //const basename = process.env.REACT_APP_BASENAME || "/";
+    //console.log("Router Basename: ", basename);
 
     return (
-        <Router basename={basename}>
+        <Router>
             <Routes>
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
