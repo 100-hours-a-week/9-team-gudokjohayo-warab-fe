@@ -34,10 +34,10 @@ jobs:
       - name: Deploy to S3 (Production) with correct Content-Type
         run: |
           aws s3 sync ./build s3://${{ secrets.S3_BUCKET_NAME }}/production --delete
-          aws s3 cp s3://${{ secrets.S3_BUCKET_NAME }}/production s3://${{ secrets.S3_BUCKET_NAME }}/production --recursive \
-            --exclude "*" --include "*.js" --metadata-directive REPLACE --content-type application/javascript
-          aws s3 cp s3://${{ secrets.S3_BUCKET_NAME }}/production s3://${{ secrets.S3_BUCKET_NAME }}/production --recursive \
-            --exclude "*" --include "*.css" --metadata-directive REPLACE --content-type text/css
+          aws s3 cp --recursive s3://${{ secrets.S3_BUCKET_NAME }}/production/static/js/ s3://${{ secrets.S3_BUCKET_NAME }}/production/static/js/ \
+          --metadata-directive REPLACE --content-type application/javascript
+          aws s3 cp --recursive s3://${{ secrets.S3_BUCKET_NAME }}/production/static/css/ s3://${{ secrets.S3_BUCKET_NAME }}/production/static/css/ \
+          --metadata-directive REPLACE --content-type text/css
 
       - name: Invalidate CloudFront cache
         run: |
