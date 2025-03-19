@@ -146,7 +146,7 @@ const DetailPage: React.FC<DetailPageProps> = () => {
                                     </div>
                                 </div>
                             </div>
-                            <div className="text-right text-xs text-gray-500">
+                            <div className="text-left text-xs text-gray-500">
                                 <div>
                                     Developer:{" "}
                                     <span className="font-medium">
