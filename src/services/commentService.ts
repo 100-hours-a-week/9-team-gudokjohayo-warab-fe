@@ -3,10 +3,11 @@ import api from "../api/config";
 interface Comment {
     comment_id: number;
     user_id: number;
+    name: string;
     content: string;
     created_at: string;
-    updated_at: string;
-    delete_at: null | string;
+    updated_at: string | null;
+    deleted_at: null | string;
 }
 
 interface CommentListResponse {
@@ -41,6 +42,39 @@ export const createComment = async (
         return response.data;
     } catch (error) {
         console.error("댓글 작성 중 오류 발생:", error);
+        throw error;
+    }
+};
+
+// 댓글 수정
+export const updateComment = async (
+    gameId: number,
+    commentId: number,
+    content: string
+): Promise<Comment> => {
+    try {
+        const response = await api.patch(
+            `/games/${gameId}/comment/${commentId}`,
+            {
+                content,
+            }
+        );
+        return response.data;
+    } catch (error) {
+        console.error("댓글 수정 중 오류 발생:", error);
+        throw error;
+    }
+};
+
+// 댓글 삭제
+export const deleteComment = async (
+    gameId: number,
+    commentId: number
+): Promise<void> => {
+    try {
+        await api.delete(`/games/${gameId}/comment/${commentId}`);
+    } catch (error) {
+        console.error("댓글 삭제 중 오류 발생:", error);
         throw error;
     }
 };

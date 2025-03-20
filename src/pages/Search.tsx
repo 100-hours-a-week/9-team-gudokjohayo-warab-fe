@@ -118,13 +118,14 @@ const SearchPage: React.FC = () => {
 
     // Navigate to search with category ID
     const handleCategoryClick = (categoryId: number, categoryName: string) => {
+        // Update to match the new FilterOptions interface with null values for player options
         const newFilters: FilterOptions = {
             categories: [categoryName],
             categoryIds: [categoryId],
             rating: 4,
             priceRange: [0, 100000],
-            playerCount: "싱글 플레이어",
-            currentPlayerCount: "0~1,000명",
+            playerCount: null, // Changed from string to null to match updated interface
+            currentPlayerCount: null, // Changed from string to null to match updated interface
         };
         setActiveFilters(newFilters);
     };
@@ -287,14 +288,14 @@ const SearchPage: React.FC = () => {
                                                 }
                                             >
                                                 <div
-                                                    className="w-32 h-32 bg-gray-200 flex-shrink-0 rounded-md bg-cover bg-center"
+                                                    className="w-40 h-24 bg-gray-200 flex-shrink-0 rounded-md bg-cover bg-center"
                                                     style={{
                                                         backgroundImage: `url(${game.thumbnail})`,
                                                     }}
                                                 ></div>
                                                 <div className="flex-1 ml-4 flex flex-col justify-between">
                                                     <div>
-                                                        <h3 className="font-medium text-lg">
+                                                        <h3 className="font-medium text-medium">
                                                             {game.title}
                                                         </h3>
                                                     </div>

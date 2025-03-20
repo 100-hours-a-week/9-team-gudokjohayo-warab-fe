@@ -15,8 +15,8 @@ export interface FilterOptions {
     categoryIds?: number[]; // Added to store category IDs
     rating: number;
     priceRange: [number, number];
-    playerCount: string; // Changed to string for player type selection
-    currentPlayerCount: string;
+    playerCount: string | null; // Changed to allow null for no selection
+    currentPlayerCount: string | null; // Changed to allow null for no selection
 }
 
 const FilterModal: React.FC<FilterModalProps> = ({
@@ -32,8 +32,8 @@ const FilterModal: React.FC<FilterModalProps> = ({
         categoryIds: [],
         rating: 4,
         priceRange: [0, 100000],
-        playerCount: "싱글 플레이어", // Default value changed
-        currentPlayerCount: "0~1,000명",
+        playerCount: null, // Default to null (no selection)
+        currentPlayerCount: null, // Default to null (no selection)
     };
 
     const [filters, setFilters] = useState<FilterOptions>(
@@ -46,7 +46,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
     const categoryRef = useRef<HTMLDivElement>(null);
     const ratingRef = useRef<HTMLDivElement>(null);
     const priceRef = useRef<HTMLDivElement>(null);
-    const playerCountRef = useRef<HTMLDivElement>(null); // Kept original name for consistency
+    const playerCountRef = useRef<HTMLDivElement>(null);
     const currentPlayerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -79,7 +79,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
                 targetRef = priceRef.current;
                 break;
             case "인원":
-                targetRef = playerCountRef.current; // Kept original name
+                targetRef = playerCountRef.current;
                 break;
             case "동접자":
                 targetRef = currentPlayerRef.current;
@@ -163,13 +163,24 @@ const FilterModal: React.FC<FilterModalProps> = ({
         setFilters({ ...filters, priceRange: [min, max] });
     };
 
-    // Handler for player count (now player type)
+    // Modified handler for player count to allow deselection
     const handlePlayerCountChange = (option: string) => {
-        setFilters({ ...filters, playerCount: option });
+        // If the same option is clicked again, deselect it
+        if (filters.playerCount === option) {
+            setFilters({ ...filters, playerCount: null });
+        } else {
+            setFilters({ ...filters, playerCount: option });
+        }
     };
 
+    // Modified handler for current player count to allow deselection
     const handleCurrentPlayerCountChange = (option: string) => {
-        setFilters({ ...filters, currentPlayerCount: option });
+        // If the same option is clicked again, deselect it
+        if (filters.currentPlayerCount === option) {
+            setFilters({ ...filters, currentPlayerCount: null });
+        } else {
+            setFilters({ ...filters, currentPlayerCount: option });
+        }
     };
 
     const handleApply = () => {
@@ -370,7 +381,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
                         </div>
                     </div>
 
-                    {/* Player Count Section - Now Player Type (modified to match currentPlayer layout) */}
+                    {/* Player Count Section - Changed to checkbox style for toggle selection */}
                     <div ref={playerCountRef} className="pt-2 pb-6">
                         <h3 className="text-lg font-medium my-2">인원</h3>
                         <div className="py-4">
@@ -380,20 +391,38 @@ const FilterModal: React.FC<FilterModalProps> = ({
                                         key={index}
                                         className="flex items-center"
                                     >
-                                        <input
-                                            type="radio"
-                                            id={`player-count-${index}`}
-                                            name="playerCount"
-                                            checked={
+                                        <div
+                                            className={`w-5 h-5 rounded border flex items-center justify-center mr-2 cursor-pointer ${
                                                 filters.playerCount === option
-                                            }
-                                            onChange={() =>
+                                                    ? "bg-orange-500 border-orange-500 text-white"
+                                                    : "border-gray-300"
+                                            }`}
+                                            onClick={() =>
                                                 handlePlayerCountChange(option)
                                             }
-                                            className="mr-2 accent-orange-500"
-                                        />
+                                        >
+                                            {filters.playerCount === option && (
+                                                <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    className="h-3 w-3"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    stroke="currentColor"
+                                                >
+                                                    <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        strokeWidth={2}
+                                                        d="M5 13l4 4L19 7"
+                                                    />
+                                                </svg>
+                                            )}
+                                        </div>
                                         <label
-                                            htmlFor={`player-count-${index}`}
+                                            className="cursor-pointer"
+                                            onClick={() =>
+                                                handlePlayerCountChange(option)
+                                            }
                                         >
                                             {option}
                                         </label>
@@ -403,7 +432,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
                         </div>
                     </div>
 
-                    {/* Current Player Count Section */}
+                    {/* Current Player Count Section - Changed to checkbox style for toggle selection */}
                     <div ref={currentPlayerRef} className="pt-2 pb-6">
                         <h3 className="text-lg font-medium my-2">동접자</h3>
                         <div className="py-4">
@@ -413,23 +442,44 @@ const FilterModal: React.FC<FilterModalProps> = ({
                                         key={index}
                                         className="flex items-center"
                                     >
-                                        <input
-                                            type="radio"
-                                            id={`current-player-${index}`}
-                                            name="currentPlayerCount"
-                                            checked={
+                                        <div
+                                            className={`w-5 h-5 rounded border flex items-center justify-center mr-2 cursor-pointer ${
                                                 filters.currentPlayerCount ===
                                                 option
-                                            }
-                                            onChange={() =>
+                                                    ? "bg-orange-500 border-orange-500 text-white"
+                                                    : "border-gray-300"
+                                            }`}
+                                            onClick={() =>
                                                 handleCurrentPlayerCountChange(
                                                     option
                                                 )
                                             }
-                                            className="mr-2 accent-orange-500"
-                                        />
+                                        >
+                                            {filters.currentPlayerCount ===
+                                                option && (
+                                                <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    className="h-3 w-3"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    stroke="currentColor"
+                                                >
+                                                    <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        strokeWidth={2}
+                                                        d="M5 13l4 4L19 7"
+                                                    />
+                                                </svg>
+                                            )}
+                                        </div>
                                         <label
-                                            htmlFor={`current-player-${index}`}
+                                            className="cursor-pointer"
+                                            onClick={() =>
+                                                handleCurrentPlayerCountChange(
+                                                    option
+                                                )
+                                            }
                                         >
                                             {option}
                                         </label>

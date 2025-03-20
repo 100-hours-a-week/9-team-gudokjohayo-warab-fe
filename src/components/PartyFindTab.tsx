@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
-import { getComments, createComment } from "../services/commentService";
+import {
+    getComments,
+    createComment,
+    updateComment,
+    deleteComment,
+} from "../services/commentService";
 import { getUserProfile } from "../services/userService";
+import ConfirmationModal from "./ConfirmationModal";
 
 interface PartyFindTabProps {
     gameId?: number;
@@ -10,11 +15,11 @@ interface PartyFindTabProps {
 interface Comment {
     comment_id: number;
     user_id: number;
+    name: string;
     content: string;
     created_at: string;
-    updated_at: string;
-    delete_at: null | string;
-    nickname?: string; // 사용자 닉네임 (API에서 따로 가져옴)
+    updated_at: string | null;
+    deleted_at: null | string;
 }
 
 interface UserProfile {
@@ -31,6 +36,16 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId = 1 }) => {
 
     // Current user message
     const [currentMessage, setCurrentMessage] = useState<string>("");
+
+    // Edit state
+    const [editingCommentId, setEditingCommentId] = useState<number | null>(
+        null
+    );
+    const [editContent, setEditContent] = useState<string>("");
+
+    // Modal state
+    const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+    const [commentToDelete, setCommentToDelete] = useState<number | null>(null);
 
     // Fetch comments on component mount
     useEffect(() => {
@@ -65,6 +80,95 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId = 1 }) => {
         setCurrentMessage(e.target.value);
     };
 
+    // Handle edit input change
+    const handleEditInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setEditContent(e.target.value);
+    };
+
+    // Start editing a comment
+    const handleStartEdit = (comment: Comment) => {
+        setEditingCommentId(comment.comment_id);
+        setEditContent(comment.content);
+    };
+
+    // Cancel editing
+    const handleCancelEdit = () => {
+        setEditingCommentId(null);
+        setEditContent("");
+    };
+
+    // Save edited comment
+    const handleSaveEdit = async (commentId: number) => {
+        if (editContent.trim() === "") return;
+
+        try {
+            await updateComment(gameId, commentId, editContent);
+
+            // Update UI optimistically
+            setComments(
+                comments.map((comment) =>
+                    comment.comment_id === commentId
+                        ? {
+                              ...comment,
+                              content: editContent,
+                              updated_at: new Date()
+                                  .toISOString()
+                                  .split("T")[0],
+                          }
+                        : comment
+                )
+            );
+
+            // Reset edit state
+            setEditingCommentId(null);
+            setEditContent("");
+
+            // Refresh comments from server
+            const updatedComments = await getComments(gameId);
+            setComments(updatedComments);
+        } catch (error) {
+            console.error("Error updating comment:", error);
+        }
+    };
+
+    // Open delete confirmation modal
+    const openDeleteModal = (commentId: number) => {
+        setCommentToDelete(commentId);
+        setIsModalOpen(true);
+    };
+
+    // Close modal
+    const closeModal = () => {
+        setIsModalOpen(false);
+        setCommentToDelete(null);
+    };
+
+    // Delete a comment
+    const confirmDeleteComment = async () => {
+        if (commentToDelete === null) return;
+
+        try {
+            await deleteComment(gameId, commentToDelete);
+
+            // Update UI
+            setComments(
+                comments.filter(
+                    (comment) => comment.comment_id !== commentToDelete
+                )
+            );
+
+            // Close modal
+            closeModal();
+
+            // Refresh comments from server
+            const updatedComments = await getComments(gameId);
+            setComments(updatedComments);
+        } catch (error) {
+            console.error("Error deleting comment:", error);
+            closeModal();
+        }
+    };
+
     // Handle send message
     const handleSendMessage = async () => {
         if (currentMessage.trim() === "") return;
@@ -76,11 +180,11 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId = 1 }) => {
             const newComment: Comment = {
                 comment_id: Date.now(), // 임시 ID
                 user_id: -1, // 임시 사용자 ID
+                name: userProfile?.nickname || "나",
                 content: currentMessage,
                 created_at: new Date().toISOString().split("T")[0],
                 updated_at: new Date().toISOString().split("T")[0],
-                delete_at: null,
-                nickname: userProfile?.nickname || "나",
+                deleted_at: null,
             };
 
             setComments([...comments, newComment]);
@@ -97,7 +201,11 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId = 1 }) => {
     // Handle key press (Enter to send)
     const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Enter") {
-            handleSendMessage();
+            if (editingCommentId) {
+                handleSaveEdit(editingCommentId);
+            } else {
+                handleSendMessage();
+            }
         }
     };
 
@@ -109,16 +217,11 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId = 1 }) => {
         return username;
     };
 
-    // Find nickname for user_id (in a real app, you'd fetch this from the API)
-    const getNickname = (userId: number) => {
-        // 이 부분은 실제 구현에서는 사용자 정보를 API에서 가져오거나
-        // 댓글 API 응답에 사용자 정보가 포함되도록 수정하는 것이 좋습니다.
-        const userMap: Record<number, string> = {
-            1: "ivan",
-            5: "mona",
-        };
-
-        return userMap[userId] || `user${userId}`;
+    // Check if the comment belongs to current user (simplified for demo)
+    const isOwnComment = (comment: Comment) => {
+        // In a real app, you would compare with the logged-in user's ID
+        // return userProfile?.nickname === comment.name || comment.user_id === -1;
+        return true;
     };
 
     if (loading) {
@@ -154,18 +257,132 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId = 1 }) => {
                                 <div className="flex flex-1">
                                     <div className="w-20 min-w-20 mr-2">
                                         <span className="font-medium text-gray-800 truncate block text-xs">
-                                            {formatUsername(
-                                                comment.nickname ||
-                                                    getNickname(comment.user_id)
-                                            )}
+                                            {formatUsername(comment.name)}
                                         </span>
                                     </div>
                                     <span className="text-gray-400 mr-2 text-xs">
                                         |
                                     </span>
-                                    <span className="text-gray-600 flex-1 break-words text-xs">
-                                        {comment.content}
-                                    </span>
+                                    {editingCommentId === comment.comment_id ? (
+                                        <div className="flex-1">
+                                            <input
+                                                type="text"
+                                                className="w-full p-1 text-xs border rounded"
+                                                value={editContent}
+                                                onChange={handleEditInputChange}
+                                                onKeyPress={handleKeyPress}
+                                                autoFocus
+                                            />
+                                        </div>
+                                    ) : (
+                                        <span className="text-gray-600 flex-1 break-words text-xs">
+                                            {comment.content}
+                                        </span>
+                                    )}
+
+                                    {/* Edit and Delete buttons for user's own comments */}
+                                    {isOwnComment(comment) && (
+                                        <div className="flex ml-2">
+                                            {editingCommentId ===
+                                            comment.comment_id ? (
+                                                <>
+                                                    <button
+                                                        className="text-green-500 px-1"
+                                                        onClick={() =>
+                                                            handleSaveEdit(
+                                                                comment.comment_id
+                                                            )
+                                                        }
+                                                    >
+                                                        <svg
+                                                            xmlns="http://www.w3.org/2000/svg"
+                                                            className="h-4 w-4"
+                                                            fill="none"
+                                                            viewBox="0 0 24 24"
+                                                            stroke="currentColor"
+                                                        >
+                                                            <path
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                                strokeWidth={2}
+                                                                d="M5 13l4 4L19 7"
+                                                            />
+                                                        </svg>
+                                                    </button>
+                                                    <button
+                                                        className="text-red-500 px-1"
+                                                        onClick={
+                                                            handleCancelEdit
+                                                        }
+                                                    >
+                                                        <svg
+                                                            xmlns="http://www.w3.org/2000/svg"
+                                                            className="h-4 w-4"
+                                                            fill="none"
+                                                            viewBox="0 0 24 24"
+                                                            stroke="currentColor"
+                                                        >
+                                                            <path
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                                strokeWidth={2}
+                                                                d="M6 18L18 6M6 6l12 12"
+                                                            />
+                                                        </svg>
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <button
+                                                        className="text-gray-400 px-1"
+                                                        onClick={() =>
+                                                            handleStartEdit(
+                                                                comment
+                                                            )
+                                                        }
+                                                    >
+                                                        <svg
+                                                            xmlns="http://www.w3.org/2000/svg"
+                                                            className="h-4 w-4"
+                                                            fill="none"
+                                                            viewBox="0 0 24 24"
+                                                            stroke="currentColor"
+                                                        >
+                                                            <path
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                                strokeWidth={2}
+                                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                                            />
+                                                        </svg>
+                                                    </button>
+                                                    <button
+                                                        className="text-gray-400 px-1"
+                                                        onClick={() =>
+                                                            openDeleteModal(
+                                                                comment.comment_id
+                                                            )
+                                                        }
+                                                    >
+                                                        <svg
+                                                            xmlns="http://www.w3.org/2000/svg"
+                                                            className="h-4 w-4"
+                                                            fill="none"
+                                                            viewBox="0 0 24 24"
+                                                            stroke="currentColor"
+                                                        >
+                                                            <path
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                                strokeWidth={2}
+                                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                                            />
+                                                        </svg>
+                                                    </button>
+                                                </>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -210,6 +427,17 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId = 1 }) => {
                     </button>
                 </div>
             </div>
+
+            {/* Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={isModalOpen}
+                title="댓글 삭제"
+                message="이 댓글을 정말 삭제하시겠습니까?"
+                confirmButtonText="삭제"
+                cancelButtonText="취소"
+                onConfirm={confirmDeleteComment}
+                onCancel={closeModal}
+            />
         </div>
     );
 };
