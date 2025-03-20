@@ -1,107 +1,84 @@
 import React, { useState, useEffect } from "react";
 import Header from "../components/Header";
 import FilterModal, { FilterOptions } from "../components/FilterModal";
-import { useNavigate, useSearchParams } from "react-router-dom"; // Import for navigation
+import { useNavigate, useSearchParams } from "react-router-dom";
+import {
+    searchGames,
+    Game,
+    convertFiltersToParams,
+} from "../services/searchService";
+import { getAllCategories } from "../services/categoryService";
 
-interface Game {
-    id: string;
-    title: string;
-    price: number;
-    discountedPrice?: number;
-    imageUrl: string;
-    categories?: string[];
-    rating?: number;
-    playerCount?: string; // Changed to string to match FilterModal
-    currentPlayers?: number;
-}
-
-interface SearchPageProps {
-    // Add any props if needed
-}
-
-const SearchPage: React.FC<SearchPageProps> = () => {
-    const navigate = useNavigate(); // Initialize navigate hook
+const SearchPage: React.FC = () => {
+    const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const [searchQuery, setSearchQuery] = useState<string>(
         searchParams.get("query") || ""
     );
     const [games, setGames] = useState<Game[]>([]);
+    const [loading, setLoading] = useState<boolean>(false);
+    const [error, setError] = useState<string | null>(null);
     const [discountFilter, setDiscountFilter] = useState<boolean>(false);
     const [recommendedFilter, setRecommendedFilter] = useState<boolean>(false);
     const [isFilterModalOpen, setIsFilterModalOpen] = useState<boolean>(false);
     const [activeFilters, setActiveFilters] = useState<FilterOptions | null>(
         null
     );
+    const [categories, setCategories] = useState<
+        { id: number; name: string }[]
+    >([]);
+    const [categoriesLoading, setCategoriesLoading] = useState<boolean>(true);
 
-    // Mock data for games
+    // Fetch categories when component mounts
     useEffect(() => {
-        // This would normally come from an API
-        const mockGames: Game[] = [
-            {
-                id: "stardew-valley",
-                title: "Stardew Valley",
-                price: 16000,
-                imageUrl: "/game-placeholder.jpg",
-                categories: ["시뮬레이션", "힐링", "캐주얼"],
-                rating: 5,
-                playerCount: "멀티 플레이어", // Changed to string
-                currentPlayers: 500000,
-            },
-            {
-                id: "balatro",
-                title: "Balatro",
-                price: 16500,
-                discountedPrice: 14020,
-                imageUrl: "/game-placeholder.jpg",
-                categories: ["카드", "전략"],
-                rating: 4,
-                playerCount: "싱글 플레이어", // Changed to string
-                currentPlayers: 75000,
-            },
-            {
-                id: "cyberpunk-2077",
-                title: "Cyberfunk 2077",
-                price: 66000,
-                imageUrl: "/game-placeholder.jpg",
-                categories: ["오픈 월드", "액션", "어드벤처"],
-                rating: 4,
-                playerCount: "싱글 플레이어", // Changed to string
-                currentPlayers: 150000,
-            },
-            {
-                id: "hogwarts-legacy",
-                title: "Hogwarts Legacy",
-                price: 79800,
-                imageUrl: "/game-placeholder.jpg",
-                categories: ["어드벤처", "오픈 월드", "액션"],
-                rating: 4,
-                playerCount: "싱글 플레이어", // Changed to string
-                currentPlayers: 90000,
-            },
-            {
-                id: "dave-driver",
-                title: "Dave the Driver",
-                price: 24000,
-                imageUrl: "/game-placeholder.jpg",
-                categories: ["시뮬레이션", "캐주얼"],
-                rating: 3,
-                playerCount: "싱글 플레이어", // Changed to string
-                currentPlayers: 5000,
-            },
-            {
-                id: "gta-v",
-                title: "Grand Theft Auto V",
-                price: 33000,
-                imageUrl: "/game-placeholder.jpg",
-                categories: ["오픈 월드", "액션", "온라인 멀티"],
-                rating: 5,
-                playerCount: "멀티 플레이어", // Changed to string
-                currentPlayers: 1000000,
-            },
-        ];
+        const fetchCategories = async () => {
+            try {
+                setCategoriesLoading(true);
+                const categoryData = await getAllCategories();
+                setCategories(categoryData);
+            } catch (err) {
+                console.error("Error fetching categories:", err);
+            } finally {
+                setCategoriesLoading(false);
+            }
+        };
 
-        setGames(mockGames);
+        fetchCategories();
     }, []);
+
+    // Fetch games based on current filters and search query
+    const fetchGames = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            // Determine the mode based on which filter is active
+            let mode: "discount" | "recommended" | "default" = "default";
+            if (discountFilter) mode = "discount";
+            if (recommendedFilter) mode = "recommended";
+
+            // Convert filters to search parameters
+            const searchParams = convertFiltersToParams(
+                activeFilters,
+                searchQuery,
+                mode
+            );
+
+            // Fetch games with the search parameters
+            const gameResults = await searchGames(searchParams);
+            setGames(gameResults);
+        } catch (error) {
+            console.error("Error fetching games:", error);
+            setError("게임 목록을 불러오는 데 실패했습니다.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Fetch games when component mounts or filters change
+    useEffect(() => {
+        fetchGames();
+    }, [searchQuery, activeFilters, discountFilter, recommendedFilter]);
 
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearchQuery(e.target.value);
@@ -109,8 +86,7 @@ const SearchPage: React.FC<SearchPageProps> = () => {
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        // In a real app, this would trigger a search API call
-        console.log(`Searching for: ${searchQuery}`);
+        fetchGames();
     };
 
     const toggleDiscountFilter = () => {
@@ -133,95 +109,32 @@ const SearchPage: React.FC<SearchPageProps> = () => {
 
     const handleApplyFilters = (filters: FilterOptions) => {
         setActiveFilters(filters);
-        console.log("Applied filters:", filters);
     };
 
-    // Navigate to game detail page
-    const handleGameClick = (gameId: string) => {
-        // Navigate to the detail page with the game ID
-        navigate(`/detail/`);
-        // navigate(`/detail/${gameId}`);
+    // Navigate to game detail page with category ID if available
+    const handleGameClick = (gameId: number) => {
+        navigate(`/detail/${gameId}`);
     };
 
-    // Function to parse player count range
-    const parsePlayerCountRange = (range: string): [number, number] => {
-        const numbers = range.replace(/[^0-9~]/g, "").split("~");
-        const start = parseInt(numbers[0]) || 0;
-        const end = numbers[1] ? parseInt(numbers[1]) : Number.MAX_SAFE_INTEGER;
-        return [start, end];
+    // Navigate to search with category ID
+    const handleCategoryClick = (categoryId: number, categoryName: string) => {
+        // Update to match the new FilterOptions interface with null values for player options
+        const newFilters: FilterOptions = {
+            categories: [categoryName],
+            categoryIds: [categoryId],
+            rating: 4,
+            priceRange: [0, 100000],
+            playerCount: null, // Changed from string to null to match updated interface
+            currentPlayerCount: null, // Changed from string to null to match updated interface
+        };
+        setActiveFilters(newFilters);
     };
 
-    // Filter games based on search query, active filters, and other filter buttons
-    const filteredGames = games.filter((game) => {
-        const matchesSearch = game.title
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase());
-
-        let matchesDiscountFilter = true;
-        if (discountFilter) {
-            matchesDiscountFilter = game.discountedPrice !== undefined;
-        }
-
-        // In a real app, you would implement recommendation logic
-        let matchesRecommendedFilter = true;
-        if (recommendedFilter) {
-            // For this demo, we'll consider games with rating >= 4 as recommended
-            matchesRecommendedFilter = (game.rating || 0) >= 4;
-        }
-
-        // Check if game matches active filters
-        let matchesActiveFilters = true;
-        if (activeFilters) {
-            // Filter by categories if any selected
-            if (activeFilters.categories.length > 0) {
-                matchesActiveFilters = activeFilters.categories.some(
-                    (category) => game.categories?.includes(category)
-                );
-            }
-
-            // Filter by rating
-            if (matchesActiveFilters && game.rating !== undefined) {
-                matchesActiveFilters = game.rating >= activeFilters.rating;
-            }
-
-            // Filter by price range
-            if (matchesActiveFilters) {
-                const [minPrice, maxPrice] = activeFilters.priceRange;
-                const gamePrice =
-                    game.discountedPrice !== undefined
-                        ? game.discountedPrice
-                        : game.price;
-                matchesActiveFilters =
-                    gamePrice >= minPrice && gamePrice <= maxPrice;
-            }
-
-            // Filter by player type (changed from player count)
-            if (matchesActiveFilters && game.playerCount !== undefined) {
-                matchesActiveFilters =
-                    game.playerCount === activeFilters.playerCount;
-            }
-
-            // Filter by current player count
-            if (matchesActiveFilters && game.currentPlayers !== undefined) {
-                const [minPlayers, maxPlayers] = parsePlayerCountRange(
-                    activeFilters.currentPlayerCount
-                );
-                matchesActiveFilters =
-                    game.currentPlayers >= minPlayers &&
-                    game.currentPlayers <= maxPlayers;
-            }
-        }
-
-        return (
-            matchesSearch &&
-            matchesDiscountFilter &&
-            matchesRecommendedFilter &&
-            matchesActiveFilters
-        );
-    });
-
-    // Format price with commas
+    // Format price with commas (in Korean Won)
     const formatPrice = (price: number) => {
+        if (price === 0) {
+            return "무료";
+        }
         return `₩${price.toLocaleString()}`;
     };
 
@@ -231,9 +144,9 @@ const SearchPage: React.FC<SearchPageProps> = () => {
                 className="relative bg-white"
                 style={{
                     width: "402px",
-                    height: "auto", // 높이를 자동으로 조정하여 스크롤 가능하게 함
+                    height: "auto",
                     maxWidth: "100vw",
-                    minHeight: "100vh", // 최소 높이를 뷰포트 높이로 설정
+                    minHeight: "100vh",
                 }}
             >
                 {/* Fixed Header */}
@@ -288,6 +201,18 @@ const SearchPage: React.FC<SearchPageProps> = () => {
                                 </div>
                             )}
 
+                            {activeFilters &&
+                                activeFilters.categories.length > 0 && (
+                                    <div className="mb-4">
+                                        <p className="text-sm text-gray-600">
+                                            CATEGORIES:{" "}
+                                            {activeFilters.categories.join(
+                                                ", "
+                                            )}
+                                        </p>
+                                    </div>
+                                )}
+
                             <div className="flex items-center mb-4">
                                 <div className="flex space-x-2">
                                     <button
@@ -341,77 +266,72 @@ const SearchPage: React.FC<SearchPageProps> = () => {
 
                         {/* Game Results List */}
                         <div className="flex-1 overflow-y-auto px-4">
-                            <div className="space-y-4 pb-6">
-                                {filteredGames.length > 0 ? (
-                                    filteredGames.map((game) => (
-                                        <div
-                                            key={game.id}
-                                            className="flex cursor-pointer"
-                                            onClick={() =>
-                                                handleGameClick(game.id)
-                                            }
-                                        >
-                                            <div className="w-32 h-32 bg-gray-200 flex-shrink-0 rounded-md"></div>
-                                            <div className="flex-1 ml-4 flex flex-col justify-between">
-                                                <div>
-                                                    <h3 className="font-medium text-lg">
-                                                        {game.title}
-                                                    </h3>
-                                                    {game.categories && (
-                                                        <div className="flex flex-wrap mt-1">
-                                                            {game.categories
-                                                                .slice(0, 3)
-                                                                .map(
-                                                                    (
-                                                                        category,
-                                                                        idx
-                                                                    ) => (
-                                                                        <span
-                                                                            key={
-                                                                                idx
-                                                                            }
-                                                                            className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-md mr-1 mb-1"
-                                                                        >
-                                                                            {
-                                                                                category
-                                                                            }
-                                                                        </span>
-                                                                    )
-                                                                )}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <div className="self-end">
-                                                    {game.discountedPrice ? (
-                                                        <div className="flex flex-col items-end">
-                                                            <span className="text-orange-500 font-medium">
-                                                                {formatPrice(
-                                                                    game.discountedPrice
-                                                                )}
-                                                            </span>
-                                                            <span className="text-gray-500 line-through text-sm">
+                            {loading ? (
+                                <div className="py-8 text-center text-gray-500">
+                                    게임을 불러오는 중입니다...
+                                </div>
+                            ) : error ? (
+                                <div className="py-8 text-center text-red-500">
+                                    {error}
+                                </div>
+                            ) : (
+                                <div className="space-y-4 pb-6">
+                                    {games.length > 0 ? (
+                                        games.map((game) => (
+                                            <div
+                                                key={game.game_id}
+                                                className="flex cursor-pointer"
+                                                onClick={() =>
+                                                    handleGameClick(
+                                                        game.game_id
+                                                    )
+                                                }
+                                            >
+                                                <div
+                                                    className="w-40 h-24 bg-gray-200 flex-shrink-0 rounded-md bg-cover bg-center"
+                                                    style={{
+                                                        backgroundImage: `url(${game.thumbnail})`,
+                                                    }}
+                                                ></div>
+                                                <div className="flex-1 ml-4 flex flex-col justify-between">
+                                                    <div>
+                                                        <h3 className="font-medium text-medium">
+                                                            {game.title}
+                                                        </h3>
+                                                    </div>
+                                                    <div className="self-end">
+                                                        {game.lowest_price <
+                                                        game.price ? (
+                                                            <div className="flex flex-col items-end">
+                                                                <span className="text-orange-500 font-medium">
+                                                                    {formatPrice(
+                                                                        game.lowest_price
+                                                                    )}
+                                                                </span>
+                                                                <span className="text-gray-500 line-through text-sm">
+                                                                    {formatPrice(
+                                                                        game.price
+                                                                    )}
+                                                                </span>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="text-right font-medium">
                                                                 {formatPrice(
                                                                     game.price
                                                                 )}
-                                                            </span>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="text-right font-medium">
-                                                            {formatPrice(
-                                                                game.price
-                                                            )}
-                                                        </div>
-                                                    )}
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
+                                        ))
+                                    ) : (
+                                        <div className="py-8 text-center text-gray-500">
+                                            해당 검색결과가 없습니다.
                                         </div>
-                                    ))
-                                ) : (
-                                    <div className="py-8 text-center text-gray-500">
-                                        해당 검색결과가 없습니다.
-                                    </div>
-                                )}
-                            </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -423,6 +343,8 @@ const SearchPage: React.FC<SearchPageProps> = () => {
                 onClose={toggleFilterModal}
                 onApply={handleApplyFilters}
                 initialFilters={activeFilters || undefined}
+                categories={categories}
+                categoriesLoading={categoriesLoading}
             />
         </div>
     );
