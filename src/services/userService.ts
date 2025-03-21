@@ -1,13 +1,18 @@
 import api from "../api/config";
 
+interface Category {
+    id: number;
+    name: string;
+}
+
 interface ProfileResponse {
     message: string;
     data: {
         nickname: string;
         discord_link: string;
+        categories: Category[]; // Updated to match the new response format
     };
 }
-
 interface DuplicationResponse {
     message: string;
     duplication: boolean;
@@ -57,12 +62,14 @@ export const checkDiscordLinkDuplication = async (
 // 프로필 정보 업데이트
 export const updateUserProfile = async (
     nickname: string,
-    discordLink: string
+    discordLink: string,
+    categoryIds: number[] // We'll still pass category IDs for the request
 ): Promise<any> => {
     try {
-        const response = await api.put("/users/profile", {
+        const response = await api.patch("/users/profile", {
             nickname,
-            discord_link: discordLink,
+            discord: discordLink,
+            category: categoryIds, // API expects category IDs in the request
         });
         return response.data;
     } catch (error) {

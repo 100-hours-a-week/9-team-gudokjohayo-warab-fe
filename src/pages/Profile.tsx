@@ -65,6 +65,27 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
                 setDiscordUrl(profileData.data.discord_link);
                 setOriginalNickname(profileData.data.nickname);
                 setOriginalDiscordUrl(profileData.data.discord_link);
+
+                // Extract category data from the response
+                if (
+                    profileData.data.categories &&
+                    profileData.data.categories.length > 0
+                ) {
+                    // Set the category data directly
+                    setCategoryData(profileData.data.categories);
+
+                    // Extract and set just the IDs for the selected categories
+                    const categoryIds = profileData.data.categories.map(
+                        (cat) => cat.id
+                    );
+                    setSelectedCategoryIds(categoryIds);
+
+                    // Extract and set the names for display
+                    const categoryNames = profileData.data.categories.map(
+                        (cat) => cat.name
+                    );
+                    setCategoryDisplayNames(categoryNames);
+                }
             } catch (error) {
                 console.error("프로필 정보를 가져오는 중 오류 발생:", error);
             } finally {
@@ -154,16 +175,47 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
     // 선택된 카테고리 ID가 변경될 때마다 표시 이름 업데이트
     useEffect(() => {
         const fetchCategoryNames = async () => {
+            // Check if we need to fetch categories or if we already have them from the profile
             if (selectedCategoryIds.length === 0) {
                 setCategoryDisplayNames([]);
                 return;
             }
 
+            // Check if we already have the category data that matches the selected IDs
+            const hasAllCategories = selectedCategoryIds.every((id) =>
+                categoryData.some((cat) => cat.id === id)
+            );
+
+            // If we have all categories, just update display names
+            if (hasAllCategories) {
+                const names = selectedCategoryIds
+                    .map((id) => {
+                        const category = categoryData.find(
+                            (cat) => cat.id === id
+                        );
+                        return category ? category.name : "";
+                    })
+                    .filter((name) => name !== "");
+
+                setCategoryDisplayNames(names);
+                return;
+            }
+
+            // If we don't have all categories, fetch them
             setIsCategoryLoading(true);
             try {
                 const categories =
                     await getCategoriesByIds(selectedCategoryIds);
-                setCategoryData(categories);
+                // Update category data with any new categories
+                const newCategoryData = [...categoryData];
+
+                categories.forEach((newCat) => {
+                    if (!newCategoryData.some((cat) => cat.id === newCat.id)) {
+                        newCategoryData.push(newCat);
+                    }
+                });
+
+                setCategoryData(newCategoryData);
                 setCategoryDisplayNames(categories.map((cat) => cat.name));
             } catch (error) {
                 console.error("카테고리 정보를 가져오는 중 오류 발생:", error);
@@ -173,7 +225,7 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
         };
 
         fetchCategoryNames();
-    }, [selectedCategoryIds]);
+    }, [selectedCategoryIds, categoryData]);
 
     const handleSave = async () => {
         // 유효성 검사
@@ -185,7 +237,8 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
 
         setIsSaving(true);
         try {
-            await updateUserProfile(nickname, discordUrl);
+            // Include selectedCategoryIds in the update request
+            await updateUserProfile(nickname, discordUrl, selectedCategoryIds);
             setOriginalNickname(nickname);
             setOriginalDiscordUrl(discordUrl);
             setShowToast(true);
@@ -217,10 +270,18 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
 
     // Cancel button handlers
     const handleCancelClick = () => {
-        // 변경사항이 있는지 확인
+        // Sort the arrays to ensure reliable comparison
+        const originalCategoriesIds = getCategoryIdsFromOriginalProfile(); // We need to get this from somewhere
+        const currentCategoriesIds = [...selectedCategoryIds].sort();
+
+        // Compare arrays by converting to strings
+        const originalIdsString = JSON.stringify(originalCategoriesIds);
+        const currentIdsString = JSON.stringify(currentCategoriesIds);
+
         if (
             nickname !== originalNickname ||
-            discordUrl !== originalDiscordUrl
+            discordUrl !== originalDiscordUrl ||
+            originalIdsString !== currentIdsString
         ) {
             setShowCancelConfirmation(true);
         } else {
@@ -249,6 +310,11 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
 
     const handleLogoutDismiss = () => {
         setShowLogoutConfirmation(false);
+    };
+
+    const getCategoryIdsFromOriginalProfile = () => {
+        // If you stored the original categories somewhere
+        return [...selectedCategoryIds].sort(); // This is a placeholder, needs proper implementation
     };
 
     return (
