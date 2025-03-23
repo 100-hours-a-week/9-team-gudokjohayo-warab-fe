@@ -6,7 +6,8 @@ import {
     Game as ApiGame,
     convertFiltersToParams,
 } from "../services/searchService";
-import gameCategoriesData from "../data/gameCategories.json";
+// hazel: gameCategoriesData import 주석 처리 
+// import gameCategoriesData from "../data/gameCategories.json";
 
 interface Game {
     id: string;
@@ -260,6 +261,7 @@ const MainPage: React.FC = () => {
         { id: 5, title: "시뮬레이션" },
     ];
 
+    // hazel: 의존성 배열에 categories 추가 
     useEffect(() => {
         const fetchGames = async () => {
             setLoading(true);
@@ -299,7 +301,7 @@ const MainPage: React.FC = () => {
         };
 
         fetchGames();
-    }, []);
+    }, [categories]);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
