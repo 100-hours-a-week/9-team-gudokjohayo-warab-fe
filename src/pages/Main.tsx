@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import Header from "../components/Header";
 import { useNavigate } from "react-router-dom";
 import {
@@ -252,14 +252,15 @@ const MainPage: React.FC = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const navigate = useNavigate();
 
+    //hazel useMemo 사용 -> categories 초기 렌더링 시에만 생성 되도록 수정 
     // Define categories
-    const categories = [
+    const categories = useMemo(() => [
         { id: 1, title: "액션" },
         { id: 2, title: "어드벤처" },
         { id: 3, title: "RPG" },
         { id: 4, title: "전략" },
         { id: 5, title: "시뮬레이션" },
-    ];
+    ], []);
 
     // hazel: 의존성 배열에 categories 추가 
     useEffect(() => {
