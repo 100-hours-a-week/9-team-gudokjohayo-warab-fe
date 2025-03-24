@@ -9,6 +9,8 @@ interface PriceInfo {
     store: string;
     logo: string;
     price: number;
+    historicalLowest?: number;
+    historicalLowestDate?: string;
 }
 
 const PriceTab: React.FC<PriceTabProps> = () => {
@@ -19,20 +21,39 @@ const PriceTab: React.FC<PriceTabProps> = () => {
             store: "Epic games",
             logo: "/images/epic-logo.png",
             price: 1330,
+            historicalLowest: 980,
+            historicalLowestDate: "2023-12-25",
         },
         {
             id: "2",
             store: "Steam",
             logo: "/images/steam-logo.png",
             price: 1800,
+            historicalLowest: 1250,
+            historicalLowestDate: "2023-11-20",
         },
         {
             id: "3",
             store: "Epic games",
             logo: "/images/epic-logo.png",
             price: 1990,
+            historicalLowest: 1330,
+            historicalLowestDate: "2024-01-15",
         },
     ]);
+
+    // 전체 최저가 정보
+    const [overallLowestPrice, setOverallLowestPrice] = useState<{
+        current: number;
+        historical: number;
+        store: string;
+        historicalDate: string;
+    }>({
+        current: 0,
+        historical: 0,
+        store: "",
+        historicalDate: "",
+    });
 
     // 가격 정보 API 호출을 위한 함수 (실제 구현에서는 API 호출)
     const fetchPriceInfo = async () => {
@@ -53,11 +74,53 @@ const PriceTab: React.FC<PriceTabProps> = () => {
     useEffect(() => {
         // 컴포넌트 마운트 시 가격 정보 가져오기
         fetchPriceInfo();
-    }, []);
+
+        // 전체 최저가 계산
+        const currentLowest = Math.min(...priceInfo.map((item) => item.price));
+        const historicalLowest = Math.min(
+            ...priceInfo.map((item) => item.historicalLowest || Infinity)
+        );
+
+        const lowestCurrentStore =
+            priceInfo.find((item) => item.price === currentLowest)?.store || "";
+
+        const lowestHistoricalItem = priceInfo.reduce(
+            (prev, current) => {
+                if (!current.historicalLowest) return prev;
+                if (
+                    !prev ||
+                    current.historicalLowest <
+                        (prev.historicalLowest || Infinity)
+                ) {
+                    return current;
+                }
+                return prev;
+            },
+            null as PriceInfo | null
+        );
+
+        setOverallLowestPrice({
+            current: currentLowest,
+            historical: historicalLowest,
+            store: lowestCurrentStore,
+            historicalDate: lowestHistoricalItem?.historicalLowestDate || "",
+        });
+    }, [priceInfo]);
 
     // 가격 포맷 함수 (예: 1800 -> ₩1,800)
     const formatPrice = (price: number) => {
         return `₩${price.toLocaleString()}`;
+    };
+
+    // 날짜 포맷 함수
+    const formatDate = (dateString: string) => {
+        if (!dateString) return "";
+        const date = new Date(dateString);
+        return date.toLocaleDateString("ko-KR", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+        });
     };
 
     // 최저가 확인 함수
@@ -66,40 +129,113 @@ const PriceTab: React.FC<PriceTabProps> = () => {
         return price === lowestPrice;
     };
 
+    // 역대 최저가 대비 현재 가격 비율 계산
+    const calculatePriceRatio = () => {
+        if (overallLowestPrice.historical === 0) return 100;
+        return Math.round(
+            (overallLowestPrice.current / overallLowestPrice.historical) * 100
+        );
+    };
+
+    // 가격 차이 계산
+    const calculatePriceDifference = () => {
+        return overallLowestPrice.current - overallLowestPrice.historical;
+    };
+
     return (
         <div className="flex flex-col h-full bg-white">
-            {/* 가격 비교 헤더 */}
-            <div className="p-3 border-b border-gray-200">
-                <h3 className="text-sm font-medium">
-                    출시일부터 현재까지의 최저가에요.
-                </h3>
-            </div>
+            {/* 역대 최저가 비교 섹션 */}
+            <div className="p-4 border-b border-gray-200">
+                <h3 className="text-sm font-medium mb-3">역대 최저가 비교</h3>
 
-            {/* 가격 정보 시각화 (그래프) */}
-            <div className="p-3 border-b border-gray-200 bg-gray-900">
-                <div className="h-16 w-full relative">
-                    {/* 실제 구현에서는 여기에 그래프가 들어갑니다 */}
-                    <div className="absolute top-0 left-0 right-0 h-full">
-                        <svg
-                            width="100%"
-                            height="100%"
-                            viewBox="0 0 400 60"
-                            preserveAspectRatio="none"
-                        >
-                            <path
-                                d="M0,40 L20,20 L40,40 L60,20 L80,40 L100,20 L120,40 L140,20 L160,40 L180,20 L240,20 L260,40 L280,20 L300,40 L320,20 L340,40 L360,20 L380,40 L400,20"
-                                stroke="#9AE6B4"
-                                strokeWidth="2"
-                                fill="none"
-                            />
-                        </svg>
+                <div className="bg-gray-50 rounded-lg p-4 shadow-sm">
+                    <div className="flex justify-between items-center mb-3">
+                        <div>
+                            <p className="text-xs text-gray-500">역대 최저가</p>
+                            <p className="text-lg font-bold text-green-600">
+                                {formatPrice(overallLowestPrice.historical)}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                                {formatDate(overallLowestPrice.historicalDate)}
+                            </p>
+                        </div>
+                        <div className="flex items-center">
+                            <div className="w-10 h-10 bg-gray-200 flex items-center justify-center rounded-full overflow-hidden">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-6 w-6 text-gray-500"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M13 7l5 5m0 0l-5 5m5-5H6"
+                                    />
+                                </svg>
+                            </div>
+                        </div>
+                        <div className="text-right">
+                            <p className="text-xs text-gray-500">현재 최저가</p>
+                            <p className="text-lg font-bold">
+                                {formatPrice(overallLowestPrice.current)}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                                {overallLowestPrice.store}
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* 가격 비교 바 */}
+                    <div className="mt-4">
+                        <div className="relative pt-1">
+                            <div className="flex items-center justify-between mb-2">
+                                <div>
+                                    <span className="text-xs font-semibold inline-block text-green-600">
+                                        역대가 대비 {calculatePriceRatio()}%
+                                    </span>
+                                </div>
+                                <div>
+                                    <span
+                                        className={`text-xs font-semibold inline-block ${
+                                            calculatePriceDifference() > 0
+                                                ? "text-orange-500"
+                                                : "text-green-600"
+                                        }`}
+                                    >
+                                        {calculatePriceDifference() > 0
+                                            ? "+"
+                                            : ""}
+                                        {formatPrice(
+                                            calculatePriceDifference()
+                                        )}
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="overflow-hidden h-2 text-xs flex rounded bg-gray-200">
+                                <div
+                                    style={{
+                                        width: `${Math.min(100, calculatePriceRatio())}%`,
+                                    }}
+                                    className={`shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center ${
+                                        calculatePriceRatio() <= 110
+                                            ? "bg-green-500"
+                                            : calculatePriceRatio() <= 130
+                                              ? "bg-yellow-500"
+                                              : "bg-orange-500"
+                                    }`}
+                                ></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             {/* 가격 정보 목록 */}
-            <div className="p-3">
-                <p className="text-xs mb-3">
+            <div className="p-4">
+                <p className="text-sm font-medium mb-3">
                     여러 플랫폼에서 현재 구매가능한 가격이에요.
                 </p>
 
@@ -126,20 +262,35 @@ const PriceTab: React.FC<PriceTabProps> = () => {
                                         }}
                                     />
                                 </div>
-                                <span className="text-xs font-medium">
-                                    {item.store}
-                                </span>
+                                <div>
+                                    <span className="text-xs font-medium block">
+                                        {item.store}
+                                    </span>
+                                    {item.historicalLowest && (
+                                        <span className="text-xs text-gray-500 block">
+                                            역대:{" "}
+                                            {formatPrice(item.historicalLowest)}
+                                        </span>
+                                    )}
+                                </div>
                             </div>
-                            <span className="text-xs font-medium">
-                                {formatPrice(item.price)}
-                            </span>
+                            <div className="text-right">
+                                <span className="text-xs font-medium block">
+                                    {formatPrice(item.price)}
+                                </span>
+                                {item.price === item.historicalLowest && (
+                                    <span className="text-xs text-green-600 block">
+                                        역대 최저가!
+                                    </span>
+                                )}
+                            </div>
                         </div>
                     ))}
                 </div>
             </div>
 
             {/* 더 많은 플랫폼 보기 버튼 */}
-            <div className="mt-2 px-3">
+            <div className="mt-2 px-3 pb-4">
                 <button className="w-full py-3 bg-gray-100 text-gray-500 rounded-lg text-xs hover:bg-gray-200 transition">
                     더 많은 플랫폼 보기
                 </button>
