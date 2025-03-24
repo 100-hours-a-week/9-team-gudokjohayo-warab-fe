@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import Header from "../components/Header";
 import PartyFindTab from "../components/PartyFindTab";
 import VideoTab from "../components/VideoTab";
@@ -27,6 +28,7 @@ interface DetailPageProps {
 
 const DetailPage: React.FC<DetailPageProps> = () => {
     // Game details state
+    const { gameId } = useParams<{ gameId: string }>();
     const [gameDetail, setGameDetail] = useState<GameDetail | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
@@ -42,7 +44,8 @@ const DetailPage: React.FC<DetailPageProps> = () => {
         const fetchGameDetails = async () => {
             try {
                 setLoading(true);
-                const data = await getGameDetails("1");
+                // Use the gameId from URL params, fallback to "1" if not available
+                const data = await getGameDetails(gameId || "1");
                 setGameDetail(data);
                 setLoading(false);
             } catch (err) {
@@ -53,7 +56,7 @@ const DetailPage: React.FC<DetailPageProps> = () => {
         };
 
         fetchGameDetails();
-    }, []);
+    }, [gameId]);
 
     const toggleCategoryExpansion = () => {
         setIsCategoryExpanded(!isCategoryExpanded);
