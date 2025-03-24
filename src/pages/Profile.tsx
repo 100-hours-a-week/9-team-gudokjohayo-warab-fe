@@ -46,6 +46,7 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
     const [categoryDisplayNames, setCategoryDisplayNames] = useState<string[]>(
         []
     );
+    //const [categoryData, setCategoryData] = useState<Category[]>([]);
     const [categoryData, setCategoryData] = useState<Category[]>([]);
     const [isCategoryLoading, setIsCategoryLoading] = useState<boolean>(false);
 
@@ -431,7 +432,8 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
                                             선택 하기
                                         </button>
                                     </div>
-                                    {categoryDisplayNames.length == 0 && (
+                                    {/* hazel: '=='를 '==='로 수정 */}
+                                    {categoryDisplayNames.length === 0 && (
                                         <p className="text-xs text-red-500">
                                             *선호 카테고리를 등록하지 않으면
                                             게시 추천 기능이 제한됩니다.
@@ -466,6 +468,20 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
                                     )}
                                 </div>
                             </div>
+
+                            {/* hazel: categoryData 상태 표시  */}
+                            {categoryData.length > 0 && (
+                            <div className="flex flex-wrap mt-4">
+                                {categoryData.map((category) => (
+                                    <div
+                                        key={category.id}
+                                        className="bg-gray-200 rounded-full px-4 py-1 m-1"
+                                    >
+                                        {category.name}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
 
                             <div className="fixed bottom-10 left-1/2 transform -translate-x-1/2 mt-auto flex flex-col">
                                 {/* Logout text with click handler */}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Header from "../components/Header";
 import FilterModal, { FilterOptions } from "../components/FilterModal";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -46,8 +46,9 @@ const SearchPage: React.FC = () => {
         fetchCategories();
     }, []);
 
+    // hazel: useCallback을 사용해서 fetchGames 함수를 메모이제이션
     // Fetch games based on current filters and search query
-    const fetchGames = async () => {
+    const fetchGames = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
@@ -73,12 +74,12 @@ const SearchPage: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [searchQuery, activeFilters, discountFilter, recommendedFilter]);
 
     // Fetch games when component mounts or filters change
     useEffect(() => {
         fetchGames();
-    }, [searchQuery, activeFilters, discountFilter, recommendedFilter]);
+    }, [fetchGames]);
 
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearchQuery(e.target.value);
@@ -116,19 +117,20 @@ const SearchPage: React.FC = () => {
         navigate(`/detail/${gameId}`);
     };
 
-    // Navigate to search with category ID
-    const handleCategoryClick = (categoryId: number, categoryName: string) => {
-        // Update to match the new FilterOptions interface with null values for player options
-        const newFilters: FilterOptions = {
-            categories: [categoryName],
-            categoryIds: [categoryId],
-            rating: 4,
-            priceRange: [0, 100000],
-            playerCount: null, // Changed from string to null to match updated interface
-            currentPlayerCount: null, // Changed from string to null to match updated interface
-        };
-        setActiveFilters(newFilters);
-    };
+    // hazel: handleCategoryClick 함수 주석 처리 
+    // // Navigate to search with category ID
+    // const handleCategoryClick = (categoryId: number, categoryName: string) => {
+    //     // Update to match the new FilterOptions interface with null values for player options
+    //     const newFilters: FilterOptions = {
+    //         categories: [categoryName],
+    //         categoryIds: [categoryId],
+    //         rating: 4,
+    //         priceRange: [0, 100000],
+    //         playerCount: null, // Changed from string to null to match updated interface
+    //         currentPlayerCount: null, // Changed from string to null to match updated interface
+    //     };
+    //     setActiveFilters(newFilters);
+    // };
 
     // Format price with commas (in Korean Won)
     const formatPrice = (price: number) => {
