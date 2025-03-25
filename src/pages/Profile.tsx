@@ -14,8 +14,8 @@ import {
 import { debounce } from "lodash"; // 디바운스 함수를 위해 lodash 가져오기
 
 interface Category {
-    id: number;
-    name: string;
+    category_id: number;
+    category_name: string;
 }
 
 interface ProfilePageProps {
@@ -77,13 +77,13 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
 
                     // Extract and set just the IDs for the selected categories
                     const categoryIds = profileData.data.categories.map(
-                        (cat) => cat.id
+                        (cat) => cat.category_id
                     );
                     setSelectedCategoryIds(categoryIds);
 
                     // Extract and set the names for display
                     const categoryNames = profileData.data.categories.map(
-                        (cat) => cat.name
+                        (cat) => cat.category_name
                     );
                     setCategoryDisplayNames(categoryNames);
                 }
@@ -184,7 +184,7 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
 
             // Check if we already have the category data that matches the selected IDs
             const hasAllCategories = selectedCategoryIds.every((id) =>
-                categoryData.some((cat) => cat.id === id)
+                categoryData.some((cat) => cat.category_id === id)
             );
 
             // If we have all categories, just update display names
@@ -192,9 +192,9 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
                 const names = selectedCategoryIds
                     .map((id) => {
                         const category = categoryData.find(
-                            (cat) => cat.id === id
+                            (cat) => cat.category_id === id
                         );
-                        return category ? category.name : "";
+                        return category ? category.category_name : "";
                     })
                     .filter((name) => name !== "");
 
@@ -211,13 +211,19 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
                 const newCategoryData = [...categoryData];
 
                 categories.forEach((newCat) => {
-                    if (!newCategoryData.some((cat) => cat.id === newCat.id)) {
+                    if (
+                        !newCategoryData.some(
+                            (cat) => cat.category_id === newCat.category_id
+                        )
+                    ) {
                         newCategoryData.push(newCat);
                     }
                 });
 
                 setCategoryData(newCategoryData);
-                setCategoryDisplayNames(categories.map((cat) => cat.name));
+                setCategoryDisplayNames(
+                    categories.map((cat) => cat.category_name)
+                );
             } catch (error) {
                 console.error("카테고리 정보를 가져오는 중 오류 발생:", error);
             } finally {

@@ -1,14 +1,14 @@
 import api from "../api/config";
 
 interface Category {
-    id: number;
-    name: string;
+    category_id: number;
+    category_name: string;
 }
 
 interface CategoryResponse {
     message: string;
     data: {
-        categories: Category[];
+        categorys: Category[];
     };
 }
 
@@ -16,12 +16,12 @@ interface CategoryResponse {
  * Fetch all game categories
  * @returns List of game categories
  */
-export const getAllCategories = async (): Promise<Category[]> => {
+export const getAllCategorys = async (): Promise<Category[]> => {
     try {
-        const response = await api.get<CategoryResponse>("/games/category");
+        const response = await api.get<CategoryResponse>("/category");
 
-        if (response.data.message === "게임 카테고리 목록입니다.") {
-            return response.data.data.categories;
+        if (response.data.message === "category_list_inquiry_success") {
+            return response.data.data.categorys;
         } else {
             throw new Error("Failed to fetch game categories");
         }
@@ -37,11 +37,13 @@ export const getAllCategories = async (): Promise<Category[]> => {
  * @returns Category data or undefined if not found
  */
 export const getCategoryById = async (
-    id: number
+    category_id: number
 ): Promise<Category | undefined> => {
     try {
-        const categories = await getAllCategories();
-        return categories.find((category) => category.id === id);
+        const categories = await getAllCategorys();
+        return categories.find(
+            (category) => category.category_id === category_id
+        );
     } catch (error) {
         console.error("Error getting category by ID:", error);
         throw error;
@@ -57,8 +59,10 @@ export const getCategoriesByIds = async (
     ids: number[]
 ): Promise<Category[]> => {
     try {
-        const categories = await getAllCategories();
-        return categories.filter((category) => ids.includes(category.id));
+        const categories = await getAllCategorys();
+        return categories.filter((category) =>
+            ids.includes(category.category_id)
+        );
     } catch (error) {
         console.error("Error getting categories by IDs:", error);
         throw error;
@@ -72,10 +76,10 @@ export const getCategoriesByIds = async (
  */
 export const searchCategories = async (query: string): Promise<Category[]> => {
     try {
-        const categories = await getAllCategories();
+        const categories = await getAllCategorys();
         const lowercaseQuery = query.toLowerCase();
         return categories.filter((category) =>
-            category.name.toLowerCase().includes(lowercaseQuery)
+            category.category_name.toLowerCase().includes(lowercaseQuery)
         );
     } catch (error) {
         console.error("Error searching categories:", error);

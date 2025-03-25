@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import ToastMessage from "./ToastMessage";
-import { getAllCategories } from "../services/categoryService";
+import { getAllCategorys } from "../services/categoryService";
 
 interface Category {
-    id: number;
-    name: string;
+    category_id: number;
+    category_name: string;
 }
 
 interface CategoryModalProps {
@@ -42,7 +42,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
             setError(null);
 
             try {
-                const categoriesData = await getAllCategories();
+                const categoriesData = await getAllCategorys();
                 setCategories(categoriesData);
             } catch (err) {
                 console.error("Failed to load categories:", err);
@@ -117,12 +117,14 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
                     <div className="flex flex-wrap gap-2 mb-6">
                         {categories.map((category) => (
                             <button
-                                key={category.id}
+                                key={category.category_id}
                                 type="button"
-                                className={getButtonStyle(category.id)}
-                                onClick={() => toggleCategory(category.id)}
+                                className={getButtonStyle(category.category_id)}
+                                onClick={() =>
+                                    toggleCategory(category.category_id)
+                                }
                             >
-                                {category.name}
+                                {category.category_name}
                             </button>
                         ))}
                     </div>

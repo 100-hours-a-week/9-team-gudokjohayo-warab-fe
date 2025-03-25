@@ -10,7 +10,7 @@ interface GameDetail {
     title: string;
     thumbnail: string;
     price: number;
-    discount_price: number;
+    lowest_price: number;
     description: string;
     release_date: string;
     developer: string;
@@ -193,14 +193,24 @@ const DetailPage: React.FC<DetailPageProps> = () => {
                         <div className="flex justify-between items-start mt-2">
                             <div>
                                 <div className="flex items-center space-x-2">
-                                    <span className="text-gray-500 line-through">
-                                        ₩{gameDetail.price.toLocaleString()}
-                                    </span>
-                                    <span className="text-orange-500 font-bold text-xl">
-                                        ₩
-                                        {gameDetail.discount_price.toLocaleString()}
-                                    </span>
-                                    {/* External link icon instead of three dots */}
+                                    {gameDetail.price !==
+                                    gameDetail.lowest_price ? (
+                                        <>
+                                            <span className="text-gray-500 line-through">
+                                                ₩
+                                                {gameDetail.price.toLocaleString()}
+                                            </span>
+                                            <span className="text-orange-500 font-bold text-xl">
+                                                ₩
+                                                {gameDetail.lowest_price.toLocaleString()}
+                                            </span>
+                                        </>
+                                    ) : (
+                                        <span className="text-gray-800 font-bold text-xl">
+                                            ₩{gameDetail.price.toLocaleString()}
+                                        </span>
+                                    )}
+                                    {/* External link icon remains the same */}
                                     <button className="ml-2">
                                         <svg
                                             xmlns="http://www.w3.org/2000/svg"
@@ -222,28 +232,6 @@ const DetailPage: React.FC<DetailPageProps> = () => {
                                             />
                                         </svg>
                                     </button>
-                                </div>
-                                <div className="flex items-center space-x-2 mt-1">
-                                    <svg
-                                        className="h-4 w-4 text-gray-500"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        viewBox="0 0 20 20"
-                                        fill="currentColor"
-                                    >
-                                        <path
-                                            fillRule="evenodd"
-                                            d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                                            clipRule="evenodd"
-                                        />
-                                    </svg>
-                                    <span className="text-sm text-gray-600">
-                                        {getPlayerTypeText(
-                                            gameDetail.player_count
-                                        )}
-                                    </span>
-                                    <div className="text-sm">
-                                        {renderStars(gameDetail.rating)}
-                                    </div>
                                 </div>
                             </div>
                             <div className="text-left text-xs text-gray-500">
@@ -351,7 +339,12 @@ const DetailPage: React.FC<DetailPageProps> = () => {
                             <div className="mt-4 py-4 border-t border-gray-200">
                                 {activeTab === "price-comparison" && (
                                     <div>
-                                        <PriceTab />
+                                        <PriceTab
+                                            currentPrice={gameDetail.price}
+                                            historicalLowestPrice={
+                                                gameDetail.lowest_price
+                                            }
+                                        />
                                     </div>
                                 )}
                                 {activeTab === "find-party" && (
