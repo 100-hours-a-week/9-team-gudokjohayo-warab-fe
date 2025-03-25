@@ -1,5 +1,8 @@
 // import React, { useEffect, useState } from "react";
 
+import React from "react";
+import { kakaoBaseURL } from "../api/config";
+
 interface LoginButtonProps {
     icon: string;
     text: string;
@@ -37,8 +40,10 @@ const LoginPage: React.FC<LoginPageProps> = ({
     logoSrc = `${process.env.PUBLIC_URL}/images/warab_logo.png`,
 }) => {
     const handleKakaoLogin = () => {
-        console.log("Kakao login attempted");
-        // Implement Kakao login logic here
+        const kakaoAuthUrl = `${kakaoBaseURL}/login/oauth2/code/kakao`;
+
+        // 카카오 로그인 페이지로 리다이렉트
+        window.location.href = kakaoAuthUrl;
     };
 
     const handleDiscordLogin = () => {
