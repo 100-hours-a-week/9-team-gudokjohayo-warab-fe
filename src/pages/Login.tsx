@@ -40,7 +40,7 @@ const LoginPage: React.FC<LoginPageProps> = ({
     logoSrc = `${process.env.PUBLIC_URL}/images/warab_logo.png`,
 }) => {
     const handleKakaoLogin = () => {
-        const kakaoAuthUrl = `${kakaoBaseURL}/login/oauth2/code/kakao`;
+        const kakaoAuthUrl = `${kakaoBaseURL}/oauth2/authorization/kakao`;
 
         // 카카오 로그인 페이지로 리다이렉트
         window.location.href = kakaoAuthUrl;
