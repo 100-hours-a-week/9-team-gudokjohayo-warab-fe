@@ -34,7 +34,7 @@ interface LoginPageProps {
 }
 
 const LoginPage: React.FC<LoginPageProps> = ({
-    logoSrc = "/images/warab_logo.png",
+    logoSrc = `${process.env.PUBLIC_URL}/images/warab_logo.png`,
 }) => {
     const handleKakaoLogin = () => {
         console.log("Kakao login attempted");
