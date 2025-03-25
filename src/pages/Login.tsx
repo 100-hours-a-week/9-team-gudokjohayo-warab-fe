@@ -76,7 +76,7 @@ const LoginPage: React.FC<LoginPageProps> = ({
                         {/* Login Buttons Section */}
                         <div className="w-full">
                             <LoginButton
-                                icon="/images/kakao.png"
+                                icon={`${process.env.PUBLIC_URL}/images/kakao.png`}
                                 text="카카오로 3초만에 시작하기"
                                 backgroundColor="#FAE100"
                                 textColor="#3A1D1D"
@@ -84,14 +84,14 @@ const LoginPage: React.FC<LoginPageProps> = ({
                             />
 
                             <LoginButton
-                                icon="/images/discord.png"
+                                icon={`${process.env.PUBLIC_URL}/images/discord.png`}
                                 text="디스코드 계정으로 로그인하기"
                                 backgroundColor="#5F70BE"
                                 onClick={handleDiscordLogin}
                             />
 
                             <LoginButton
-                                icon="/images/steam.png"
+                                icon={`${process.env.PUBLIC_URL}/images/steam.png`}
                                 text="스팀 계정으로 로그인하기"
                                 backgroundColor="#101B38"
                                 onClick={handleSteamLogin}
