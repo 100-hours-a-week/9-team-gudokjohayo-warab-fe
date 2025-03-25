@@ -25,14 +25,14 @@ jobs:
 
       - name: update package.json
         run: |
-          npm pkg set homepage="https://d1o0m970emoglm.cloudfront.net/dev/"
+          npm pkg set homepage="https://d2khgun68ocfq1.cloudfront.net/dev/"
           
       - name: Install dependencies
         run: npm install
 
       - name: Build project
         run: |
-          PUBLIC_URL=https://d1o0m970emoglm.cloudfront.net/dev/ npm run build
+          PUBLIC_URL=https://d2khgun68ocfq1.cloudfront.net/dev/ npm run build
 
       - name: Deploy to S3 (Develop) with correct Content-Type
         run: |
@@ -44,4 +44,4 @@ jobs:
 
       - name: Invalidate CloudFront cache
         run: |
-          aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
+          aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_DEV }} --paths "/*"
