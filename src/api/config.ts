@@ -1,5 +1,8 @@
 import axios from "axios";
 
+export const kakaoBaseURL = "http://localhost:8080";
+
+// "http://localhost:4000/v1/api" 테스트용 주소
 const api = axios.create({
     baseURL: "http://localhost:4000/v1/api", // API 기본 URL
     timeout: 10000, // 요청 제한 시간 (10초)

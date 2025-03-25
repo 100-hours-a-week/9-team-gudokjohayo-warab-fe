@@ -1,27 +1,24 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import Header from "../components/Header";
 import { useNavigate } from "react-router-dom";
-import {
-    searchGames,
-    Game as ApiGame,
-    convertFiltersToParams,
-} from "../services/searchService";
-// hazel: gameCategoriesData import 주석 처리 
-// import gameCategoriesData from "../data/gameCategories.json";
+import api from "../api/config";
 
 interface Game {
-    id: string;
+    game_id: number;
     title: string;
-    thumbnailUrl: string;
-    discountRate?: number;
-    price?: number;
-    lowestPrice?: number;
+    thumbnail: string;
+    price: number;
+    lowest_price: number;
 }
 
-interface GameCategory {
-    id: number;
+interface MainPageSection {
     title: string;
     games: Game[];
+}
+
+interface MainPageResponse {
+    message: string;
+    data: MainPageSection[];
 }
 
 interface GameSliderProps {
@@ -29,7 +26,8 @@ interface GameSliderProps {
     itemsPerView: number;
     autoSlideInterval?: number;
     title?: string;
-    onGameClick: (gameId: string) => void;
+    subtitle?: string;
+    onGameClick: (gameId: number) => void;
 }
 
 const GameSlider: React.FC<GameSliderProps> = ({
@@ -37,6 +35,7 @@ const GameSlider: React.FC<GameSliderProps> = ({
     itemsPerView,
     autoSlideInterval = 5000,
     title,
+    subtitle,
     onGameClick,
 }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -51,8 +50,8 @@ const GameSlider: React.FC<GameSliderProps> = ({
     useEffect(() => {
         if (autoSlideInterval > 0) {
             intervalRef.current = setInterval(() => {
-                setCurrentIndex(
-                    (prevIndex) => (prevIndex >= maxIndex ? 0 : prevIndex + 1) // 항상 1개씩만 이동
+                setCurrentIndex((prevIndex) =>
+                    prevIndex >= maxIndex ? 0 : prevIndex + 1
                 );
             }, autoSlideInterval);
         }
@@ -66,19 +65,18 @@ const GameSlider: React.FC<GameSliderProps> = ({
 
     const handleNext = () => {
         setCurrentIndex((prevIndex) => {
-            const newIndex = prevIndex + 1; // 항상 1개씩만 이동
+            const newIndex = prevIndex + 1;
             return newIndex > maxIndex ? maxIndex : newIndex;
         });
     };
 
     const handlePrev = () => {
         setCurrentIndex((prevIndex) => {
-            const newIndex = prevIndex - 1; // 항상 1개씩만 이동
+            const newIndex = prevIndex - 1;
             return newIndex < 0 ? 0 : newIndex;
         });
     };
 
-    // Handle touch events for swipe
     const handleTouchStart = (e: React.TouchEvent) => {
         setTouchStart(e.targetTouches[0].clientX);
     };
@@ -106,6 +104,15 @@ const GameSlider: React.FC<GameSliderProps> = ({
         setTouchEnd(null);
     };
 
+    const calculateDiscountRate = (game: Game) => {
+        if (game.price > game.lowest_price) {
+            return Math.round(
+                ((game.price - game.lowest_price) / game.price) * 100
+            );
+        }
+        return 0;
+    };
+
     return (
         <div
             className="relative"
@@ -113,7 +120,14 @@ const GameSlider: React.FC<GameSliderProps> = ({
             onMouseLeave={() => setShowControls(false)}
             ref={sliderRef}
         >
-            {title && <h2 className="text-lg font-medium mb-2">{title}</h2>}
+            {(title || subtitle) && (
+                <div className="mb-2">
+                    {title && <h2 className="text-lg font-medium">{title}</h2>}
+                    {subtitle && (
+                        <p className="text-sm text-gray-500">{subtitle}</p>
+                    )}
+                </div>
+            )}
             <div
                 className="relative overflow-hidden"
                 onTouchStart={handleTouchStart}
@@ -123,37 +137,33 @@ const GameSlider: React.FC<GameSliderProps> = ({
                 <div
                     className="flex transition-transform duration-300 ease-in-out"
                     style={{
-                        transform: `translateX(-${currentIndex * (100 / games.length)}%)`, // 개별 아이템 너비에 맞게 이동하도록 수정
+                        transform: `translateX(-${currentIndex * (100 / games.length)}%)`,
                         width: `${(games.length / itemsPerView) * 100}%`,
                     }}
                 >
                     {games.map((game) => (
                         <div
-                            key={game.id}
+                            key={game.game_id}
                             className="flex-shrink-0 cursor-pointer"
                             style={{ width: `${100 / games.length}%` }}
-                            onClick={() => onGameClick(game.id)}
+                            onClick={() => onGameClick(game.game_id)}
                         >
-                            <div className="aspect-w-16 aspect-h-9 bg-gray-200 rounded-md overflow-hidden mx-1">
-                                {/* 게임 썸네일 이미지 추가 */}
+                            <div className="aspect-w-16 aspect-h-9 bg-gray-200 rounded-md overflow-hidden mx-1 relative">
                                 <img
-                                    src={game.thumbnailUrl}
+                                    src={game.thumbnail}
                                     alt={`${game.title} thumbnail`}
                                     className="w-full h-full object-cover"
                                     onError={(e) => {
-                                        // 이미지 로드 실패 시 기본 이미지로 대체
                                         (e.target as HTMLImageElement).src =
                                             "/default-game-image.jpg";
                                     }}
                                 />
-                                {/* 할인율 표시 (있는 경우) */}
-                                {game.discountRate && (
+                                {calculateDiscountRate(game) > 0 && (
                                     <div className="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold p-1 m-1 rounded">
-                                        {game.discountRate}% OFF
+                                        {calculateDiscountRate(game)}% OFF
                                     </div>
                                 )}
                             </div>
-                            {/* 게임 제목 */}
                             <div className="mt-1 px-1 truncate text-sm font-medium">
                                 {game.title}
                             </div>
@@ -161,7 +171,7 @@ const GameSlider: React.FC<GameSliderProps> = ({
                     ))}
                 </div>
 
-                {/* Navigation arrows - only shown on hover */}
+                {/* Navigation arrows */}
                 {showControls && currentIndex > 0 && (
                     <button
                         onClick={handlePrev}
@@ -225,88 +235,37 @@ const GameSlider: React.FC<GameSliderProps> = ({
     );
 };
 
-// Function to convert API game format to component format
-const convertApiGameToComponentGame = (apiGame: ApiGame): Game => {
-    // Calculate discount rate if applicable
-    let discountRate = undefined;
-    if (apiGame.price > apiGame.lowest_price) {
-        discountRate = Math.round(
-            ((apiGame.price - apiGame.lowest_price) / apiGame.price) * 100
-        );
-    }
-
-    return {
-        id: apiGame.game_id.toString(),
-        title: apiGame.title,
-        thumbnailUrl: apiGame.thumbnail,
-        discountRate,
-        price: apiGame.price,
-        lowestPrice: apiGame.lowest_price,
-    };
-};
-
 const MainPage: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState<string>("");
-    const [discountedGames, setDiscountedGames] = useState<Game[]>([]);
-    const [gameCategories, setGameCategories] = useState<GameCategory[]>([]);
+    const [mainPageSections, setMainPageSections] = useState<MainPageSection[]>(
+        []
+    );
     const [loading, setLoading] = useState<boolean>(true);
     const navigate = useNavigate();
 
-    //hazel useMemo 사용 -> categories 초기 렌더링 시에만 생성 되도록 수정 
-    // Define categories
-    const categories = useMemo(() => [
-        { id: 1, title: "액션" },
-        { id: 2, title: "어드벤처" },
-        { id: 3, title: "RPG" },
-        { id: 4, title: "전략" },
-        { id: 5, title: "시뮬레이션" },
-    ], []);
-
-    // hazel: 의존성 배열에 categories 추가 
     useEffect(() => {
-        const fetchGames = async () => {
+        const fetchMainPageData = async () => {
             setLoading(true);
             try {
-                // Fetch discounted games
-                const discountParams = convertFiltersToParams(
-                    {},
-                    "",
-                    "discount"
-                );
-                const discountedApiGames = await searchGames(discountParams);
-                const formattedDiscountedGames = discountedApiGames.map(
-                    convertApiGameToComponentGame
-                );
-                setDiscountedGames(formattedDiscountedGames);
+                const response = await api.get<MainPageResponse>("/games/main");
 
-                // Fetch games for each category
-                const categoryPromises = categories.map(async (category) => {
-                    const categoryParams = convertFiltersToParams({
-                        categoryIds: [category.id],
-                    });
-                    const categoryGames = await searchGames(categoryParams);
-                    return {
-                        id: category.id,
-                        title: category.title,
-                        games: categoryGames.map(convertApiGameToComponentGame),
-                    };
-                });
-
-                const fetchedCategories = await Promise.all(categoryPromises);
-                setGameCategories(fetchedCategories);
+                if (response.data.message === "main_page_inquiry_success") {
+                    setMainPageSections(response.data.data);
+                } else {
+                    throw new Error("Failed to fetch main page data");
+                }
             } catch (error) {
-                console.error("Error fetching games:", error);
+                console.error("Error fetching main page data:", error);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchGames();
-    }, [categories]);
+        fetchMainPageData();
+    }, []);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        // Navigate to search page with query parameter
         if (searchQuery.trim()) {
             navigate(`/search?query=${encodeURIComponent(searchQuery)}`);
         } else {
@@ -314,38 +273,26 @@ const MainPage: React.FC = () => {
         }
     };
 
-    const handleGameClick = (gameId: string) => {
-        // Navigate to game detail page
+    const handleGameClick = (gameId: number) => {
         navigate(`/detail/${gameId}`);
-    };
-
-    const handleCategoryMoreClick = (
-        categoryId: number,
-        categoryTitle: string
-    ) => {
-        // Navigate to search page with category as filter
-        navigate(`/search?category_ids=${categoryId}`);
     };
 
     return (
         <div className="flex items-center justify-center min-h-screen bg-white">
-            {/* 고정 비율 컨테이너 (402*874) */}
             <div
                 className="relative bg-white"
                 style={{
                     width: "402px",
-                    height: "auto", // 높이를 자동으로 조정하여 스크롤 가능하게 함
+                    height: "auto",
                     maxWidth: "100vw",
-                    minHeight: "100vh", // 최소 높이를 뷰포트 높이로 설정
+                    minHeight: "100vh",
                 }}
             >
-                {/* 헤더 고정 */}
                 <div className="sticky top-0 z-10">
                     <Header />
                 </div>
 
                 <div className="flex flex-col">
-                    {/* Search Bar */}
                     <div className="p-4">
                         <form onSubmit={handleSearch}>
                             <div className="relative">
@@ -386,65 +333,21 @@ const MainPage: React.FC = () => {
                             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500"></div>
                         </div>
                     ) : (
-                        <>
-                            {/* Featured Discounted Games - Single Row */}
-                            <div className="px-4 mb-6">
-                                <div className="mb-2">
-                                    <h2 className="text-lg font-medium">
-                                        특가 할인 게임
-                                    </h2>
-                                    <p className="text-sm text-gray-500">
-                                        지금 가장 좋은 가격에 만나보세요
-                                    </p>
+                        <div className="px-4 space-y-8 pb-8">
+                            {mainPageSections.map((section, index) => (
+                                <div key={index} className="space-y-2">
+                                    <GameSlider
+                                        games={section.games}
+                                        itemsPerView={index === 0 ? 1 : 2}
+                                        autoSlideInterval={
+                                            index === 0 ? 5000 : 0
+                                        }
+                                        title={section.title}
+                                        onGameClick={handleGameClick}
+                                    />
                                 </div>
-                                <GameSlider
-                                    games={discountedGames}
-                                    itemsPerView={1}
-                                    autoSlideInterval={5000}
-                                    onGameClick={handleGameClick}
-                                />
-                            </div>
-
-                            {/* Game Category Sections */}
-                            <div className="px-4 space-y-8 pb-8">
-                                {gameCategories.map((category) => (
-                                    <div
-                                        key={category.id}
-                                        className="space-y-2"
-                                    >
-                                        {/* Category title with "더보기" button */}
-                                        <div className="flex justify-between items-center">
-                                            <div>
-                                                <h2 className="text-lg font-medium">
-                                                    {category.title}
-                                                </h2>
-                                                <p className="text-sm text-gray-500">
-                                                    {category.title} 장르를
-                                                    선호하시는군요!
-                                                </p>
-                                            </div>
-                                            <button
-                                                className="text-sm text-gray-500 font-medium"
-                                                onClick={() =>
-                                                    handleCategoryMoreClick(
-                                                        category.id,
-                                                        category.title
-                                                    )
-                                                }
-                                            >
-                                                더보기
-                                            </button>
-                                        </div>
-                                        <GameSlider
-                                            games={category.games}
-                                            itemsPerView={2}
-                                            autoSlideInterval={0} // No auto-slide for category sections
-                                            onGameClick={handleGameClick}
-                                        />
-                                    </div>
-                                ))}
-                            </div>
-                        </>
+                            ))}
+                        </div>
                     )}
                 </div>
             </div>

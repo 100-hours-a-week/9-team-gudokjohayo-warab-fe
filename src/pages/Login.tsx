@@ -1,4 +1,5 @@
-// import React, { useEffect, useState } from "react";
+import React from "react";
+import { kakaoBaseURL } from "../api/config";
 
 interface LoginButtonProps {
     icon: string;
@@ -37,8 +38,11 @@ const LoginPage: React.FC<LoginPageProps> = ({
     logoSrc = "/images/warab_logo.png",
 }) => {
     const handleKakaoLogin = () => {
-        console.log("Kakao login attempted");
-        // Implement Kakao login logic here
+        // Kakao OAuth 로그인 URL 생성
+        const kakaoAuthUrl = `${kakaoBaseURL}/login/oauth2/code/kakao`;
+
+        // 카카오 로그인 페이지로 리다이렉트
+        window.location.href = kakaoAuthUrl;
     };
 
     const handleDiscordLogin = () => {
@@ -57,14 +61,14 @@ const LoginPage: React.FC<LoginPageProps> = ({
                 className="relative bg-white"
                 style={{
                     width: "402px",
-                    height: "auto", // 높이를 자동으로 조정하여 스크롤 가능하게 함
+                    height: "auto",
                     maxWidth: "100vw",
-                    minHeight: "100vh", // 최소 높이를 뷰포트 높이로 설정
+                    minHeight: "100vh",
                 }}
             >
                 <div className="flex-1 flex flex-col items-center justify-center p-6">
                     <div className="w-full max-w-md flex flex-col items-center">
-                        {/* Logo Section - Single Image */}
+                        {/* Logo Section */}
                         <div className="flex flex-col items-center mb-16">
                             <img
                                 src={logoSrc}
