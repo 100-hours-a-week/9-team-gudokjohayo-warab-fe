@@ -7,7 +7,7 @@ import {
     Game,
     convertFiltersToParams,
 } from "../services/searchService";
-import { getAllCategories } from "../services/categoryService";
+import { getAllCategorys } from "../services/categoryService";
 
 const SearchPage: React.FC = () => {
     const navigate = useNavigate();
@@ -24,26 +24,26 @@ const SearchPage: React.FC = () => {
     const [activeFilters, setActiveFilters] = useState<FilterOptions | null>(
         null
     );
-    const [categories, setCategories] = useState<
-        { id: number; name: string }[]
+    const [categorys, setCategorys] = useState<
+        { category_id: number; category_name: string }[]
     >([]);
-    const [categoriesLoading, setCategoriesLoading] = useState<boolean>(true);
+    const [categorysLoading, setCategorysLoading] = useState<boolean>(true);
 
     // Fetch categories when component mounts
     useEffect(() => {
-        const fetchCategories = async () => {
+        const fetchCategorys = async () => {
             try {
-                setCategoriesLoading(true);
-                const categoryData = await getAllCategories();
-                setCategories(categoryData);
+                setCategorysLoading(true);
+                const categoryData = await getAllCategorys();
+                setCategorys(categoryData);
             } catch (err) {
-                console.error("Error fetching categories:", err);
+                console.error("Error fetching categorys:", err);
             } finally {
-                setCategoriesLoading(false);
+                setCategorysLoading(false);
             }
         };
 
-        fetchCategories();
+        fetchCategorys();
     }, []);
 
     // hazel: useCallback을 사용해서 fetchGames 함수를 메모이제이션
@@ -54,8 +54,8 @@ const SearchPage: React.FC = () => {
             setError(null);
 
             // Determine the mode based on which filter is active
-            let mode: "discount" | "recommended" | "default" = "default";
-            if (discountFilter) mode = "discount";
+            let mode: "discounted" | "recommended" | "default" = "default";
+            if (discountFilter) mode = "discounted";
             if (recommendedFilter) mode = "recommended";
 
             // Convert filters to search parameters
@@ -114,10 +114,10 @@ const SearchPage: React.FC = () => {
 
     // Navigate to game detail page with category ID if available
     const handleGameClick = (gameId: number) => {
-        navigate(`/detail/${gameId}`);
+        navigate(`/games/${gameId}`);
     };
 
-    // hazel: handleCategoryClick 함수 주석 처리 
+    // hazel: handleCategoryClick 함수 주석 처리
     // // Navigate to search with category ID
     // const handleCategoryClick = (categoryId: number, categoryName: string) => {
     //     // Update to match the new FilterOptions interface with null values for player options
@@ -345,8 +345,8 @@ const SearchPage: React.FC = () => {
                 onClose={toggleFilterModal}
                 onApply={handleApplyFilters}
                 initialFilters={activeFilters || undefined}
-                categories={categories}
-                categoriesLoading={categoriesLoading}
+                categories={categorys}
+                categoriesLoading={categorysLoading}
             />
         </div>
     );

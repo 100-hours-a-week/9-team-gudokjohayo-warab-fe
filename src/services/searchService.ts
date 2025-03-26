@@ -25,7 +25,7 @@ interface SearchParams {
     playerCount?: string;
     onlinePlayersMin?: number;
     onlinePlayersMax?: number;
-    mode?: "discount" | "recommended" | "default";
+    mode?: "discounted" | "recommended" | "default";
     sort?: string;
     limit?: number;
 }
@@ -82,14 +82,14 @@ const buildQueryString = (params: SearchParams): string => {
         queryParts.push(`mode=${params.mode}`);
     }
 
-    if (params.sort) {
-        queryParts.push(`sort=${params.sort}`);
-    }
+    // if (params.sort) {
+    //     queryParts.push(`sort=${params.sort}`);
+    // }
 
-    if (params.limit) {
-        queryParts.push(`limit=${params.limit}`);
-    }
-
+    // if (params.limit) {
+    //     queryParts.push(`limit=${params.limit}`);
+    // }
+    if (queryParts.length <= 0) queryParts.push("/");
     return queryParts.length > 0 ? `?${queryParts.join("&")}` : "";
 };
 
@@ -103,7 +103,7 @@ export const searchGames = async (params: SearchParams): Promise<Game[]> => {
         const queryString = buildQueryString(params);
         console.log("Search query string:", queryString);
         const response = await api.get<SearchResponseData>(
-            `/games/${queryString}`
+            `/games${queryString}`
         );
 
         if (response.data.message === "game_list_inquiry_success") {
@@ -170,7 +170,7 @@ const getMockGames = (): Game[] => {
 export const convertFiltersToParams = (
     filters: any,
     searchQuery?: string,
-    mode?: "discount" | "recommended" | "default"
+    mode?: "discounted" | "recommended" | "default"
 ): SearchParams => {
     const params: SearchParams = {};
 

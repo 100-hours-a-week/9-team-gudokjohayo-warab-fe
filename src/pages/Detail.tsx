@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import Header from "../components/Header";
 import PartyFindTab from "../components/PartyFindTab";
-import VideoTab from "../components/VideoTab";
+// mvp 기능에서 제외
+// import VideoTab from "../components/VideoTab";
 import PriceTab from "../components/PriceTab";
 import { getGameDetails } from "../services/gameService";
 
@@ -10,7 +11,7 @@ interface GameDetail {
     title: string;
     thumbnail: string;
     price: number;
-    discount_price: number;
+    lowest_price: number;
     description: string;
     release_date: string;
     developer: string;
@@ -100,27 +101,16 @@ const DetailPage: React.FC<DetailPageProps> = () => {
         return stars;
     };
 
-    // Format date from string to desired format (already in the right format in the API response)
-    const formatDate = (dateString: string) => {
-        // Check if the date is already in the desired format (DD MMM, YYYY)
-        if (/\d{1,2} [A-Za-z]{3,}, \d{4}/.test(dateString)) {
-            return dateString.toUpperCase();
-        }
-
-        // Otherwise parse it and format
-        const date = new Date(dateString);
-        return date
-            .toLocaleDateString("en-US", {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-            })
-            .toUpperCase();
-    };
-
     // Handle player count text
     const getPlayerTypeText = (playerCount: string) => {
         return playerCount === "single" ? "싱글" : "멀티";
+    };
+
+    // New utility function to truncate text
+    const truncateText = (text: string, maxLength: number = 10) => {
+        return text.length > maxLength
+            ? `${text.substring(0, maxLength)}...`
+            : text;
     };
 
     if (loading) {
@@ -193,18 +183,28 @@ const DetailPage: React.FC<DetailPageProps> = () => {
                         <div className="flex justify-between items-start mt-2">
                             <div>
                                 <div className="flex items-center space-x-2">
-                                    <span className="text-gray-500 line-through">
-                                        ₩{gameDetail.price.toLocaleString()}
-                                    </span>
-                                    <span className="text-orange-500 font-bold text-xl">
-                                        ₩
-                                        {gameDetail.discount_price.toLocaleString()}
-                                    </span>
-                                    {/* External link icon instead of three dots */}
-                                    <button className="ml-2">
+                                    {gameDetail.price !==
+                                    gameDetail.lowest_price ? (
+                                        <>
+                                            <span className="text-gray-500 line-through">
+                                                ₩
+                                                {gameDetail.price.toLocaleString()}
+                                            </span>
+                                            <span className="text-orange-500 font-bold text-xl">
+                                                ₩
+                                                {gameDetail.lowest_price.toLocaleString()}
+                                            </span>
+                                        </>
+                                    ) : (
+                                        <span className="text-gray-800 font-bold text-xl">
+                                            ₩{gameDetail.price.toLocaleString()}
+                                        </span>
+                                    )}
+                                    {/* External link icon remains the same */}
+                                    <button className="ml-0">
                                         <svg
                                             xmlns="http://www.w3.org/2000/svg"
-                                            className="h-5 w-5 text-gray-500"
+                                            className="h-3 w-3 text-orange-500 -translate-y-1"
                                             viewBox="0 0 24 24"
                                             fill="none"
                                             stroke="currentColor"
@@ -250,19 +250,19 @@ const DetailPage: React.FC<DetailPageProps> = () => {
                                 <div>
                                     Developer:{" "}
                                     <span className="font-medium">
-                                        {gameDetail.developer}
+                                        {truncateText(gameDetail.developer)}
                                     </span>
                                 </div>
                                 <div>
                                     Publisher:{" "}
                                     <span className="font-medium">
-                                        {gameDetail.publisher}
+                                        {truncateText(gameDetail.publisher)}
                                     </span>
                                 </div>
                                 <div>
                                     Released:{" "}
                                     <span className="font-medium">
-                                        {formatDate(gameDetail.release_date)}
+                                        {gameDetail.release_date}
                                     </span>
                                 </div>
                             </div>
@@ -351,7 +351,12 @@ const DetailPage: React.FC<DetailPageProps> = () => {
                             <div className="mt-4 py-4 border-t border-gray-200">
                                 {activeTab === "price-comparison" && (
                                     <div>
-                                        <PriceTab />
+                                        <PriceTab
+                                            currentPrice={gameDetail.price}
+                                            historicalLowestPrice={
+                                                gameDetail.lowest_price
+                                            }
+                                        />
                                     </div>
                                 )}
                                 {activeTab === "find-party" && (
@@ -361,11 +366,11 @@ const DetailPage: React.FC<DetailPageProps> = () => {
                                         </div>
                                     </div>
                                 )}
-                                {activeTab === "related-videos" && (
+                                {/* {activeTab === "related-videos" && (
                                     <div>
                                         <VideoTab />
                                     </div>
-                                )}
+                                )} */}
                             </div>
                         </div>
                     </div>

@@ -6,7 +6,7 @@ interface GameDetailResponse {
         title: string;
         thumbnail: string;
         price: number;
-        discount_price: number;
+        lowest_price: number;
         description: string;
         release_date: string;
         developer: string;

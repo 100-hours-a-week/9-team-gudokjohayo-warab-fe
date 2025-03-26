@@ -1,8 +1,8 @@
 import api from "../api/config";
 
 interface Category {
-    id: number;
-    name: string;
+    category_id: number;
+    category_name: string;
 }
 
 interface ProfileResponse {

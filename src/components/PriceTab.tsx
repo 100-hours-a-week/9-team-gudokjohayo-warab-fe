@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 
 interface PriceTabProps {
-    // Add any props if needed
+    currentPrice: number;
+    historicalLowestPrice: number;
 }
 
 interface PriceInfo {
@@ -13,31 +14,34 @@ interface PriceInfo {
     historicalLowestDate?: string;
 }
 
-const PriceTab: React.FC<PriceTabProps> = () => {
+const PriceTab: React.FC<PriceTabProps> = ({
+    currentPrice,
+    historicalLowestPrice,
+}) => {
     // 가격 정보 데이터
     const [priceInfo] = useState<PriceInfo[]>([
         {
             id: "1",
             store: "Epic games",
             logo: "/images/epic-logo.png",
-            price: 1330,
-            historicalLowest: 980,
+            price: currentPrice,
+            historicalLowest: historicalLowestPrice,
             historicalLowestDate: "2023-12-25",
         },
         {
             id: "2",
             store: "Steam",
             logo: "/images/steam-logo.png",
-            price: 1800,
-            historicalLowest: 1250,
+            price: currentPrice,
+            historicalLowest: historicalLowestPrice,
             historicalLowestDate: "2023-11-20",
         },
         {
             id: "3",
-            store: "Epic games",
-            logo: "/images/epic-logo.png",
-            price: 1990,
-            historicalLowest: 1330,
+            store: "Ubisoft",
+            logo: "/images/ubisoft-logo.png",
+            price: currentPrice,
+            historicalLowest: historicalLowestPrice,
             historicalLowestDate: "2024-01-15",
         },
     ]);
@@ -58,11 +62,6 @@ const PriceTab: React.FC<PriceTabProps> = () => {
     // 가격 정보 API 호출을 위한 함수 (실제 구현에서는 API 호출)
     const fetchPriceInfo = async () => {
         try {
-            // 실제 구현에서는 API에서 가격 정보를 가져옴
-            // const response = await fetch('your-api-endpoint');
-            // const data = await response.json();
-            // setPriceInfo(data);
-
             console.log(
                 "가격 정보를 API에서 가져오는 로직이 여기에 들어갑니다"
             );
@@ -213,20 +212,6 @@ const PriceTab: React.FC<PriceTabProps> = () => {
                                         )}
                                     </span>
                                 </div>
-                            </div>
-                            <div className="overflow-hidden h-2 text-xs flex rounded bg-gray-200">
-                                <div
-                                    style={{
-                                        width: `${Math.min(100, calculatePriceRatio())}%`,
-                                    }}
-                                    className={`shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center ${
-                                        calculatePriceRatio() <= 110
-                                            ? "bg-green-500"
-                                            : calculatePriceRatio() <= 130
-                                              ? "bg-yellow-500"
-                                              : "bg-orange-500"
-                                    }`}
-                                ></div>
                             </div>
                         </div>
                     </div>

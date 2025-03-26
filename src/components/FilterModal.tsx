@@ -6,7 +6,7 @@ interface FilterModalProps {
     onClose: () => void;
     onApply: (filters: FilterOptions) => void;
     initialFilters?: FilterOptions;
-    categories: { id: number; name: string }[];
+    categories: { category_id: number; category_name: string }[];
     categoriesLoading: boolean;
 }
 
@@ -301,19 +301,19 @@ const FilterModal: React.FC<FilterModalProps> = ({
                                 <div className="flex flex-wrap gap-2">
                                     {categories.map((category) => (
                                         <button
-                                            key={category.id}
+                                            key={category.category_id}
                                             type="button"
                                             className={getCategoryButtonStyle(
-                                                category.name
+                                                category.category_name
                                             )}
                                             onClick={() =>
                                                 toggleCategory(
-                                                    category.name,
-                                                    category.id
+                                                    category.category_name,
+                                                    category.category_id
                                                 )
                                             }
                                         >
-                                            {category.name}
+                                            {category.category_name}
                                         </button>
                                     ))}
                                 </div>
