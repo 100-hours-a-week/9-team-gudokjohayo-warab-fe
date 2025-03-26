@@ -18,7 +18,7 @@ interface CategoryResponse {
  */
 export const getAllCategorys = async (): Promise<Category[]> => {
     try {
-        const response = await api.get<CategoryResponse>("/category");
+        const response = await api.get<CategoryResponse>("/games/category");
 
         if (response.data.message === "category_list_inquiry_success") {
             return response.data.data.categorys;

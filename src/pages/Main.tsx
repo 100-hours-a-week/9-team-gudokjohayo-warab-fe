@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Header from "../components/Header";
 import { useNavigate } from "react-router-dom";
 import api from "../api/config";
@@ -18,7 +18,9 @@ interface MainPageSection {
 
 interface MainPageResponse {
     message: string;
-    data: MainPageSection[];
+    data: {
+        games: MainPageSection[];
+    };
 }
 
 interface GameSliderProps {
@@ -250,7 +252,8 @@ const MainPage: React.FC = () => {
                 const response = await api.get<MainPageResponse>("/games/main");
 
                 if (response.data.message === "main_page_inquiry_success") {
-                    setMainPageSections(response.data.data);
+                    console.log(response.data.data.games);
+                    setMainPageSections(response.data.data.games);
                 } else {
                     throw new Error("Failed to fetch main page data");
                 }
@@ -274,7 +277,7 @@ const MainPage: React.FC = () => {
     };
 
     const handleGameClick = (gameId: number) => {
-        navigate(`/detail/${gameId}`);
+        navigate(`/games/${gameId}`);
     };
 
     return (

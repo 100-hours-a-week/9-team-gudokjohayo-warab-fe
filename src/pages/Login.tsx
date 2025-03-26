@@ -46,15 +46,16 @@ const LoginPage: React.FC<LoginPageProps> = ({
         window.location.href = kakaoAuthUrl;
     };
 
-    const handleDiscordLogin = () => {
-        console.log("Discord login attempted");
-        // Implement Discord login logic here
-    };
+    // mvp 기능에서 제외
+    // const handleDiscordLogin = () => {
+    //     console.log("Discord login attempted");
+    //     // Implement Discord login logic here
+    // };
 
-    const handleSteamLogin = () => {
-        console.log("Steam login attempted");
-        // Implement Steam login logic here
-    };
+    // const handleSteamLogin = () => {
+    //     console.log("Steam login attempted");
+    //     // Implement Steam login logic here
+    // };
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-white">
@@ -88,7 +89,7 @@ const LoginPage: React.FC<LoginPageProps> = ({
                                 onClick={handleKakaoLogin}
                             />
 
-                            <LoginButton
+                            {/* <LoginButton
                                 icon={`${process.env.PUBLIC_URL}/images/discord.png`}
                                 text="디스코드 계정으로 로그인하기"
                                 backgroundColor="#5F70BE"
@@ -100,7 +101,7 @@ const LoginPage: React.FC<LoginPageProps> = ({
                                 text="스팀 계정으로 로그인하기"
                                 backgroundColor="#101B38"
                                 onClick={handleSteamLogin}
-                            />
+                            /> */}
                         </div>
                     </div>
                 </div>

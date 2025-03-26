@@ -89,8 +89,7 @@ const buildQueryString = (params: SearchParams): string => {
     // if (params.limit) {
     //     queryParts.push(`limit=${params.limit}`);
     // }
-    if (queryParts.length > 0) queryParts.push("/");
-    console.log(queryParts.length > 0 ? `?${queryParts.join("&")}` : "");
+    if (queryParts.length <= 0) queryParts.push("/");
     return queryParts.length > 0 ? `?${queryParts.join("&")}` : "";
 };
 

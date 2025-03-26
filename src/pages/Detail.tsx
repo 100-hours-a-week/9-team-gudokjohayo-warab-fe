@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import Header from "../components/Header";
 import PartyFindTab from "../components/PartyFindTab";
-import VideoTab from "../components/VideoTab";
+// mvp 기능에서 제외
+// import VideoTab from "../components/VideoTab";
 import PriceTab from "../components/PriceTab";
 import { getGameDetails } from "../services/gameService";
 
@@ -100,27 +101,16 @@ const DetailPage: React.FC<DetailPageProps> = () => {
         return stars;
     };
 
-    // Format date from string to desired format (already in the right format in the API response)
-    const formatDate = (dateString: string) => {
-        // Check if the date is already in the desired format (DD MMM, YYYY)
-        if (/\d{1,2} [A-Za-z]{3,}, \d{4}/.test(dateString)) {
-            return dateString.toUpperCase();
-        }
-
-        // Otherwise parse it and format
-        const date = new Date(dateString);
-        return date
-            .toLocaleDateString("en-US", {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-            })
-            .toUpperCase();
-    };
-
     // Handle player count text
     const getPlayerTypeText = (playerCount: string) => {
         return playerCount === "single" ? "싱글" : "멀티";
+    };
+
+    // New utility function to truncate text
+    const truncateText = (text: string, maxLength: number = 10) => {
+        return text.length > maxLength
+            ? `${text.substring(0, maxLength)}...`
+            : text;
     };
 
     if (loading) {
@@ -211,10 +201,10 @@ const DetailPage: React.FC<DetailPageProps> = () => {
                                         </span>
                                     )}
                                     {/* External link icon remains the same */}
-                                    <button className="ml-2">
+                                    <button className="ml-0">
                                         <svg
                                             xmlns="http://www.w3.org/2000/svg"
-                                            className="h-5 w-5 text-gray-500"
+                                            className="h-3 w-3 text-orange-500 -translate-y-1"
                                             viewBox="0 0 24 24"
                                             fill="none"
                                             stroke="currentColor"
@@ -233,24 +223,46 @@ const DetailPage: React.FC<DetailPageProps> = () => {
                                         </svg>
                                     </button>
                                 </div>
+                                <div className="flex items-center space-x-2 mt-1">
+                                    <svg
+                                        className="h-4 w-4 text-gray-500"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 20 20"
+                                        fill="currentColor"
+                                    >
+                                        <path
+                                            fillRule="evenodd"
+                                            d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                                            clipRule="evenodd"
+                                        />
+                                    </svg>
+                                    <span className="text-sm text-gray-600">
+                                        {getPlayerTypeText(
+                                            gameDetail.player_count
+                                        )}
+                                    </span>
+                                    <div className="text-sm">
+                                        {renderStars(gameDetail.rating)}
+                                    </div>
+                                </div>
                             </div>
                             <div className="text-left text-xs text-gray-500">
                                 <div>
                                     Developer:{" "}
                                     <span className="font-medium">
-                                        {gameDetail.developer}
+                                        {truncateText(gameDetail.developer)}
                                     </span>
                                 </div>
                                 <div>
                                     Publisher:{" "}
                                     <span className="font-medium">
-                                        {gameDetail.publisher}
+                                        {truncateText(gameDetail.publisher)}
                                     </span>
                                 </div>
                                 <div>
                                     Released:{" "}
                                     <span className="font-medium">
-                                        {formatDate(gameDetail.release_date)}
+                                        {gameDetail.release_date}
                                     </span>
                                 </div>
                             </div>
@@ -354,11 +366,11 @@ const DetailPage: React.FC<DetailPageProps> = () => {
                                         </div>
                                     </div>
                                 )}
-                                {activeTab === "related-videos" && (
+                                {/* {activeTab === "related-videos" && (
                                     <div>
                                         <VideoTab />
                                     </div>
-                                )}
+                                )} */}
                             </div>
                         </div>
                     </div>
