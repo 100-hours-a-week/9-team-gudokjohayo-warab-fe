@@ -1,11 +1,14 @@
 name: Deploy React App (Development)
+
 on:
   push:
     branches:
       - develop
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -23,18 +26,25 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: update package.json
+      - name: Generate .env file
+        run: |
+          cat <<EOF > .env
+          REACT_APP_KAKAOURL=https://dev.api.warab.store/
+          REACT_APP_BASEURL=https://dev.warab.store/api/v1
+          PUBLIC_URL=https://d2khgun68ocfq1.cloudfront.net/dev/
+          EOF
+
+      - name: Update package.json homepage
         run: |
           npm pkg set homepage="https://d2khgun68ocfq1.cloudfront.net/dev/"
-          
+
       - name: Install dependencies
         run: npm install
 
       - name: Build project
-        run: |
-          PUBLIC_URL=https://d2khgun68ocfq1.cloudfront.net/dev/ npm run build
+        run: npm run build
 
-      - name: Deploy to S3 (Develop) with correct Content-Type
+      - name: Deploy to S3 (Development) with correct Content-Type
         run: |
           aws s3 sync ./build s3://${{ secrets.S3_BUCKET_NAME }}/dev --delete
           aws s3 cp --recursive s3://${{ secrets.S3_BUCKET_NAME }}/dev/static/js/ s3://${{ secrets.S3_BUCKET_NAME }}/dev/static/js/ \
