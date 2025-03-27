@@ -30,7 +30,7 @@ jobs:
         run: |
           cat <<EOF > .env
           REACT_APP_KAKAOURL=https://dev.api.warab.store/
-          REACT_APP_BASEURL=https://dev.warab.store/api/v1
+          REACT_APP_BASEURL=https://dev.api.warab.store/api/v1
           PUBLIC_URL=https://d2khgun68ocfq1.cloudfront.net/dev/
           EOF
 
