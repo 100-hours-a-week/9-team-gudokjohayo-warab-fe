@@ -79,3 +79,15 @@ export const updateUserProfile = async (
         throw error;
     }
 };
+
+// 로그아웃
+export const userLogOut = async (): Promise<any> => {
+    try {
+        const response = await api.post("/logout"); // Send the logout request to the server
+        console.log(response);
+        return response.data; // Return the response data (optional)
+    } catch (error) {
+        console.error("Logout failed:", error);
+        throw error; // Throw the error to be handled by the caller
+    }
+};

@@ -7,6 +7,7 @@ import {
 } from "../services/commentService";
 import { getUserProfile } from "../services/userService";
 import ConfirmationModal from "./ConfirmationModal";
+import ToastMessage from "./ToastMessage";
 
 interface PartyFindTabProps {
     gameId: string;
@@ -34,6 +35,13 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
     const [error, setError] = useState<string | null>(null);
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
+    // New state for discord link copying
+    const [discordLinkMap, setDiscordLinkMap] = useState<{
+        [key: string]: string;
+    }>({});
+    const [toastMessage, setToastMessage] = useState<string>("");
+    const [showToast, setShowToast] = useState<boolean>(false);
+
     // Current user message
     const [currentMessage, setCurrentMessage] = useState<string>("");
 
@@ -57,6 +65,28 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                 const commentsData = await getComments(gameId);
                 setComments(commentsData);
                 setLoading(false);
+
+                // Fetch discord links for each unique user
+                const uniqueUsernames = Array.from(
+                    new Set(commentsData.map((comment) => comment.name))
+                );
+                const linkMap: { [key: string]: string } = {};
+
+                for (const username of uniqueUsernames) {
+                    try {
+                        const profileData = await getUserProfile();
+                        if (profileData.data.nickname === username) {
+                            linkMap[username] = profileData.data.discord_link;
+                        }
+                    } catch (err) {
+                        console.error(
+                            `Error fetching profile for ${username}:`,
+                            err
+                        );
+                    }
+                }
+
+                setDiscordLinkMap(linkMap);
             } catch (err) {
                 setError("댓글을 불러오는 데 실패했습니다.");
                 setLoading(false);
@@ -76,6 +106,37 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
         fetchComments();
         fetchUserProfile();
     }, [gameId]);
+
+    // Handle Discord link copy
+    const handleDiscordLinkCopy = (username: string) => {
+        const discordLink = discordLinkMap[username];
+
+        if (discordLink) {
+            navigator.clipboard
+                .writeText(discordLink)
+                .then(() => {
+                    setToastMessage(
+                        `${username}의 디스코드 링크가 복사되었습니다.`
+                    );
+                    setShowToast(true);
+
+                    // Hide toast after 3 seconds
+                    setTimeout(() => {
+                        setShowToast(false);
+                    }, 3000);
+                })
+                .catch((err) => {
+                    console.error("Failed to copy discord link:", err);
+                });
+        } else {
+            setToastMessage("디스코드 링크를 찾을 수 없습니다.");
+            setShowToast(true);
+
+            setTimeout(() => {
+                setShowToast(false);
+            }, 3000);
+        }
+    };
 
     // Handle input change
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -249,9 +310,14 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                             className="p-2 mb-2 bg-white rounded-lg shadow-sm"
                         >
                             <div className="flex">
-                                <div className="w-8 h-8 mr-2 flex justify-center">
+                                <div
+                                    className="w-8 h-8 mr-2 flex justify-center cursor-pointer"
+                                    onClick={() =>
+                                        handleDiscordLinkCopy(comment.name)
+                                    }
+                                >
                                     <img
-                                        src="/images/discord.png"
+                                        src={`${process.env.PUBLIC_URL}/images/discord.png`}
                                         alt="Discord"
                                         className="w-5 h-5"
                                     />
@@ -429,6 +495,8 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                     </button>
                 </div>
             </div>
+
+            <ToastMessage message={toastMessage} isVisible={showToast} />
 
             {/* Confirmation Modal */}
             <ConfirmationModal

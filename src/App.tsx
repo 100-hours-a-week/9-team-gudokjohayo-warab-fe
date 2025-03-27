@@ -13,6 +13,7 @@ const App: React.FC = () => {
     return (
         <Router>
             <Routes>
+                <Route path="/" element={<LoginPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
                 <Route path="/main" element={<MainPage />} />

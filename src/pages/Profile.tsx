@@ -10,6 +10,7 @@ import {
     checkNicknameDuplication,
     checkDiscordLinkDuplication,
     updateUserProfile,
+    userLogOut,
 } from "../services/userService";
 import { debounce } from "lodash"; // 디바운스 함수를 위해 lodash 가져오기
 
@@ -317,9 +318,15 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
         setShowLogoutConfirmation(true);
     };
 
-    const handleLogoutConfirm = () => {
+    const handleLogoutConfirm = async () => {
         setShowLogoutConfirmation(false);
-        navigate("/login");
+        try {
+            await userLogOut(); // Call the logout API to clear the session
+            console.log("Logged out successfully");
+            navigate("/login"); // Navigate to the login page after logout
+        } catch (error) {
+            console.error("Logout failed:", error);
+        }
     };
 
     const handleLogoutDismiss = () => {
@@ -492,13 +499,13 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
                                 </p>
 
                                 {/* Fixed height container for toast to prevent layout shifts */}
-                                <div className="h-16 mb-4">
+                                <div className="mb-4">
                                     {showToast && (
                                         <ToastMessage message="프로필을 수정했어요." />
                                     )}
                                 </div>
 
-                                <div className="flex justify-center space-x-4">
+                                <div className="flex justify-center space-x-14">
                                     <button
                                         className="px-6 py-2 rounded-full bg-white border border-gray-300 text-sm"
                                         onClick={handleCancelClick}

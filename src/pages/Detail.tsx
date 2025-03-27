@@ -367,11 +367,14 @@ const DetailPage: React.FC<DetailPageProps> = () => {
                                         </div>
                                     </div>
                                 )}
-                                {/* {activeTab === "related-videos" && (
+                                {activeTab === "related-videos" && (
                                     <div>
-                                        <VideoTab />
+                                        <div className="p-4 text-center text-gray-500">
+                                            Coming Soon!
+                                        </div>
+                                        {/* <VideoTab /> */}
                                     </div>
-                                )} */}
+                                )}
                             </div>
                         </div>
                     </div>
