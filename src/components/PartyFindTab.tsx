@@ -9,7 +9,7 @@ import { getUserProfile } from "../services/userService";
 import ConfirmationModal from "./ConfirmationModal";
 
 interface PartyFindTabProps {
-    gameId?: number;
+    gameId: string;
 }
 
 interface Comment {
@@ -27,7 +27,7 @@ interface UserProfile {
     discord_link: string;
 }
 
-const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId = 1 }) => {
+const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
     // Comments state
     const [comments, setComments] = useState<Comment[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
@@ -49,6 +49,8 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId = 1 }) => {
 
     // Fetch comments on component mount
     useEffect(() => {
+        if (!gameId) return;
+
         const fetchComments = async () => {
             try {
                 setLoading(true);
@@ -102,7 +104,7 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId = 1 }) => {
         if (editContent.trim() === "") return;
 
         try {
-            await updateComment(gameId, commentId, editContent);
+            await updateComment(commentId, editContent);
 
             // Update UI optimistically
             setComments(
@@ -148,7 +150,7 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId = 1 }) => {
         if (commentToDelete === null) return;
 
         try {
-            await deleteComment(gameId, commentToDelete);
+            await deleteComment(commentToDelete);
 
             // Update UI
             setComments(
@@ -238,7 +240,7 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId = 1 }) => {
             <div className="flex-1 overflow-y-auto mb-3">
                 {comments.length === 0 ? (
                     <div className="p-4 text-center text-gray-500">
-                        아직 댓글이 없습니다. 첫 번째 댓글을 작성해보세요!
+                        아직 댓글이 없습니다.
                     </div>
                 ) : (
                     comments.map((comment) => (

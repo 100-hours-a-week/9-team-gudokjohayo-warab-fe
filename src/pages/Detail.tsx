@@ -201,7 +201,8 @@ const DetailPage: React.FC<DetailPageProps> = () => {
                                         </span>
                                     )}
                                     {/* External link icon remains the same */}
-                                    <button className="ml-0">
+                                    {/* mvp 기능 제거 */}
+                                    {/* <button className="ml-0">
                                         <svg
                                             xmlns="http://www.w3.org/2000/svg"
                                             className="h-3 w-3 text-orange-500 -translate-y-1"
@@ -221,7 +222,7 @@ const DetailPage: React.FC<DetailPageProps> = () => {
                                                 y2="3"
                                             />
                                         </svg>
-                                    </button>
+                                    </button> */}
                                 </div>
                                 <div className="flex items-center space-x-2 mt-1">
                                     <svg
@@ -349,20 +350,20 @@ const DetailPage: React.FC<DetailPageProps> = () => {
 
                             {/* Tab content */}
                             <div className="mt-4 py-4 border-t border-gray-200">
-                                {activeTab === "price-comparison" && (
+                                {activeTab === "price-comparison" && gameId && (
                                     <div>
                                         <PriceTab
-                                            currentPrice={gameDetail.price}
-                                            historicalLowestPrice={
+                                            gameId={gameId}
+                                            currentPrice={
                                                 gameDetail.lowest_price
                                             }
                                         />
                                     </div>
                                 )}
-                                {activeTab === "find-party" && (
+                                {activeTab === "find-party" && gameId && (
                                     <div>
                                         <div>
-                                            <PartyFindTab />
+                                            <PartyFindTab gameId={gameId} />
                                         </div>
                                     </div>
                                 )}

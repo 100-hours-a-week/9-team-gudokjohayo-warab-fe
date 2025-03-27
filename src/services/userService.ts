@@ -10,7 +10,7 @@ interface ProfileResponse {
     data: {
         nickname: string;
         discord_link: string;
-        categories: Category[]; // Updated to match the new response format
+        categorys: Category[]; // Updated to match the new response format
     };
 }
 interface DuplicationResponse {
@@ -50,8 +50,9 @@ export const checkDiscordLinkDuplication = async (
 ): Promise<DuplicationResponse> => {
     try {
         const response = await api.get(
-            `/users/check_discord_link/?discord_link=${encodeURIComponent(discordLink)}`
+            `/users/check_discord_link?discord_link=${encodeURIComponent(discordLink)}`
         );
+
         return response.data;
     } catch (error) {
         console.error("디스코드 링크 중복 확인 중 오류 발생:", error);
@@ -66,7 +67,8 @@ export const updateUserProfile = async (
     categoryIds: number[] // We'll still pass category IDs for the request
 ): Promise<any> => {
     try {
-        const response = await api.patch("/users/profile", {
+        console.log(categoryIds);
+        const response = await api.put("/users/profile", {
             nickname,
             discord: discordLink,
             category: categoryIds, // API expects category IDs in the request

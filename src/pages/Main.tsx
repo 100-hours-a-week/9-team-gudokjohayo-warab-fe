@@ -250,7 +250,7 @@ const MainPage: React.FC = () => {
             setLoading(true);
             try {
                 const response = await api.get<MainPageResponse>("/games/main");
-
+                console.log(response);
                 if (response.data.message === "main_page_inquiry_success") {
                     console.log(response.data.data.games);
                     setMainPageSections(response.data.data.games);
