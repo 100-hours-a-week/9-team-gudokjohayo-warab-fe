@@ -18,7 +18,7 @@ interface CommentListResponse {
 }
 
 // 댓글 목록 조회
-export const getComments = async (gameId: number): Promise<Comment[]> => {
+export const getComments = async (gameId: string): Promise<Comment[]> => {
     try {
         const response = await api.get<CommentListResponse>(
             `/games/${gameId}/comment`
@@ -32,7 +32,7 @@ export const getComments = async (gameId: number): Promise<Comment[]> => {
 
 // 댓글 작성
 export const createComment = async (
-    gameId: number,
+    gameId: string,
     content: string
 ): Promise<Comment> => {
     try {
@@ -48,17 +48,13 @@ export const createComment = async (
 
 // 댓글 수정
 export const updateComment = async (
-    gameId: number,
     commentId: number,
     content: string
 ): Promise<Comment> => {
     try {
-        const response = await api.patch(
-            `/games/${gameId}/comment/${commentId}`,
-            {
-                content,
-            }
-        );
+        const response = await api.put(`/games/comment/${commentId}`, {
+            content,
+        });
         return response.data;
     } catch (error) {
         console.error("댓글 수정 중 오류 발생:", error);
@@ -67,12 +63,9 @@ export const updateComment = async (
 };
 
 // 댓글 삭제
-export const deleteComment = async (
-    gameId: number,
-    commentId: number
-): Promise<void> => {
+export const deleteComment = async (commentId: number): Promise<void> => {
     try {
-        await api.delete(`/games/${gameId}/comment/${commentId}`);
+        await api.delete(`/games/comment/${commentId}`);
     } catch (error) {
         console.error("댓글 삭제 중 오류 발생:", error);
         throw error;

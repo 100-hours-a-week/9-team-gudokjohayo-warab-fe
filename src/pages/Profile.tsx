@@ -62,6 +62,7 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
             setIsLoading(true);
             try {
                 const profileData = await getUserProfile();
+                console.log(profileData);
                 setNickname(profileData.data.nickname);
                 setDiscordUrl(profileData.data.discord_link);
                 setOriginalNickname(profileData.data.nickname);
@@ -69,20 +70,20 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
 
                 // Extract category data from the response
                 if (
-                    profileData.data.categories &&
-                    profileData.data.categories.length > 0
+                    profileData.data.categorys &&
+                    profileData.data.categorys.length > 0
                 ) {
                     // Set the category data directly
-                    setCategoryData(profileData.data.categories);
+                    setCategoryData(profileData.data.categorys);
 
                     // Extract and set just the IDs for the selected categories
-                    const categoryIds = profileData.data.categories.map(
+                    const categoryIds = profileData.data.categorys.map(
                         (cat) => cat.category_id
                     );
                     setSelectedCategoryIds(categoryIds);
 
                     // Extract and set the names for display
-                    const categoryNames = profileData.data.categories.map(
+                    const categoryNames = profileData.data.categorys.map(
                         (cat) => cat.category_name
                     );
                     setCategoryDisplayNames(categoryNames);
@@ -145,15 +146,21 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
 
         try {
             const result = await checkDiscordLinkDuplication(value);
-            if (result.duplication) {
-                setDiscordHelperText("이미 사용 중인 디스코드 링크입니다.");
+            console.log(result.message);
+            if (result.message === "invalid_discordlink") {
+                setDiscordHelperText("유효하지않은 링크입니다.");
                 setIsDiscordValid(false);
             } else {
-                setDiscordHelperText("사용 가능한 디스코드 링크입니다.");
-                setIsDiscordValid(true);
+                if (result.duplication) {
+                    setDiscordHelperText("이미 사용 중인 디스코드 링크입니다.");
+                    setIsDiscordValid(false);
+                } else {
+                    setDiscordHelperText("사용 가능한 디스코드 링크입니다.");
+                    setIsDiscordValid(true);
+                }
             }
         } catch (error) {
-            console.error("디스코드 링크 중복 확인 중 오류 발생:", error);
+            console.error("유효한 링크가 아닙니다.:", error);
             setDiscordHelperText("중복 확인 중 오류가 발생했습니다.");
             setIsDiscordValid(false);
         }

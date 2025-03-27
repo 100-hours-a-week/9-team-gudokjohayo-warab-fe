@@ -19,6 +19,25 @@ interface GameDetailResponse {
     };
 }
 
+interface CurrentPriceResponse {
+    message: string;
+    data: {
+        lowest_prices: {
+            platform: string;
+            price: number;
+            store_url: string;
+            logo?: string; // Optional logo URL
+        }[];
+    };
+}
+
+interface LowestPriceResponse {
+    message: string;
+    data: {
+        history_lowest_price: number;
+    };
+}
+
 /**
  * Fetch game details by ID
  * @param id Game ID
@@ -81,5 +100,67 @@ export const getGameVideos = async (id: string) => {
     } catch (error) {
         console.error("Error fetching game videos:", error);
         throw error;
+    }
+};
+
+/**
+ * Get current prices for a game across different platforms
+ * @param id Game ID
+ * @returns Current price comparison data
+ */
+export const getCurrentPricesByPlatform = async (id: string) => {
+    try {
+        const response = await api.get<CurrentPriceResponse>(
+            `/games/${id}/current-price`
+        );
+
+        if (response.data.message === "get_lowest_price_by_platform_success") {
+            return response.data.data.lowest_prices.map((price) => ({
+                ...price,
+                // Map platform names to match existing logos in PriceTab
+                logo: getPlatformLogo(price.platform),
+            }));
+        } else {
+            throw new Error("Failed to fetch current prices");
+        }
+    } catch (error) {
+        console.error("Error fetching current prices:", error);
+        throw error;
+    }
+};
+
+// Helper function to map platform names to logo paths
+const getPlatformLogo = (platform: string): string => {
+    const platformLogos: { [key: string]: string } = {
+        Steam: "/images/steam-logo.png",
+        Epic: "/images/epic-logo.png",
+        Ubisoft: "/images/ubisoft-logo.png",
+        // Add more mappings as needed
+        default: "/images/placeholder.png",
+    };
+
+    return platformLogos[platform] || platformLogos["default"];
+};
+
+/**
+ * Get the historical lowest price for a game
+ * @param id Game ID
+ * @returns Historical lowest price
+ */
+export const getHistoricalLowestPrice = async (id: string) => {
+    try {
+        const response = await api.get<LowestPriceResponse>(
+            `/games/${id}/lowest-price`
+        );
+
+        if (response.data.message === "get_lowest_price_success") {
+            return response.data.data.history_lowest_price;
+        } else {
+            throw new Error("Failed to fetch historical lowest price");
+        }
+    } catch (error) {
+        console.error("Error fetching historical lowest price:", error);
+        // Return a fallback value or re-throw the error
+        return 0;
     }
 };

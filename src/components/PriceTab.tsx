@@ -1,145 +1,60 @@
 import React, { useState, useEffect } from "react";
+import {
+    getCurrentPricesByPlatform,
+    getHistoricalLowestPrice,
+} from "../services/gameService";
 
 interface PriceTabProps {
+    gameId: string;
     currentPrice: number;
-    historicalLowestPrice: number;
 }
 
-interface PriceInfo {
-    id: string;
-    store: string;
-    logo: string;
-    price: number;
-    historicalLowest?: number;
-    historicalLowestDate?: string;
-}
-
-const PriceTab: React.FC<PriceTabProps> = ({
-    currentPrice,
-    historicalLowestPrice,
-}) => {
-    // 가격 정보 데이터
-    const [priceInfo] = useState<PriceInfo[]>([
-        {
-            id: "1",
-            store: "Epic games",
-            logo: "/images/epic-logo.png",
-            price: currentPrice,
-            historicalLowest: historicalLowestPrice,
-            historicalLowestDate: "2023-12-25",
-        },
-        {
-            id: "2",
-            store: "Steam",
-            logo: "/images/steam-logo.png",
-            price: currentPrice,
-            historicalLowest: historicalLowestPrice,
-            historicalLowestDate: "2023-11-20",
-        },
-        {
-            id: "3",
-            store: "Ubisoft",
-            logo: "/images/ubisoft-logo.png",
-            price: currentPrice,
-            historicalLowest: historicalLowestPrice,
-            historicalLowestDate: "2024-01-15",
-        },
-    ]);
-
-    // 전체 최저가 정보
-    const [overallLowestPrice, setOverallLowestPrice] = useState<{
-        current: number;
-        historical: number;
-        store: string;
-        historicalDate: string;
-    }>({
-        current: 0,
-        historical: 0,
-        store: "",
-        historicalDate: "",
-    });
-
-    // 가격 정보 API 호출을 위한 함수 (실제 구현에서는 API 호출)
-    const fetchPriceInfo = async () => {
-        try {
-            console.log(
-                "가격 정보를 API에서 가져오는 로직이 여기에 들어갑니다"
-            );
-        } catch (error) {
-            console.error("가격 정보 가져오기 오류:", error);
-        }
-    };
+const PriceTab: React.FC<PriceTabProps> = ({ gameId, currentPrice }) => {
+    const [historicalLowestPrice, setHistoricalLowestPrice] =
+        useState<number>(0);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        // 컴포넌트 마운트 시 가격 정보 가져오기
-        fetchPriceInfo();
+        const fetchLowestPrice = async () => {
+            try {
+                // Fetch historical lowest price
+                const historicalLowest = await getHistoricalLowestPrice(gameId);
+                setHistoricalLowestPrice(historicalLowest);
+                setIsLoading(false);
+            } catch (err) {
+                console.error("Error fetching historical lowest price:", err);
+                setError("가격 정보를 불러오는 데 실패했습니다.");
+                setIsLoading(false);
+            }
+        };
 
-        // 전체 최저가 계산
-        const currentLowest = Math.min(...priceInfo.map((item) => item.price));
-        const historicalLowest = Math.min(
-            ...priceInfo.map((item) => item.historicalLowest || Infinity)
-        );
-
-        const lowestCurrentStore =
-            priceInfo.find((item) => item.price === currentLowest)?.store || "";
-
-        const lowestHistoricalItem = priceInfo.reduce(
-            (prev, current) => {
-                if (!current.historicalLowest) return prev;
-                if (
-                    !prev ||
-                    current.historicalLowest <
-                        (prev.historicalLowest || Infinity)
-                ) {
-                    return current;
-                }
-                return prev;
-            },
-            null as PriceInfo | null
-        );
-
-        setOverallLowestPrice({
-            current: currentLowest,
-            historical: historicalLowest,
-            store: lowestCurrentStore,
-            historicalDate: lowestHistoricalItem?.historicalLowestDate || "",
-        });
-    }, [priceInfo]);
+        fetchLowestPrice();
+    }, [gameId]);
 
     // 가격 포맷 함수 (예: 1800 -> ₩1,800)
     const formatPrice = (price: number) => {
         return `₩${price.toLocaleString()}`;
     };
 
-    // 날짜 포맷 함수
-    const formatDate = (dateString: string) => {
-        if (!dateString) return "";
-        const date = new Date(dateString);
-        return date.toLocaleDateString("ko-KR", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-        });
-    };
-
-    // 최저가 확인 함수
-    const isLowestPrice = (price: number) => {
-        const lowestPrice = Math.min(...priceInfo.map((item) => item.price));
-        return price === lowestPrice;
-    };
-
     // 역대 최저가 대비 현재 가격 비율 계산
     const calculatePriceRatio = () => {
-        if (overallLowestPrice.historical === 0) return 100;
-        return Math.round(
-            (overallLowestPrice.current / overallLowestPrice.historical) * 100
-        );
+        if (historicalLowestPrice === 0) return 100;
+        return Math.round((currentPrice / historicalLowestPrice) * 100);
     };
 
     // 가격 차이 계산
     const calculatePriceDifference = () => {
-        return overallLowestPrice.current - overallLowestPrice.historical;
+        return currentPrice - historicalLowestPrice;
     };
+
+    if (isLoading) {
+        return <div className="p-4 text-center">로딩 중...</div>;
+    }
+
+    if (error) {
+        return <div className="p-4 text-red-500">{error}</div>;
+    }
 
     return (
         <div className="flex flex-col h-full bg-white">
@@ -152,10 +67,7 @@ const PriceTab: React.FC<PriceTabProps> = ({
                         <div>
                             <p className="text-xs text-gray-500">역대 최저가</p>
                             <p className="text-lg font-bold text-green-600">
-                                {formatPrice(overallLowestPrice.historical)}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                                {formatDate(overallLowestPrice.historicalDate)}
+                                {formatPrice(historicalLowestPrice)}
                             </p>
                         </div>
                         <div className="flex items-center">
@@ -177,12 +89,9 @@ const PriceTab: React.FC<PriceTabProps> = ({
                             </div>
                         </div>
                         <div className="text-right">
-                            <p className="text-xs text-gray-500">현재 최저가</p>
+                            <p className="text-xs text-gray-500">현재 가격</p>
                             <p className="text-lg font-bold">
-                                {formatPrice(overallLowestPrice.current)}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                                {overallLowestPrice.store}
+                                {formatPrice(currentPrice)}
                             </p>
                         </div>
                     </div>
@@ -218,68 +127,23 @@ const PriceTab: React.FC<PriceTabProps> = ({
                 </div>
             </div>
 
-            {/* 가격 정보 목록 */}
-            <div className="p-4">
+            {/* 가격 정보 목록 (MVP에서는 주석 처리) */}
+            {/* <div className="p-4">
                 <p className="text-sm font-medium mb-3">
                     여러 플랫폼에서 현재 구매가능한 가격이에요.
                 </p>
 
                 <div className="space-y-2">
-                    {priceInfo.map((item) => (
-                        <div
-                            key={item.id}
-                            className={`flex items-center justify-between p-3 rounded-lg ${
-                                isLowestPrice(item.price)
-                                    ? "bg-gray-100"
-                                    : "bg-gray-50"
-                            }`}
-                        >
-                            <div className="flex items-center">
-                                <div className="w-8 h-8 mr-2 flex-shrink-0 flex items-center justify-center bg-gray-200 rounded-md overflow-hidden">
-                                    <img
-                                        src={item.logo}
-                                        alt={item.store}
-                                        className="w-6 h-6 object-contain"
-                                        onError={(e) => {
-                                            // 이미지 로드 실패 시 대체 이미지
-                                            (e.target as HTMLImageElement).src =
-                                                "/images/placeholder.png";
-                                        }}
-                                    />
-                                </div>
-                                <div>
-                                    <span className="text-xs font-medium block">
-                                        {item.store}
-                                    </span>
-                                    {item.historicalLowest && (
-                                        <span className="text-xs text-gray-500 block">
-                                            역대:{" "}
-                                            {formatPrice(item.historicalLowest)}
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-                            <div className="text-right">
-                                <span className="text-xs font-medium block">
-                                    {formatPrice(item.price)}
-                                </span>
-                                {item.price === item.historicalLowest && (
-                                    <span className="text-xs text-green-600 block">
-                                        역대 최저가!
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-                    ))}
+                    // 가격 목록 내용 주석 처리
                 </div>
-            </div>
+            </div> */}
 
-            {/* 더 많은 플랫폼 보기 버튼 */}
-            <div className="mt-2 px-3 pb-4">
+            {/* 더 많은 플랫폼 보기 버튼 (MVP에서는 주석 처리) */}
+            {/* <div className="mt-2 px-3 pb-4">
                 <button className="w-full py-3 bg-gray-100 text-gray-500 rounded-lg text-xs hover:bg-gray-200 transition">
                     더 많은 플랫폼 보기
                 </button>
-            </div>
+            </div> */}
         </div>
     );
 };
