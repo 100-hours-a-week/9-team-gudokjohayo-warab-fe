@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
-    getCurrentPricesByPlatform,
+    // getCurrentPricesByPlatform,
     getHistoricalLowestPrice,
 } from "../services/gameService";
 
