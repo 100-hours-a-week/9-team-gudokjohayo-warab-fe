@@ -5,9 +5,9 @@ import {
     updateComment,
     deleteComment,
 } from "../services/commentService";
-import { getUserProfile } from "../services/userService";
 import ConfirmationModal from "./ConfirmationModal";
 import ToastMessage from "./ToastMessage";
+import { getUserProfile } from "../services/userService";
 
 interface PartyFindTabProps {
     gameId: string;
@@ -16,6 +16,7 @@ interface PartyFindTabProps {
 interface Comment {
     comment_id: number;
     user_id: number;
+    user_discord?: string;
     name: string;
     content: string;
     created_at: string;
@@ -25,7 +26,7 @@ interface Comment {
 
 interface UserProfile {
     nickname: string;
-    discord_link: string;
+    discord_link?: string;
 }
 
 const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
@@ -55,56 +56,34 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [commentToDelete, setCommentToDelete] = useState<number | null>(null);
 
-    // Fetch comments on component mount
     useEffect(() => {
-        if (!gameId) return;
-
-        const fetchComments = async () => {
+        const fetchUserProfileAndComments = async () => {
             try {
-                setLoading(true);
+                // Fetch user profile first
+                const profile = await getUserProfile();
+                setUserProfile(profile.data);
+
+                // Fetch comments
                 const commentsData = await getComments(gameId);
                 setComments(commentsData);
-                setLoading(false);
 
-                // Fetch discord links for each unique user
-                const uniqueUsernames = Array.from(
-                    new Set(commentsData.map((comment) => comment.name))
-                );
+                // Create discord link map from comments
                 const linkMap: { [key: string]: string } = {};
-
-                for (const username of uniqueUsernames) {
-                    try {
-                        const profileData = await getUserProfile();
-                        if (profileData.data.nickname === username) {
-                            linkMap[username] = profileData.data.discord_link;
-                        }
-                    } catch (err) {
-                        console.error(
-                            `Error fetching profile for ${username}:`,
-                            err
-                        );
+                commentsData.forEach((comment) => {
+                    if (comment.user_discord) {
+                        linkMap[comment.name] = comment.user_discord;
                     }
-                }
-
+                });
                 setDiscordLinkMap(linkMap);
-            } catch (err) {
-                setError("댓글을 불러오는 데 실패했습니다.");
                 setLoading(false);
-                console.error("Error fetching comments:", err);
-            }
-        };
-
-        const fetchUserProfile = async () => {
-            try {
-                const profileData = await getUserProfile();
-                setUserProfile(profileData.data);
             } catch (err) {
-                console.error("Error fetching user profile:", err);
+                setError("사용자 정보 또는 댓글을 불러오는 데 실패했습니다.");
+                setLoading(false);
+                console.error("Error fetching data:", err);
             }
         };
 
-        fetchComments();
-        fetchUserProfile();
+        fetchUserProfileAndComments();
     }, [gameId]);
 
     // Handle Discord link copy
@@ -232,8 +211,15 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
         }
     };
 
-    // Handle send message
+    // Handle send message with Discord link check
     const handleSendMessage = async () => {
+        // Check if user has Discord link
+        if (!userProfile?.discord_link) {
+            setToastMessage("디스코드 링크를 먼저 등록해주세요.");
+            setShowToast(true);
+            return;
+        }
+
         if (currentMessage.trim() === "") return;
 
         try {
@@ -280,11 +266,9 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
         return username;
     };
 
-    // Check if the comment belongs to current user (simplified for demo)
-    const isOwnComment = (comment: Comment) => {
-        // In a real app, you would compare with the logged-in user's ID
-        // return userProfile?.nickname === comment.name || comment.user_id === -1;
-        return true;
+    // Modify isOwnComment to check against user_id
+    const isOwnComment = (nickname: string) => {
+        return nickname === userProfile?.nickname;
     };
 
     if (loading) {
@@ -294,6 +278,9 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
     if (error) {
         return <div className="p-4 text-center text-red-500">{error}</div>;
     }
+
+    // Check if Discord link is set before rendering comment input
+    const canPostComment = !!userProfile?.discord_link;
 
     return (
         <div className="flex flex-col h-full">
@@ -349,7 +336,7 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                                     )}
 
                                     {/* Edit and Delete buttons for user's own comments */}
-                                    {isOwnComment(comment) && (
+                                    {isOwnComment(comment.name) && (
                                         <div className="flex ml-2">
                                             {editingCommentId ===
                                             comment.comment_id ? (
@@ -463,20 +450,27 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                 <div className="flex items-center bg-white rounded-full border border-gray-300">
                     <input
                         type="text"
-                        placeholder="메시지를 입력하세요."
+                        placeholder={
+                            !canPostComment
+                                ? "프로필에 디스코드 링크를 등록해주세요."
+                                : "메시지를 입력하세요."
+                        }
                         className="flex-1 py-2 px-4 bg-transparent outline-none rounded-full text-sm"
                         value={currentMessage}
                         onChange={handleInputChange}
                         onKeyPress={handleKeyPress}
+                        disabled={!canPostComment}
                     />
                     <button
                         className={`absolute right-2 p-1.5 rounded-full ${
-                            currentMessage.trim() === ""
+                            !canPostComment || currentMessage.trim() === ""
                                 ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                                 : "bg-orange-500 text-white"
                         }`}
                         onClick={handleSendMessage}
-                        disabled={currentMessage.trim() === ""}
+                        disabled={
+                            !canPostComment || currentMessage.trim() === ""
+                        }
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"

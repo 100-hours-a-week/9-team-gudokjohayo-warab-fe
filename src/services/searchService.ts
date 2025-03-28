@@ -28,6 +28,7 @@ interface SearchParams {
     mode?: "discounted" | "recommended" | "default";
     sort?: string;
     limit?: number;
+    page?: number;
 }
 
 /**
@@ -80,6 +81,10 @@ const buildQueryString = (params: SearchParams): string => {
 
     if (params.mode) {
         queryParts.push(`mode=${params.mode}`);
+    }
+
+    if (params.page) {
+        queryParts.push(`page=${params.page}`);
     }
 
     // if (params.sort) {
