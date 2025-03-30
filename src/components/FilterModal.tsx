@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import ToastMessage from "./ToastMessage";
+import RangeSlider from "./RangeSlider";
 
 interface FilterModalProps {
     isOpen: boolean;
@@ -157,10 +158,6 @@ const FilterModal: React.FC<FilterModalProps> = ({
 
     const handleRatingChange = (rating: number) => {
         setFilters({ ...filters, rating });
-    };
-
-    const handlePriceChange = (min: number, max: number) => {
-        setFilters({ ...filters, priceRange: [min, max] });
     };
 
     // Modified handler for player count to allow deselection
@@ -351,32 +348,20 @@ const FilterModal: React.FC<FilterModalProps> = ({
                         </div>
                     </div>
 
-                    {/* Price Section */}
+                    {/* Price Section - Updated with min and max sliders */}
                     <div ref={priceRef} className="pt-2 pb-6">
                         <h3 className="text-lg font-medium my-2">가격</h3>
                         <div className="py-4">
-                            <div className="flex items-center justify-between">
-                                <div className="px-2 py-2 rounded w-24 text-center">
-                                    {filters.priceRange[0].toLocaleString()} 원
-                                </div>
-                                <span className="mx-2">~</span>
-                                <div className="px-2 py-2 rounded w-24 text-center">
-                                    {filters.priceRange[1].toLocaleString()} 원
-                                </div>
-                            </div>
-                            <input
-                                type="range"
-                                min="0"
-                                max="200000"
-                                step="10000"
-                                value={filters.priceRange[1]}
-                                onChange={(e) =>
-                                    handlePriceChange(
-                                        filters.priceRange[0],
-                                        parseInt(e.target.value)
-                                    )
+                            <RangeSlider
+                                minPrice={0}
+                                maxPrice={200000}
+                                initialRange={filters.priceRange}
+                                onRangeChange={(newRange: [number, number]) =>
+                                    setFilters({
+                                        ...filters,
+                                        priceRange: newRange,
+                                    })
                                 }
-                                className="w-full mt-4 accent-orange-500"
                             />
                         </div>
                     </div>
