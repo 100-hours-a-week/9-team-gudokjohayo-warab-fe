@@ -527,18 +527,12 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
                                     </button>
                                     <button
                                         className={`px-6 py-2 rounded-full bg-orange-500 text-white text-sm ${
-                                            isSaving ||
-                                            !isNicknameValid ||
-                                            !isDiscordValid
+                                            isSaving || !isNicknameValid
                                                 ? "opacity-50 cursor-not-allowed"
                                                 : ""
                                         }`}
                                         onClick={handleSave}
-                                        disabled={
-                                            isSaving ||
-                                            !isNicknameValid ||
-                                            !isDiscordValid
-                                        }
+                                        disabled={isSaving || !isNicknameValid}
                                     >
                                         {isSaving ? "저장 중..." : "완료"}
                                     </button>

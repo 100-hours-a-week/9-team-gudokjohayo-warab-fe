@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 
 interface PriceRangeSliderProps {
     minPrice?: number;
@@ -27,17 +27,23 @@ const PriceRangeSlider: React.FC<PriceRangeSliderProps> = ({
         setRange(initialRange);
     }, [initialRange]);
 
-    // Calculate position percentage from price value
-    const getPositionFromValue = (value: number): number => {
-        return ((value - minPrice) / (maxPrice - minPrice)) * 100;
-    };
+    // Calculate position percentage from price value - wrapped in useCallback
+    const getPositionFromValue = useCallback(
+        (value: number): number => {
+            return ((value - minPrice) / (maxPrice - minPrice)) * 100;
+        },
+        [minPrice, maxPrice]
+    );
 
-    // Calculate price value from position percentage
-    const getValueFromPosition = (position: number): number => {
-        const percent = Math.max(0, Math.min(100, position)) / 100;
-        const value = percent * (maxPrice - minPrice) + minPrice;
-        return Math.round(value / 10000) * 10000; // Round to nearest 10,000
-    };
+    // Calculate price value from position percentage - wrapped in useCallback
+    const getValueFromPosition = useCallback(
+        (position: number): number => {
+            const percent = Math.max(0, Math.min(100, position)) / 100;
+            const value = percent * (maxPrice - minPrice) + minPrice;
+            return Math.round(value / 10000) * 10000; // Round to nearest 10,000
+        },
+        [minPrice, maxPrice]
+    );
 
     // Mouse down handler for thumbs and bar
     const handleMouseDown = (
@@ -77,115 +83,141 @@ const PriceRangeSlider: React.FC<PriceRangeSliderProps> = ({
     };
 
     // Mouse move handler
-    const handleMouseMove = (e: MouseEvent): void => {
-        if (!isDraggingMin && !isDraggingMax && !isDraggingBar) return;
-        if (!containerRef.current) return;
+    const handleMouseMove = useCallback(
+        (e: MouseEvent): void => {
+            if (!isDraggingMin && !isDraggingMax && !isDraggingBar) return;
+            if (!containerRef.current) return;
 
-        const containerRect = containerRef.current.getBoundingClientRect();
-        const position =
-            ((e.clientX - containerRect.left) / containerRect.width) * 100;
+            const containerRect = containerRef.current.getBoundingClientRect();
+            const position =
+                ((e.clientX - containerRect.left) / containerRect.width) * 100;
 
-        if (isDraggingMin) {
-            const newMinPos = Math.max(
-                0,
-                Math.min(getPositionFromValue(range[1]) - 5, position)
-            );
-            const newMinValue = getValueFromPosition(newMinPos);
-            setRange([newMinValue, range[1]]);
-            onRangeChange([newMinValue, range[1]]);
-        } else if (isDraggingMax) {
-            const newMaxPos = Math.min(
-                100,
-                Math.max(getPositionFromValue(range[0]) + 5, position)
-            );
-            const newMaxValue = getValueFromPosition(newMaxPos);
-            setRange([range[0], newMaxValue]);
-            onRangeChange([range[0], newMaxValue]);
-        } else if (isDraggingBar) {
-            const deltaX = e.clientX - dragStart;
-            const deltaPercent = (deltaX / containerRect.width) * 100;
+            if (isDraggingMin) {
+                const newMinPos = Math.max(
+                    0,
+                    Math.min(getPositionFromValue(range[1]) - 5, position)
+                );
+                const newMinValue = getValueFromPosition(newMinPos);
+                setRange([newMinValue, range[1]]);
+                onRangeChange([newMinValue, range[1]]);
+            } else if (isDraggingMax) {
+                const newMaxPos = Math.min(
+                    100,
+                    Math.max(getPositionFromValue(range[0]) + 5, position)
+                );
+                const newMaxValue = getValueFromPosition(newMaxPos);
+                setRange([range[0], newMaxValue]);
+                onRangeChange([range[0], newMaxValue]);
+            } else if (isDraggingBar) {
+                const deltaX = e.clientX - dragStart;
+                const deltaPercent = (deltaX / containerRect.width) * 100;
 
-            let newMinPos = getPositionFromValue(range[0]) + deltaPercent;
-            let newMaxPos = getPositionFromValue(range[1]) + deltaPercent;
+                let newMinPos = getPositionFromValue(range[0]) + deltaPercent;
+                let newMaxPos = getPositionFromValue(range[1]) + deltaPercent;
 
-            if (newMinPos < 0) {
-                newMinPos = 0;
-                newMaxPos = barWidth;
+                if (newMinPos < 0) {
+                    newMinPos = 0;
+                    newMaxPos = barWidth;
+                }
+
+                if (newMaxPos > 100) {
+                    newMaxPos = 100;
+                    newMinPos = 100 - barWidth;
+                }
+
+                const newMinValue = getValueFromPosition(newMinPos);
+                const newMaxValue = getValueFromPosition(newMaxPos);
+
+                setRange([newMinValue, newMaxValue]);
+                onRangeChange([newMinValue, newMaxValue]);
+                setDragStart(e.clientX);
             }
-
-            if (newMaxPos > 100) {
-                newMaxPos = 100;
-                newMinPos = 100 - barWidth;
-            }
-
-            const newMinValue = getValueFromPosition(newMinPos);
-            const newMaxValue = getValueFromPosition(newMaxPos);
-
-            setRange([newMinValue, newMaxValue]);
-            onRangeChange([newMinValue, newMaxValue]);
-            setDragStart(e.clientX);
-        }
-    };
+        },
+        [
+            isDraggingMin,
+            isDraggingMax,
+            isDraggingBar,
+            range,
+            barWidth,
+            dragStart,
+            onRangeChange,
+            getPositionFromValue,
+            getValueFromPosition,
+        ]
+    );
 
     // Touch move handler
-    const handleTouchMove = (e: TouchEvent): void => {
-        if (!isDraggingMin && !isDraggingMax && !isDraggingBar) return;
-        if (!containerRef.current) return;
+    const handleTouchMove = useCallback(
+        (e: TouchEvent): void => {
+            if (!isDraggingMin && !isDraggingMax && !isDraggingBar) return;
+            if (!containerRef.current) return;
 
-        const containerRect = containerRef.current.getBoundingClientRect();
-        const position =
-            ((e.touches[0].clientX - containerRect.left) /
-                containerRect.width) *
-            100;
+            const containerRect = containerRef.current.getBoundingClientRect();
+            const position =
+                ((e.touches[0].clientX - containerRect.left) /
+                    containerRect.width) *
+                100;
 
-        if (isDraggingMin) {
-            const newMinPos = Math.max(
-                0,
-                Math.min(getPositionFromValue(range[1]) - 5, position)
-            );
-            const newMinValue = getValueFromPosition(newMinPos);
-            setRange([newMinValue, range[1]]);
-            onRangeChange([newMinValue, range[1]]);
-        } else if (isDraggingMax) {
-            const newMaxPos = Math.min(
-                100,
-                Math.max(getPositionFromValue(range[0]) + 5, position)
-            );
-            const newMaxValue = getValueFromPosition(newMaxPos);
-            setRange([range[0], newMaxValue]);
-            onRangeChange([range[0], newMaxValue]);
-        } else if (isDraggingBar) {
-            const deltaX = e.touches[0].clientX - dragStart;
-            const deltaPercent = (deltaX / containerRect.width) * 100;
+            if (isDraggingMin) {
+                const newMinPos = Math.max(
+                    0,
+                    Math.min(getPositionFromValue(range[1]) - 5, position)
+                );
+                const newMinValue = getValueFromPosition(newMinPos);
+                setRange([newMinValue, range[1]]);
+                onRangeChange([newMinValue, range[1]]);
+            } else if (isDraggingMax) {
+                const newMaxPos = Math.min(
+                    100,
+                    Math.max(getPositionFromValue(range[0]) + 5, position)
+                );
+                const newMaxValue = getValueFromPosition(newMaxPos);
+                setRange([range[0], newMaxValue]);
+                onRangeChange([range[0], newMaxValue]);
+            } else if (isDraggingBar) {
+                const deltaX = e.touches[0].clientX - dragStart;
+                const deltaPercent = (deltaX / containerRect.width) * 100;
 
-            let newMinPos = getPositionFromValue(range[0]) + deltaPercent;
-            let newMaxPos = getPositionFromValue(range[1]) + deltaPercent;
+                let newMinPos = getPositionFromValue(range[0]) + deltaPercent;
+                let newMaxPos = getPositionFromValue(range[1]) + deltaPercent;
 
-            if (newMinPos < 0) {
-                newMinPos = 0;
-                newMaxPos = barWidth;
+                if (newMinPos < 0) {
+                    newMinPos = 0;
+                    newMaxPos = barWidth;
+                }
+
+                if (newMaxPos > 100) {
+                    newMaxPos = 100;
+                    newMinPos = 100 - barWidth;
+                }
+
+                const newMinValue = getValueFromPosition(newMinPos);
+                const newMaxValue = getValueFromPosition(newMaxPos);
+
+                setRange([newMinValue, newMaxValue]);
+                onRangeChange([newMinValue, newMaxValue]);
+                setDragStart(e.touches[0].clientX);
             }
+        },
+        [
+            isDraggingMin,
+            isDraggingMax,
+            isDraggingBar,
+            range,
+            barWidth,
+            dragStart,
+            onRangeChange,
+            getPositionFromValue,
+            getValueFromPosition,
+        ]
+    );
 
-            if (newMaxPos > 100) {
-                newMaxPos = 100;
-                newMinPos = 100 - barWidth;
-            }
-
-            const newMinValue = getValueFromPosition(newMinPos);
-            const newMaxValue = getValueFromPosition(newMaxPos);
-
-            setRange([newMinValue, newMaxValue]);
-            onRangeChange([newMinValue, newMaxValue]);
-            setDragStart(e.touches[0].clientX);
-        }
-    };
-
-    // Mouse/Touch up handler
-    const handleMouseUp = (): void => {
+    // Mouse/Touch up handler - wrapped in useCallback
+    const handleMouseUp = useCallback((): void => {
         setIsDraggingMin(false);
         setIsDraggingMax(false);
         setIsDraggingBar(false);
-    };
+    }, []);
 
     // Add event listeners when dragging starts
     useEffect(() => {
@@ -202,7 +234,14 @@ const PriceRangeSlider: React.FC<PriceRangeSliderProps> = ({
             document.removeEventListener("touchmove", handleTouchMove);
             document.removeEventListener("touchend", handleMouseUp);
         };
-    }, [isDraggingMin, isDraggingMax, isDraggingBar, range]);
+    }, [
+        isDraggingMin,
+        isDraggingMax,
+        isDraggingBar,
+        handleMouseMove,
+        handleTouchMove,
+        handleMouseUp,
+    ]);
 
     return (
         <div className="mt-6 mb-2">
