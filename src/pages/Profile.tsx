@@ -69,6 +69,14 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
                 setOriginalNickname(profileData.data.nickname);
                 setOriginalDiscordUrl(profileData.data.discord_link);
 
+                // 디스코드 링크가 비어있는 경우 헬퍼 텍스트 설정
+                if (!profileData.data.discord_link) {
+                    setIsDiscordValid(false);
+                    setDiscordHelperText(
+                        "*링크를 등록하지 않으면 게임 상세 페이지 내 댓글 기능 사용이 제한됩니다."
+                    );
+                }
+
                 // Extract category data from the response
                 if (
                     profileData.data.categorys &&
@@ -147,22 +155,17 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
 
         try {
             const result = await checkDiscordLinkDuplication(value);
-            console.log(result.message);
-            if (result.message === "invalid_discordlink") {
-                setDiscordHelperText("유효하지않은 링크입니다.");
+
+            if (result.duplication) {
+                setDiscordHelperText("이미 사용 중인 디스코드 링크입니다.");
                 setIsDiscordValid(false);
             } else {
-                if (result.duplication) {
-                    setDiscordHelperText("이미 사용 중인 디스코드 링크입니다.");
-                    setIsDiscordValid(false);
-                } else {
-                    setDiscordHelperText("사용 가능한 디스코드 링크입니다.");
-                    setIsDiscordValid(true);
-                }
+                setDiscordHelperText("사용 가능한 디스코드 링크입니다.");
+                setIsDiscordValid(true);
             }
         } catch (error) {
             console.error("유효한 링크가 아닙니다.:", error);
-            setDiscordHelperText("중복 확인 중 오류가 발생했습니다.");
+            setDiscordHelperText("유효하지 않은 링크입니다.");
             setIsDiscordValid(false);
         }
     }, 500);
@@ -178,7 +181,15 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
     const handleDiscordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
         setDiscordUrl(value);
-        checkDiscordLink(value);
+
+        if (!value) {
+            setDiscordHelperText(
+                "*링크를 등록하지 않으면 게임 상세 페이지 내 댓글 기능 사용이 제한됩니다."
+            );
+            setIsDiscordValid(true); // 비어있어도 유효하지만 경고 메시지 표시
+        } else {
+            checkDiscordLink(value);
+        }
     };
 
     // 선택된 카테고리 ID가 변경될 때마다 표시 이름 업데이트
@@ -267,8 +278,10 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
 
     const handleClearDiscord = () => {
         setDiscordUrl("");
-        setDiscordHelperText("");
-        setIsDiscordValid(true);
+        setDiscordHelperText(
+            "*링크를 등록하지 않으면 게임 상세 페이지 내 댓글 기능 사용이 제한됩니다."
+        );
+        setIsDiscordValid(false);
     };
 
     const handleOpenModal = () => {

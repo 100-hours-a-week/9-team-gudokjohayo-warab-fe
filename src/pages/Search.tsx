@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import Header from "../components/Header";
 import FilterModal, { FilterOptions } from "../components/FilterModal";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -8,6 +8,7 @@ import {
     convertFiltersToParams,
 } from "../services/searchService";
 import { getAllCategorys } from "../services/categoryService";
+import ScrollToTopButton from "../components/ScrollToTopButton";
 
 const SearchPage: React.FC = () => {
     const navigate = useNavigate();
@@ -29,6 +30,13 @@ const SearchPage: React.FC = () => {
     >([]);
     const [categorysLoading, setCategorysLoading] = useState<boolean>(true);
 
+    // 인피니티 스크롤 관련 상태
+    const [currentPage, setCurrentPage] = useState<number>(0);
+    const [hasMore, setHasMore] = useState<boolean>(true);
+    const [loadingMore, setLoadingMore] = useState<boolean>(false);
+    const observerRef = useRef<IntersectionObserver | null>(null);
+    const lastGameElementRef = useRef<HTMLDivElement | null>(null);
+
     // Fetch categories when component mounts
     useEffect(() => {
         const fetchCategorys = async () => {
@@ -46,40 +54,96 @@ const SearchPage: React.FC = () => {
         fetchCategorys();
     }, []);
 
-    // hazel: useCallback을 사용해서 fetchGames 함수를 메모이제이션
     // Fetch games based on current filters and search query
-    const fetchGames = useCallback(async () => {
-        try {
-            setLoading(true);
-            setError(null);
+    const fetchGames = useCallback(
+        async (page = 0, isLoadingMore = false) => {
+            try {
+                if (page === 0) {
+                    setLoading(true);
+                    setHasMore(true);
+                } else {
+                    setLoadingMore(true);
+                }
+                setError(null);
 
-            // Determine the mode based on which filter is active
-            let mode: "discounted" | "recommended" | "default" = "default";
-            if (discountFilter) mode = "discounted";
-            if (recommendedFilter) mode = "recommended";
+                // Determine the mode based on which filter is active
+                let mode: "discounted" | "recommended" | "default" = "default";
+                if (discountFilter) mode = "discounted";
+                if (recommendedFilter) mode = "recommended";
 
-            // Convert filters to search parameters
-            const searchParams = convertFiltersToParams(
-                activeFilters,
-                searchQuery,
-                mode
-            );
+                // Convert filters to search parameters
+                const searchParams = convertFiltersToParams(
+                    activeFilters,
+                    searchQuery,
+                    mode
+                );
 
-            // Fetch games with the search parameters
-            const gameResults = await searchGames(searchParams);
-            setGames(gameResults);
-        } catch (error) {
-            console.error("Error fetching games:", error);
-            setError("게임 목록을 불러오는 데 실패했습니다.");
-        } finally {
-            setLoading(false);
-        }
-    }, [searchQuery, activeFilters, discountFilter, recommendedFilter]);
+                // Add page parameter
+                searchParams.page = page;
 
-    // Fetch games when component mounts or filters change
+                // Fetch games with the search parameters
+                const gameResults = await searchGames(searchParams);
+
+                // If we got fewer results than expected or none, there's no more data
+                if (gameResults.length === 0) {
+                    setHasMore(false);
+                }
+
+                // Update the games list
+                if (isLoadingMore) {
+                    setGames((prevGames) => [...prevGames, ...gameResults]);
+                } else {
+                    setGames(gameResults);
+                }
+            } catch (error) {
+                console.error("Error fetching games:", error);
+                setError("게임 목록을 불러오는 데 실패했습니다.");
+            } finally {
+                setLoading(false);
+                setLoadingMore(false);
+            }
+        },
+        [searchQuery, activeFilters, discountFilter, recommendedFilter]
+    );
+
+    // Setup intersection observer for infinite scrolling
     useEffect(() => {
-        fetchGames();
-    }, [fetchGames]);
+        const options = {
+            root: null, // viewport
+            rootMargin: "0px",
+            threshold: 0.1,
+        };
+
+        observerRef.current = new IntersectionObserver((entries) => {
+            const [entry] = entries;
+            if (entry.isIntersecting && hasMore && !loading && !loadingMore) {
+                // Load more data when the last element is visible
+                const nextPage = currentPage + 1;
+                setCurrentPage(nextPage);
+                fetchGames(nextPage, true);
+            }
+        }, options);
+
+        return () => {
+            if (observerRef.current) {
+                observerRef.current.disconnect();
+            }
+        };
+    }, [hasMore, loading, loadingMore, currentPage, fetchGames]);
+
+    // Attach the observer to the last game element
+    useEffect(() => {
+        if (lastGameElementRef.current && observerRef.current) {
+            observerRef.current.disconnect();
+            observerRef.current.observe(lastGameElementRef.current);
+        }
+    }, [games]);
+
+    // Initial fetch when component mounts or filters change
+    useEffect(() => {
+        setCurrentPage(0);
+        fetchGames(0, false);
+    }, [searchQuery, activeFilters, discountFilter, recommendedFilter]);
 
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearchQuery(e.target.value);
@@ -87,7 +151,8 @@ const SearchPage: React.FC = () => {
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        fetchGames();
+        setCurrentPage(0);
+        fetchGames(0, false);
     };
 
     const toggleDiscountFilter = () => {
@@ -110,27 +175,13 @@ const SearchPage: React.FC = () => {
 
     const handleApplyFilters = (filters: FilterOptions) => {
         setActiveFilters(filters);
+        setCurrentPage(0);
     };
 
     // Navigate to game detail page with category ID if available
     const handleGameClick = (gameId: number) => {
         navigate(`/games/${gameId}`);
     };
-
-    // hazel: handleCategoryClick 함수 주석 처리
-    // // Navigate to search with category ID
-    // const handleCategoryClick = (categoryId: number, categoryName: string) => {
-    //     // Update to match the new FilterOptions interface with null values for player options
-    //     const newFilters: FilterOptions = {
-    //         categories: [categoryName],
-    //         categoryIds: [categoryId],
-    //         rating: 4,
-    //         priceRange: [0, 100000],
-    //         playerCount: null, // Changed from string to null to match updated interface
-    //         currentPlayerCount: null, // Changed from string to null to match updated interface
-    //     };
-    //     setActiveFilters(newFilters);
-    // };
 
     // Format price with commas (in Korean Won)
     const formatPrice = (price: number) => {
@@ -268,7 +319,7 @@ const SearchPage: React.FC = () => {
 
                         {/* Game Results List */}
                         <div className="flex-1 overflow-y-auto px-4">
-                            {loading ? (
+                            {loading && currentPage === 0 ? (
                                 <div className="py-8 text-center text-gray-500">
                                     게임을 불러오는 중입니다...
                                 </div>
@@ -279,14 +330,19 @@ const SearchPage: React.FC = () => {
                             ) : (
                                 <div className="space-y-4 pb-6">
                                     {games.length > 0 ? (
-                                        games.map((game) => (
+                                        games.map((game, index) => (
                                             <div
-                                                key={game.game_id}
+                                                key={`${game.game_id}-${index}`}
                                                 className="flex cursor-pointer"
                                                 onClick={() =>
                                                     handleGameClick(
                                                         game.game_id
                                                     )
+                                                }
+                                                ref={
+                                                    index === games.length - 1
+                                                        ? lastGameElementRef
+                                                        : null
                                                 }
                                             >
                                                 <div
@@ -332,6 +388,20 @@ const SearchPage: React.FC = () => {
                                             해당 검색결과가 없습니다.
                                         </div>
                                     )}
+
+                                    {/* Loading indicator for infinite scroll */}
+                                    {loadingMore && (
+                                        <div className="py-4 text-center text-gray-500">
+                                            더 많은 게임을 불러오는 중...
+                                        </div>
+                                    )}
+
+                                    {/* End of results message */}
+                                    {!hasMore && games.length > 0 && (
+                                        <div className="py-4 text-center text-gray-500">
+                                            모든 결과를 불러왔습니다.
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -347,6 +417,16 @@ const SearchPage: React.FC = () => {
                 initialFilters={activeFilters || undefined}
                 categories={categorys}
                 categoriesLoading={categorysLoading}
+            />
+
+            {/* Scroll To Top Button */}
+            <ScrollToTopButton
+                threshold={300}
+                bottom={20}
+                right={20}
+                backgroundColor="#FF6B00"
+                size={36} // 모바일에 적합한 크기로 약간 줄임
+                containerWidth={402} // 컨테이너 너비 전달
             />
         </div>
     );

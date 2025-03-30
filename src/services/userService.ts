@@ -83,7 +83,7 @@ export const updateUserProfile = async (
 // 로그아웃
 export const userLogOut = async (): Promise<any> => {
     try {
-        const response = await api.post("/logout"); // Send the logout request to the server
+        const response = await api.post("/auth/logout"); // Send the logout request to the server
         console.log(response);
         return response.data; // Return the response data (optional)
     } catch (error) {
