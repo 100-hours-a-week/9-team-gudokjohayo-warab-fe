@@ -143,7 +143,13 @@ const SearchPage: React.FC = () => {
     useEffect(() => {
         setCurrentPage(0);
         fetchGames(0, false);
-    }, [searchQuery, activeFilters, discountFilter, recommendedFilter]);
+    }, [
+        searchQuery,
+        activeFilters,
+        discountFilter,
+        recommendedFilter,
+        fetchGames,
+    ]);
 
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearchQuery(e.target.value);
