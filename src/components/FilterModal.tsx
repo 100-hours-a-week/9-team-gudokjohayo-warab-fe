@@ -251,6 +251,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
                 id="filter-modal-content"
                 className="bg-white rounded-t-lg w-full h-4/5 px-4 overflow-y-auto"
                 style={{
+                    maxHeight: "70vh",
                     transform: isOpen ? "translateY(0)" : "translateY(100%)",
                     transition: "transform 0.3s ease-out",
                     width: "402px",
@@ -259,11 +260,40 @@ const FilterModal: React.FC<FilterModalProps> = ({
                     scrollbarGutter: "stable",
                     boxSizing: "border-box",
                     paddingRight: "16px",
-                    overflowY: "auto",
+                    overflow: "auto",
                     overscrollBehavior: "contain",
+                    
+                    scrollbarColor: "#E5E7EB transparent",
                 }}
                 onScroll={handleScroll}
             >
+                <style>
+                    {`
+                        #filter-modal-content {
+                            border-top-left-radius: 1rem;
+                            border-top-right-radius: 1rem;
+                            overflow: auto;
+                            clip-path: inset(0 round 1rem 1rem 0 0);
+                        }
+                        #filter-modal-content::-webkit-scrollbar {
+                            width: 6px;
+                            position: relative;
+                            z-index: 1;
+                        }
+                        #filter-modal-content::-webkit-scrollbar-track {
+                            background: transparent;
+                        }
+                        #filter-modal-content::-webkit-scrollbar-thumb {
+                            background-color: #E5E7EB;
+                            border-radius: 3px;
+                        }
+                        .sticky {
+                            position: sticky;
+                            z-index: 2;
+                            background-color: white;
+                        }
+                    `}
+                </style>
                 <div className="sticky top-0 p-4 bg-white">
                     <div className="bg-white z-10 flex justify-between items-center pb-2 border-b">
                         <h2 className="text-xl font-bold">필터</h2>
