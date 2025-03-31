@@ -511,7 +511,7 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
                                     {categoryDisplayNames.length === 0 && (
                                         <p className="text-xs text-red-500">
                                             *선호 카테고리를 등록하지 않으면
-                                            게시 추천 기능이 제한됩니다.
+                                            게임 추천 기능이 제한됩니다.
                                         </p>
                                     )}
 
