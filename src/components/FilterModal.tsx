@@ -56,6 +56,18 @@ const FilterModal: React.FC<FilterModalProps> = ({
         }
     }, [initialFilters, isOpen]);
 
+    // disable 스크롤 이벤트
+    useEffect(() => {
+        if (isOpen) {
+            const originalStyle = window.getComputedStyle(document.body).overflow;
+            document.body.style.overflow = 'hidden';
+            
+            return () => {
+                document.body.style.overflow = originalStyle;
+            };
+        }
+    }, [isOpen]);
+
     // Scroll to section when tab is clicked
     const scrollToSection = (sectionId: string) => {
         setActiveTab(sectionId);
