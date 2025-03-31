@@ -33,6 +33,7 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isSaving, setIsSaving] = useState<boolean>(false);
+    const [hasChanges, setHasChanges] = useState<boolean>(false);
 
     // 유효성 검사 상태
     const [nicknameHelperText, setNicknameHelperText] = useState<string>("");
@@ -44,10 +45,12 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
     const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>(
         []
     );
+    const [originalCategoryIds, setOriginalCategoryIds] = useState<number[]>(
+        []
+    );
     const [categoryDisplayNames, setCategoryDisplayNames] = useState<string[]>(
         []
     );
-    //const [categoryData, setCategoryData] = useState<Category[]>([]);
     const [categoryData, setCategoryData] = useState<Category[]>([]);
     const [isCategoryLoading, setIsCategoryLoading] = useState<boolean>(false);
 
@@ -71,7 +74,6 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
 
                 // 디스코드 링크가 비어있는 경우 헬퍼 텍스트 설정
                 if (!profileData.data.discord_link) {
-                    setIsDiscordValid(false);
                     setDiscordHelperText(
                         "*링크를 등록하지 않으면 게임 상세 페이지 내 댓글 기능 사용이 제한됩니다."
                     );
@@ -90,6 +92,7 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
                         (cat) => cat.category_id
                     );
                     setSelectedCategoryIds(categoryIds);
+                    setOriginalCategoryIds([...categoryIds]);
 
                     // Extract and set the names for display
                     const categoryNames = profileData.data.categorys.map(
@@ -107,8 +110,50 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
         fetchProfileData();
     }, []);
 
+    // 변경사항 감지
+    useEffect(() => {
+        const checkChanges = () => {
+            const nicknameChanged = nickname !== originalNickname;
+            const discordChanged = discordUrl !== originalDiscordUrl;
+
+            // 카테고리 변경 감지를 위해 배열을 정렬한 후 비교
+            const sortedOriginal = [...originalCategoryIds].sort();
+            const sortedCurrent = [...selectedCategoryIds].sort();
+            const categoriesChanged =
+                JSON.stringify(sortedOriginal) !==
+                JSON.stringify(sortedCurrent);
+
+            setHasChanges(
+                nicknameChanged || discordChanged || categoriesChanged
+            );
+        };
+
+        checkChanges();
+    }, [
+        nickname,
+        discordUrl,
+        selectedCategoryIds,
+        originalNickname,
+        originalDiscordUrl,
+        originalCategoryIds,
+    ]);
+
     // 닉네임 중복 확인 (디바운스 적용)
     const checkNickname = debounce(async (value: string) => {
+        // 공백 체크
+        if (value.includes(" ")) {
+            setNicknameHelperText("닉네임에 공백을 포함할 수 없습니다.");
+            setIsNicknameValid(false);
+            return;
+        }
+
+        const specialCharRegex = /[~!@#$%^&*()_+`\-={}[\]|\\:;"'<>,.?/]/;
+        if (specialCharRegex.test(value)) {
+            setNicknameHelperText("닉네임에 특수문자를 포함할 수 없습니다.");
+            setIsNicknameValid(false);
+            return;
+        }
+
         if (!value) {
             setNicknameHelperText("닉네임을 입력해주세요.");
             setIsNicknameValid(false);
@@ -141,8 +186,10 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
     // 디스코드 링크 중복 확인 (디바운스 적용)
     const checkDiscordLink = debounce(async (value: string) => {
         if (!value) {
-            setDiscordHelperText("");
-            setIsDiscordValid(true);
+            setDiscordHelperText(
+                "*링크를 등록하지 않으면 게임 상세 페이지 내 댓글 기능 사용이 제한됩니다."
+            );
+            setIsDiscordValid(true); // 비어있어도 유효함
             return;
         }
 
@@ -186,7 +233,7 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
             setDiscordHelperText(
                 "*링크를 등록하지 않으면 게임 상세 페이지 내 댓글 기능 사용이 제한됩니다."
             );
-            setIsDiscordValid(true); // 비어있어도 유효하지만 경고 메시지 표시
+            setIsDiscordValid(true); // 비어있어도 유효함
         } else {
             checkDiscordLink(value);
         }
@@ -254,8 +301,14 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
     }, [selectedCategoryIds, categoryData]);
 
     const handleSave = async () => {
+        // 변경사항이 없으면 저장하지 않음
+        if (!hasChanges) {
+            navigate("/main");
+            return;
+        }
+
         // 유효성 검사
-        if (!isNicknameValid || !isDiscordValid) {
+        if (!isNicknameValid) {
             setShowToast(true);
             setTimeout(() => setShowToast(false), 3000);
             return;
@@ -267,8 +320,13 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
             await updateUserProfile(nickname, discordUrl, selectedCategoryIds);
             setOriginalNickname(nickname);
             setOriginalDiscordUrl(discordUrl);
+            setOriginalCategoryIds([...selectedCategoryIds]);
+            setHasChanges(false);
             setShowToast(true);
-            setTimeout(() => setShowToast(false), 3000);
+            setTimeout(() => {
+                setShowToast(false);
+                navigate("/main");
+            }, 3000);
         } catch (error) {
             console.error("프로필 저장 중 오류 발생:", error);
         } finally {
@@ -281,7 +339,7 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
         setDiscordHelperText(
             "*링크를 등록하지 않으면 게임 상세 페이지 내 댓글 기능 사용이 제한됩니다."
         );
-        setIsDiscordValid(false);
+        setIsDiscordValid(true); // 비어있어도 유효함
     };
 
     const handleOpenModal = () => {
@@ -298,19 +356,7 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
 
     // Cancel button handlers
     const handleCancelClick = () => {
-        // Sort the arrays to ensure reliable comparison
-        const originalCategoriesIds = getCategoryIdsFromOriginalProfile(); // We need to get this from somewhere
-        const currentCategoriesIds = [...selectedCategoryIds].sort();
-
-        // Compare arrays by converting to strings
-        const originalIdsString = JSON.stringify(originalCategoriesIds);
-        const currentIdsString = JSON.stringify(currentCategoriesIds);
-
-        if (
-            nickname !== originalNickname ||
-            discordUrl !== originalDiscordUrl ||
-            originalIdsString !== currentIdsString
-        ) {
+        if (hasChanges) {
             setShowCancelConfirmation(true);
         } else {
             navigate("/main");
@@ -344,11 +390,6 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
 
     const handleLogoutDismiss = () => {
         setShowLogoutConfirmation(false);
-    };
-
-    const getCategoryIdsFromOriginalProfile = () => {
-        // If you stored the original categories somewhere
-        return [...selectedCategoryIds].sort(); // This is a placeholder, needs proper implementation
     };
 
     return (
@@ -446,7 +487,7 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
                                     </div>
                                     {discordHelperText && (
                                         <p
-                                            className={`text-xs ${isDiscordValid ? "text-green-500" : "text-red-500"}`}
+                                            className={`text-xs ${!discordUrl || isDiscordValid ? "text-gray-500" : "text-red-500"}`}
                                         >
                                             {discordHelperText}
                                         </p>
@@ -528,12 +569,17 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
                                     </button>
                                     <button
                                         className={`px-6 py-2 rounded-full bg-orange-500 text-white text-sm ${
-                                            isSaving || !isNicknameValid
-                                                ? "opacity-50 cursor-not-allowed"
-                                                : ""
+                                            isSaving ||
+                                            !isNicknameValid ||
+                                            (!hasChanges &&
+                                                "opacity-50 cursor-not-allowed")
                                         }`}
                                         onClick={handleSave}
-                                        disabled={isSaving || !isNicknameValid}
+                                        disabled={
+                                            isSaving ||
+                                            !isNicknameValid ||
+                                            !hasChanges
+                                        }
                                     >
                                         {isSaving ? "저장 중..." : "완료"}
                                     </button>
