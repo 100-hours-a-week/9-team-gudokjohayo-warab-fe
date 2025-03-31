@@ -143,7 +143,7 @@ const DetailPage: React.FC<DetailPageProps> = () => {
               ];
 
     // Collapsed view only shows the first 4 categories
-    const collapsedCategories = displayCategories.slice(0, 4);
+    const collapsedCategories = displayCategories.slice(0, 3);
 
     return (
         <div className="flex justify-center items-center min-h-screen bg-white">
@@ -280,20 +280,22 @@ const DetailPage: React.FC<DetailPageProps> = () => {
                         <div className="mt-4">
                             <div className="flex justify-between items-center">
                                 <h2 className="text-gray-600">카테고리</h2>
-                                <button
-                                    onClick={toggleCategoryExpansion}
-                                    className="flex items-center justify-center w-8 h-8 bg-gray-100 rounded-md"
-                                >
-                                    {isCategoryExpanded ? "-" : "+"}
-                                </button>
+                                {displayCategories.length > 3 && (
+                                    <button
+                                        onClick={toggleCategoryExpansion}
+                                        className="flex items-center justify-center w-8 h-8 bg-gray-100 rounded-md"
+                                    >
+                                        {isCategoryExpanded ? "-" : "+"}
+                                    </button>
+                                )}
                             </div>
 
                             {/* Categories - shows only relevant categories */}
                             <div className="overflow-x-auto pb-2 -mx-2 px-2 mt-2">
                                 <div className="flex flex-wrap gap-2">
-                                    {(isCategoryExpanded
-                                        ? displayCategories
-                                        : collapsedCategories
+                                    {(displayCategories.length > 3 && !isCategoryExpanded
+                                        ? collapsedCategories
+                                        : displayCategories
                                     ).map((category, index) => (
                                         <button
                                             key={index}
