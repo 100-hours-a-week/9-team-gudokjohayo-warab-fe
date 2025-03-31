@@ -339,7 +339,7 @@ const MainPage: React.FC = () => {
                                     나만의 게임 취향을 설정해보세요
                                 </h3>
                                 <p className="text-sm text-gray-600">
-                                    선호하는 장르를 등록하면 맞춤형 게임 추천을 받을 수 있어요
+                                    선호하는 카테고리를 등록하면 맞춤형 게임 추천을 받을 수 있어요
                                 </p>
                             </div>
                             <button
