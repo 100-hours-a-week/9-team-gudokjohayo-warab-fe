@@ -242,33 +242,42 @@ const MainPage: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState<string>("");
     const [mainPageSections, setMainPageSections] = useState<MainPageSection[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
-    const [showCategoryBanner, setShowCategoryBanner] = useState<boolean>(false);
+    const [showCategoryBanner, setShowCategoryBanner] = useState<boolean>(true);
     const navigate = useNavigate();
 
     useEffect(() => {
-        const fetchData = async () => {
+        const checkUserPreferences = async () => {
+            try {
+                const userProfile = await getUserProfile();
+                // 사용자가 선호 카테고리를 선택했다면 배너를 숨깁니다
+                setShowCategoryBanner(!userProfile.data.categorys || userProfile.data.categorys.length === 0);
+            } catch (error) {
+                console.error("Error fetching user preferences:", error);
+                setShowCategoryBanner(true);
+            }
+        };
+
+        checkUserPreferences();
+    }, []);
+
+    useEffect(() => {
+        const fetchMainPageData = async () => {
             setLoading(true);
             try {
-                // 메인 페이지 데이터 가져오기
                 const response = await api.get<MainPageResponse>("/games/main");
                 if (response.data.message === "main_page_inquiry_success") {
                     setMainPageSections(response.data.data.games);
+                } else {
+                    throw new Error("Failed to fetch main page data");
                 }
-
-                // 유저 프로필 데이터 가져오기
-                const profileData = await getUserProfile();
-                // 프로필 페이지에서 선호 카테고리를 등록하지 않은 경우에만 배너 표시
-                setShowCategoryBanner(
-                    !profileData.data.categorys || profileData.data.categorys.length === 0
-                );
             } catch (error) {
-                console.error("Error fetching data:", error);
+                console.error("Error fetching main page data:", error);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchData();
+        fetchMainPageData();
     }, []);
 
     const handleSearch = (e: React.FormEvent) => {
@@ -285,93 +294,103 @@ const MainPage: React.FC = () => {
     };
 
     const handleCategoryRegister = () => {
-        navigate('/profile');
+        navigate("/profile"); 
     };
 
     return (
-        <div className="flex justify-center items-center min-h-screen bg-white">
-            <div className="relative bg-white" style={{ width: "402px", height: "auto", maxWidth: "100vw", minHeight: "100vh" }}>
-                {/* Fixed Header */}
-                <div className="sticky top-0 z-10 w-full">
+        <div className="flex items-center justify-center min-h-screen bg-white">
+            <div
+                className="relative bg-white"
+                style={{
+                    width: "402px",
+                    height: "auto",
+                    maxWidth: "100vw",
+                    minHeight: "100vh",
+                }}
+            >
+                <div className="sticky top-0 z-10">
                     <Header />
                 </div>
 
-                {/* Scrollable Content */}
-                <div className="px-4 pb-4">
-                    {/* Search Bar */}
-                    <form onSubmit={handleSearch} className="mt-4 mb-6">
-                        <div className="relative">
-                            <input
-                                type="text"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="게임 검색하기"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:border-orange-500"
-                            />
-                            <button
-                                type="submit"
-                                className="absolute right-3 top-1/2 transform -translate-y-1/2"
-                            >
-                                <svg
-                                    className="w-5 h-5 text-gray-400"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
+                <div className="flex flex-col">
+                    <div className="p-4">
+                        <form onSubmit={handleSearch}>
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    placeholder="게임 검색"
+                                    className="w-full px-4 py-2 rounded-full bg-gray-200 focus:outline-none"
+                                />
+                                <button
+                                    type="submit"
+                                    className="absolute right-2 top-1/2 transform -translate-y-1/2"
                                 >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                                    />
-                                </svg>
-                            </button>
-                        </div>
-                    </form>
-
-                    {/* Category Registration Banner - Only shown when user hasn't registered categories */}
-                    {showCategoryBanner && (
-                    <div className="mb-6 p-4 bg-gradient-to-r from-orange-100 to-orange-50 rounded-lg border border-orange-200 shadow-sm">
-                        <div className="flex items-center gap-3">
-                            {/* 아이콘 제거됨 */}
-                            <div className="flex-1">
-                                <h3 className="text-md font-semibold text-gray-800 mb-1">
-                                    나만의 게임 취향을 설정해보세요
-                                </h3>
-                                <p className="text-sm text-gray-600">
-                                    선호하는 카테고리를 등록하면 맞춤형 게임 추천을 받을 수 있어요
-                                </p>
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        className="h-5 w-5 text-gray-500"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                                        />
+                                    </svg>
+                                </button>
                             </div>
-                            <button
-                                onClick={handleCategoryRegister}
-                                className="flex-shrink-0 px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-full hover:bg-orange-600 transition-colors duration-300 flex items-center gap-1 shadow-sm"
-                            >
-                                <span>설정하기</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
-                                </svg>
-                            </button>
-                        </div>
+                        </form>
                     </div>
-                )}                                      
 
+                    {/* 🎯 선호 장르 배너 표시 */}
+                    {showCategoryBanner && (
+                        <div className="mb-6 px-4">
+                            <div className="p-4 bg-gradient-to-r from-orange-100 to-orange-50 rounded-lg border border-orange-200 shadow-sm">
+                                <div className="flex items-center gap-3">
+                                    <div className="flex-1">
+                                        <h3 className="text-md font-semibold text-gray-800 mb-1">
+                                            나만의 게임 취향을 설정해보세요
+                                        </h3>
+                                        <p className="text-sm text-gray-600">
+                                            선호하는 카테고리를 등록하면 맞춤형 게임 추천을 받을 수 있어요
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={handleCategoryRegister}
+                                        className="flex-shrink-0 px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-full hover:bg-orange-600 transition-colors duration-300 flex items-center gap-1 shadow-sm"
+                                    >
+                                        <span>설정하기</span>
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
-                    {/* Game Sections */}
                     {loading ? (
-                        <div className="flex justify-center items-center h-40">
-                            <p className="text-gray-500">게임 정보를 불러오는 중...</p>
+                        <div className="flex justify-center items-center py-12">
+                            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500"></div>
                         </div>
                     ) : (
-                        mainPageSections.map((section, index) => (
-                            <div key={index} className="mb-8">
-                                <GameSlider
-                                    games={section.games}
-                                    itemsPerView={2}
-                                    title={section.title}
-                                    onGameClick={handleGameClick}
-                                />
-                            </div>
-                        ))
+                        <div className="px-4 space-y-8 pb-8">
+                            {mainPageSections.map((section, index) => (
+                                <div key={index} className="space-y-2">
+                                    <GameSlider
+                                        games={section.games}
+                                        itemsPerView={index === 0 ? 1 : 2}
+                                        autoSlideInterval={index === 0 ? 5000 : 0}
+                                        title={section.title}
+                                        onGameClick={handleGameClick}
+                                    />
+                                </div>
+                            ))}
+                        </div>
                     )}
                 </div>
             </div>
