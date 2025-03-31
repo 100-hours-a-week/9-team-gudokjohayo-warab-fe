@@ -459,6 +459,7 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                         value={currentMessage}
                         onChange={handleInputChange}
                         onKeyPress={handleKeyPress}
+                        maxLength={100}
                         disabled={!canPostComment}
                     />
                     <button

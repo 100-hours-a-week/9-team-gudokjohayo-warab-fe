@@ -388,6 +388,7 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
                                         type="text"
                                         value={nickname}
                                         onChange={handleNicknameChange}
+                                        maxLength={12}
                                         className={`w-full px-3 py-2 border ${
                                             isNicknameValid
                                                 ? "border-gray-300"
