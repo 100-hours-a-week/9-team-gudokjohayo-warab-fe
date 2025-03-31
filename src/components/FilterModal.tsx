@@ -56,7 +56,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
         }
     }, [initialFilters, isOpen]);
 
-    // disable 스크롤 이벤트
+    // disable 스크롤 
     useEffect(() => {
         if (isOpen) {
             const originalStyle = window.getComputedStyle(document.body).overflow;
@@ -254,6 +254,13 @@ const FilterModal: React.FC<FilterModalProps> = ({
                     transform: isOpen ? "translateY(0)" : "translateY(100%)",
                     transition: "transform 0.3s ease-out",
                     width: "402px",
+                    borderTopLeftRadius: "1rem",
+                    borderTopRightRadius: "1rem",
+                    scrollbarGutter: "stable",
+                    boxSizing: "border-box",
+                    paddingRight: "16px",
+                    overflowY: "auto",
+                    overscrollBehavior: "contain",
                 }}
                 onScroll={handleScroll}
             >
@@ -280,7 +287,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
                 </div>
 
                 {/* Tab Navigation - Sticky at the top */}
-                <div className="sticky top-12 bg-white z-10 flex border-b overflow-x-auto">
+                <div className="sticky top-12 bg-white z-10 flex border-b overflow-x-auto overflow-y-hidden">
                     {tabs.map((tab) => (
                         <button
                             key={tab}
@@ -363,7 +370,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
                     {/* Price Section - Updated with min and max sliders */}
                     <div ref={priceRef} className="pt-2 pb-6">
                         <h3 className="text-lg font-medium my-2">가격</h3>
-                        <div className="py-4">
+                        <div className="py-4 pl-4 pr-4">
                             <RangeSlider
                                 minPrice={0}
                                 maxPrice={200000}
