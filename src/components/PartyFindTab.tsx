@@ -29,6 +29,7 @@ interface UserProfile {
     discord_link?: string;
 }
 
+
 const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
     // Comments state
     const [comments, setComments] = useState<Comment[]>([]);
