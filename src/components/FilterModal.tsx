@@ -6,6 +6,7 @@ interface FilterModalProps {
     isOpen: boolean;
     onClose: () => void;
     onApply: (filters: FilterOptions) => void;
+    onReset: () => void; // New reset handler
     initialFilters?: FilterOptions;
     categories: { category_id: number; category_name: string }[];
     categoriesLoading: boolean;
@@ -25,6 +26,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
     isOpen,
     onClose,
     onApply,
+    onReset, // New reset prop
     initialFilters,
     categories,
     categoriesLoading,
@@ -178,7 +180,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
     // New handler for player type (single/multi/none) segmented control
     const handlePlayerTypeChange = (type: "none" | "single" | "multi") => {
         if (type === "none") {
-            setFilters({ ...filters, singlePlay: false, multiPlay: false });
+            setFilters({ ...filters, singlePlay: true, multiPlay: true });
         } else if (type === "single") {
             setFilters({ ...filters, singlePlay: true, multiPlay: false });
         } else if (type === "multi") {
@@ -194,6 +196,12 @@ const FilterModal: React.FC<FilterModalProps> = ({
     const handleApply = () => {
         onApply(filters);
         onClose();
+    };
+
+    // New handler for reset button
+    const handleReset = () => {
+        setFilters(defaultFilters);
+        onReset();
     };
 
     if (!isOpen) return null;
@@ -246,6 +254,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
 
     // Function to get current player type selection
     const getPlayerType = () => {
+        if (filters.singlePlay && filters.multiPlay) return "none";
         if (filters.singlePlay) return "single";
         if (filters.multiPlay) return "multi";
         return "none";
@@ -256,6 +265,20 @@ const FilterModal: React.FC<FilterModalProps> = ({
         return (
             filters.playerRange[0] === range[0] &&
             filters.playerRange[1] === range[1]
+        );
+    };
+
+    // Check if any filter has been applied
+    const hasActiveFilters = () => {
+        return (
+            filters.categories.length > 0 ||
+            filters.rating !== defaultFilters.rating ||
+            filters.priceRange[0] !== defaultFilters.priceRange[0] ||
+            filters.priceRange[1] !== defaultFilters.priceRange[1] ||
+            filters.playerRange[0] !== defaultFilters.playerRange[0] ||
+            filters.playerRange[1] !== defaultFilters.playerRange[1] ||
+            filters.singlePlay !== defaultFilters.singlePlay ||
+            filters.multiPlay !== defaultFilters.multiPlay
         );
     };
 
@@ -523,24 +546,40 @@ const FilterModal: React.FC<FilterModalProps> = ({
                     </div>
                 </div>
 
-                {/* Bottom Buttons */}
-                <div className="sticky bottom-0 bg-white pt-2 pb-2 flex justify-end space-x-3">
+                {/* Bottom Buttons - Now includes Reset button */}
+                <div className="sticky bottom-0 bg-white pt-2 pb-2 flex justify-between">
+                    {/* Left side - Reset button */}
                     <button
-                        className="px-6 py-2 rounded-full border border-gray-300 bg-white text-gray-700"
-                        onClick={onClose}
+                        className={`px-6 py-2 rounded-full ${
+                            hasActiveFilters()
+                                ? "text-orange-500"
+                                : "text-gray-400"
+                        }`}
+                        onClick={handleReset}
+                        disabled={!hasActiveFilters()}
                     >
-                        취소
+                        초기화
                     </button>
-                    <button
-                        className="px-6 py-2 rounded-full bg-orange-500 text-white"
-                        onClick={handleApply}
-                    >
-                        적용
-                    </button>
-                </div>
 
-                {/* Toast Message Container */}
+                    {/* Right side - Cancel and Apply buttons */}
+                    <div className="flex space-x-3">
+                        <button
+                            className="px-6 py-2 rounded-full border border-gray-300 bg-white text-gray-700"
+                            onClick={onClose}
+                        >
+                            취소
+                        </button>
+                        <button
+                            className="px-6 py-2 rounded-full bg-orange-500 text-white"
+                            onClick={handleApply}
+                        >
+                            적용
+                        </button>
+                    </div>
+                </div>
             </div>
+
+            {/* Toast Message Container */}
             <div className="h-16 mb-4 z-10">
                 {showToast && (
                     <ToastMessage message="카테고리는 5개까지 선택할 수 있어요." />

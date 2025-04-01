@@ -17,7 +17,8 @@ interface GameDetail {
     developer: string;
     publisher: string;
     rating: number;
-    player_count: string;
+    single_play: boolean;
+    multi_play: boolean;
     recent_player: number;
     categories: string[];
     updated_at: string;
@@ -47,6 +48,7 @@ const DetailPage: React.FC<DetailPageProps> = () => {
                 setLoading(true);
                 // Use the gameId from URL params, fallback to "1" if not available
                 const data = await getGameDetails(gameId || "1");
+                console.log(data);
                 setGameDetail(data);
                 setLoading(false);
             } catch (err) {
@@ -65,6 +67,11 @@ const DetailPage: React.FC<DetailPageProps> = () => {
 
     const handleTabChange = (tabId: string) => {
         setActiveTab(tabId);
+    };
+
+    const renderScore = (rating: number) => {
+        const converted = (rating / 10) * 5;
+        return (Math.round(converted * 10) / 10).toFixed(1);
     };
 
     // Render stars based on rating
@@ -102,8 +109,11 @@ const DetailPage: React.FC<DetailPageProps> = () => {
     };
 
     // Handle player count text
-    const getPlayerTypeText = (playerCount: string) => {
-        return playerCount === "single" ? "싱글" : "멀티";
+    const getSinglePlayerText = (single_player: boolean) => {
+        return single_player ? "싱글" : "";
+    };
+    const getMultiPlayerText = (multi_player: boolean) => {
+        return multi_player ? "멀티" : "";
     };
 
     // New utility function to truncate text
@@ -238,12 +248,22 @@ const DetailPage: React.FC<DetailPageProps> = () => {
                                         />
                                     </svg>
                                     <span className="text-sm text-gray-600">
-                                        {getPlayerTypeText(
-                                            gameDetail.player_count
+                                        {getSinglePlayerText(
+                                            gameDetail.single_play
+                                        )}
+                                        {gameDetail.single_play &&
+                                        gameDetail.multi_play
+                                            ? ", "
+                                            : ""}
+                                        {getMultiPlayerText(
+                                            gameDetail.multi_play
                                         )}
                                     </span>
                                     <div className="text-sm">
                                         {renderStars(gameDetail.rating)}
+                                    </div>
+                                    <div className="text-sm text-gray-400">
+                                        {renderScore(gameDetail.rating)}
                                     </div>
                                 </div>
                             </div>
@@ -293,7 +313,8 @@ const DetailPage: React.FC<DetailPageProps> = () => {
                             {/* Categories - shows only relevant categories */}
                             <div className="overflow-x-auto pb-2 -mx-2 px-2 mt-2">
                                 <div className="flex flex-wrap gap-2">
-                                    {(displayCategories.length > 3 && !isCategoryExpanded
+                                    {(displayCategories.length > 3 &&
+                                    !isCategoryExpanded
                                         ? collapsedCategories
                                         : displayCategories
                                     ).map((category, index) => (

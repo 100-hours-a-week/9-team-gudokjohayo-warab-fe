@@ -12,6 +12,8 @@ interface GameDetailResponse {
         developer: string;
         publisher: string;
         rating: number;
+        single_play: boolean;
+        multi_play: boolean;
         player_count: string;
         recent_player: number;
         categories: string[];
