@@ -224,6 +224,28 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
         checkNickname(value);
     };
 
+    const handleNicknameKeyDown = (
+        e: React.KeyboardEvent<HTMLInputElement>
+    ) => {
+        // 허용되지 않는 키 입력 차단
+        const specialChars = /[~!@#$%^&*()_+`\-={}[\]|\\:;"'<>,.?/ ]/;
+        if (specialChars.test(e.key) && e.key.length === 1) {
+            e.preventDefault();
+            setNicknameHelperText(
+                "닉네임에 특수문자나 공백을 포함할 수 없습니다."
+            );
+            // 메시지 잠시 후 사라짐
+            setTimeout(() => {
+                if (nickname) {
+                    checkNickname(nickname);
+                } else {
+                    setNicknameHelperText("닉네임을 입력해주세요.");
+                    setIsNicknameValid(false);
+                }
+            }, 1500);
+        }
+    };
+
     // 디스코드 링크 변경 핸들러
     const handleDiscordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
@@ -307,21 +329,68 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
             return;
         }
 
-        // 유효성 검사
-        if (!isNicknameValid) {
-            setShowToast(true);
-            setTimeout(() => setShowToast(false), 3000);
+        // 저장 직전에 닉네임 특수문자 검사를 한 번 더 수행
+        const specialCharRegex = /[~!@#$%^&*()_+`\-={}[\]|\\:;"'<>,.?/]/;
+
+        // 공백 체크
+        if (nickname.includes(" ")) {
+            setNicknameHelperText("닉네임에 공백을 포함할 수 없습니다.");
+            setIsNicknameValid(false);
+            // 토스트 메시지 제거
             return;
         }
 
+        // 특수문자 체크
+        if (specialCharRegex.test(nickname)) {
+            setNicknameHelperText("닉네임에 특수문자를 포함할 수 없습니다.");
+            setIsNicknameValid(false);
+            // 토스트 메시지 제거
+            return;
+        }
+
+        // 빈 닉네임 체크
+        if (!nickname) {
+            setNicknameHelperText("닉네임을 입력해주세요.");
+            setIsNicknameValid(false);
+            // 토스트 메시지 제거
+            return;
+        }
+
+        // 닉네임이 변경되었다면 중복 체크를 한 번 더 수행
+        if (nickname !== originalNickname) {
+            setIsSaving(true);
+            try {
+                const result = await checkNicknameDuplication(nickname);
+                if (result.duplication) {
+                    setNicknameHelperText("이미 사용 중인 닉네임입니다.");
+                    setIsNicknameValid(false);
+                    setIsSaving(false);
+                    // 토스트 메시지 제거
+                    return;
+                }
+            } catch (error) {
+                console.error("닉네임 중복 확인 중 오류 발생:", error);
+                setNicknameHelperText("중복 확인 중 오류가 발생했습니다.");
+                setIsNicknameValid(false);
+                setIsSaving(false);
+                // 토스트 메시지 제거
+                return;
+            }
+        }
+
+        // 모든 검증을 통과했으므로 닉네임이 유효하다고 설정
+        setIsNicknameValid(true);
+
+        // 실제 저장 로직 실행
         setIsSaving(true);
         try {
-            // Include selectedCategoryIds in the update request
             await updateUserProfile(nickname, discordUrl, selectedCategoryIds);
             setOriginalNickname(nickname);
             setOriginalDiscordUrl(discordUrl);
             setOriginalCategoryIds([...selectedCategoryIds]);
             setHasChanges(false);
+
+            // 저장이 성공했을 때만 토스트 메시지 표시
             setShowToast(true);
             setTimeout(() => {
                 setShowToast(false);
@@ -329,6 +398,8 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
             }, 3000);
         } catch (error) {
             console.error("프로필 저장 중 오류 발생:", error);
+            // 저장 실패 시 에러 메시지 표시 (선택적)
+            setNicknameHelperText("프로필 저장 중 오류가 발생했습니다.");
         } finally {
             setIsSaving(false);
         }
@@ -429,6 +500,7 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
                                         type="text"
                                         value={nickname}
                                         onChange={handleNicknameChange}
+                                        onKeyDown={handleNicknameKeyDown}
                                         maxLength={12}
                                         className={`w-full px-3 py-2 border ${
                                             isNicknameValid
@@ -571,8 +643,9 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
                                         className={`px-6 py-2 rounded-full bg-orange-500 text-white text-sm ${
                                             isSaving ||
                                             !isNicknameValid ||
-                                            (!hasChanges &&
-                                                "opacity-50 cursor-not-allowed")
+                                            !hasChanges
+                                                ? "opacity-50 cursor-not-allowed"
+                                                : ""
                                         }`}
                                         onClick={handleSave}
                                         disabled={
