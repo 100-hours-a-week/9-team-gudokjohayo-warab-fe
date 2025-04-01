@@ -197,8 +197,8 @@ export const convertFiltersToParams = (
 
         // Add rating
         if (filters.rating) {
-            params.ratingMin = filters.rating;
-            params.ratingMax = 5;
+            params.ratingMin = filters.rating * 2;
+            params.ratingMax = 10;
         }
 
         // Add price range

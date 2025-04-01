@@ -56,6 +56,18 @@ const FilterModal: React.FC<FilterModalProps> = ({
         }
     }, [initialFilters, isOpen]);
 
+    // disable 스크롤 
+    useEffect(() => {
+        if (isOpen) {
+            const originalStyle = window.getComputedStyle(document.body).overflow;
+            document.body.style.overflow = 'hidden';
+            
+            return () => {
+                document.body.style.overflow = originalStyle;
+            };
+        }
+    }, [isOpen]);
+
     // Scroll to section when tab is clicked
     const scrollToSection = (sectionId: string) => {
         setActiveTab(sectionId);
@@ -239,12 +251,49 @@ const FilterModal: React.FC<FilterModalProps> = ({
                 id="filter-modal-content"
                 className="bg-white rounded-t-lg w-full h-4/5 px-4 overflow-y-auto"
                 style={{
+                    maxHeight: "70vh",
                     transform: isOpen ? "translateY(0)" : "translateY(100%)",
                     transition: "transform 0.3s ease-out",
                     width: "402px",
+                    borderTopLeftRadius: "1rem",
+                    borderTopRightRadius: "1rem",
+                    scrollbarGutter: "stable",
+                    boxSizing: "border-box",
+                    paddingRight: "16px",
+                    overflow: "auto",
+                    overscrollBehavior: "contain",
+                    
+                    scrollbarColor: "#E5E7EB transparent",
                 }}
                 onScroll={handleScroll}
             >
+                <style>
+                    {`
+                        #filter-modal-content {
+                            border-top-left-radius: 1rem;
+                            border-top-right-radius: 1rem;
+                            overflow: auto;
+                            clip-path: inset(0 round 1rem 1rem 0 0);
+                        }
+                        #filter-modal-content::-webkit-scrollbar {
+                            width: 6px;
+                            position: relative;
+                            z-index: 1;
+                        }
+                        #filter-modal-content::-webkit-scrollbar-track {
+                            background: transparent;
+                        }
+                        #filter-modal-content::-webkit-scrollbar-thumb {
+                            background-color: #E5E7EB;
+                            border-radius: 3px;
+                        }
+                        .sticky {
+                            position: sticky;
+                            z-index: 2;
+                            background-color: white;
+                        }
+                    `}
+                </style>
                 <div className="sticky top-0 p-4 bg-white">
                     <div className="bg-white z-10 flex justify-between items-center pb-2 border-b">
                         <h2 className="text-xl font-bold">필터</h2>
@@ -268,7 +317,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
                 </div>
 
                 {/* Tab Navigation - Sticky at the top */}
-                <div className="sticky top-12 bg-white z-10 flex border-b overflow-x-auto">
+                <div className="sticky top-12 bg-white z-10 flex border-b overflow-x-auto overflow-y-hidden">
                     {tabs.map((tab) => (
                         <button
                             key={tab}
@@ -351,7 +400,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
                     {/* Price Section - Updated with min and max sliders */}
                     <div ref={priceRef} className="pt-2 pb-6">
                         <h3 className="text-lg font-medium my-2">가격</h3>
-                        <div className="py-4">
+                        <div className="py-4 pl-4 pr-4">
                             <RangeSlider
                                 minPrice={0}
                                 maxPrice={200000}

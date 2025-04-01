@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import Header from "../components/Header";
 import { useNavigate } from "react-router-dom";
 import api from "../api/config";
+import { getUserProfile } from "../services/userService";
 
 interface Game {
     game_id: number;
@@ -239,20 +240,32 @@ const GameSlider: React.FC<GameSliderProps> = ({
 
 const MainPage: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState<string>("");
-    const [mainPageSections, setMainPageSections] = useState<MainPageSection[]>(
-        []
-    );
+    const [mainPageSections, setMainPageSections] = useState<MainPageSection[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
+    const [showCategoryBanner, setShowCategoryBanner] = useState<boolean>(true);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const checkUserPreferences = async () => {
+            try {
+                const userProfile = await getUserProfile();
+                // 사용자가 선호 카테고리를 선택했다면 배너를 숨깁니다
+                setShowCategoryBanner(!userProfile.data.categorys || userProfile.data.categorys.length === 0);
+            } catch (error) {
+                console.error("Error fetching user preferences:", error);
+                setShowCategoryBanner(true);
+            }
+        };
+
+        checkUserPreferences();
+    }, []);
 
     useEffect(() => {
         const fetchMainPageData = async () => {
             setLoading(true);
             try {
                 const response = await api.get<MainPageResponse>("/games/main");
-                console.log(response);
                 if (response.data.message === "main_page_inquiry_success") {
-                    console.log(response.data.data.games);
                     setMainPageSections(response.data.data.games);
                 } else {
                     throw new Error("Failed to fetch main page data");
@@ -280,6 +293,10 @@ const MainPage: React.FC = () => {
         navigate(`/games/${gameId}`);
     };
 
+    const handleCategoryRegister = () => {
+        navigate("/profile"); 
+    };
+
     return (
         <div className="flex items-center justify-center min-h-screen bg-white">
             <div
@@ -302,9 +319,7 @@ const MainPage: React.FC = () => {
                                 <input
                                     type="text"
                                     value={searchQuery}
-                                    onChange={(e) =>
-                                        setSearchQuery(e.target.value)
-                                    }
+                                    onChange={(e) => setSearchQuery(e.target.value)}
                                     placeholder="게임 검색"
                                     className="w-full px-4 py-2 rounded-full bg-gray-200 focus:outline-none"
                                 />
@@ -331,6 +346,33 @@ const MainPage: React.FC = () => {
                         </form>
                     </div>
 
+                    {/* 🎯 선호 장르 배너 표시 */}
+                    {showCategoryBanner && (
+                        <div className="mb-6 px-4">
+                            <div className="p-4 bg-gradient-to-r from-orange-100 to-orange-50 rounded-lg border border-orange-200 shadow-sm">
+                                <div className="flex items-center gap-3">
+                                    <div className="flex-1">
+                                        <h3 className="text-md font-semibold text-gray-800 mb-1">
+                                            나만의 게임 취향을 설정해보세요
+                                        </h3>
+                                        <p className="text-sm text-gray-600">
+                                            선호하는 카테고리를 등록하면 맞춤형 게임 추천을 받을 수 있어요
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={handleCategoryRegister}
+                                        className="flex-shrink-0 px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-full hover:bg-orange-600 transition-colors duration-300 flex items-center gap-1 shadow-sm"
+                                    >
+                                        <span>설정하기</span>
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {loading ? (
                         <div className="flex justify-center items-center py-12">
                             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500"></div>
@@ -342,9 +384,7 @@ const MainPage: React.FC = () => {
                                     <GameSlider
                                         games={section.games}
                                         itemsPerView={index === 0 ? 1 : 2}
-                                        autoSlideInterval={
-                                            index === 0 ? 5000 : 0
-                                        }
+                                        autoSlideInterval={index === 0 ? 5000 : 0}
                                         title={section.title}
                                         onGameClick={handleGameClick}
                                     />
