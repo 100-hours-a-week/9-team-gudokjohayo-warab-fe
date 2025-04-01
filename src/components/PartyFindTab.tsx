@@ -29,6 +29,7 @@ interface UserProfile {
     discord_link?: string;
 }
 
+
 const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
     // Comments state
     const [comments, setComments] = useState<Comment[]>([]);
@@ -65,6 +66,10 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
 
                 // Fetch comments
                 const commentsData = await getComments(gameId);
+                // 최신순 정렬
+                const sortedComments = commentsData.sort(
+                    (a: Comment, b: Comment) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+                );
                 setComments(commentsData);
 
                 // Create discord link map from comments
@@ -85,6 +90,41 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
 
         fetchUserProfileAndComments();
     }, [gameId]);
+
+    // Calculate relative time 
+    const getRelativeTime = (dateString: string) => {
+        const date = new Date(dateString);
+        const now = new Date();
+        
+        const secondsDiff = Math.floor((now.getTime() - date.getTime()) / 1000);
+        
+        // Less than 24 hours
+        if (secondsDiff < 86400) {
+            return "오늘";
+        }
+        
+        // Less than 7 days
+        if (secondsDiff < 604800) {
+            const days = Math.floor(secondsDiff / 86400);
+            return `${days}일 전`;
+        }
+        
+        // Less than 30 days
+        if (secondsDiff < 2592000) {
+            const weeks = Math.floor(secondsDiff / 604800);
+            return `${weeks}주 전`;
+        }
+        
+        // Less than 12 months
+        if (secondsDiff < 31536000) {
+            const months = Math.floor(secondsDiff / 2592000);
+            return `${months}개월 전`;
+        }
+        
+        // More than a year
+        const years = Math.floor(secondsDiff / 31536000);
+        return `${years}년 전`;
+    };
 
     // Handle Discord link copy
     const handleDiscordLinkCopy = (username: string) => {
@@ -248,13 +288,10 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
     };
 
     // Handle key press (Enter to send)
-    const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === "Enter") {
-            if (editingCommentId) {
-                handleSaveEdit(editingCommentId);
-            } else {
-                handleSendMessage();
-            }
+    const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault(); 
+            handleSendMessage();
         }
     };
 
@@ -284,8 +321,71 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
 
     return (
         <div className="flex flex-col h-full">
+
+            {/* Message input */}
+            <div className="mb-3 relative">
+            <div className="flex items-center bg-white border border-gray-300 rounded-lg">
+                <textarea
+                    placeholder={
+                        !canPostComment
+                            ? "프로필에 디스코드 링크를 등록해주세요."
+                            : "메시지를 입력하세요."
+                    }
+                    className="flex-1 py-2 px-4 bg-transparent outline-none rounded-lg text-sm resize-none overflow-hidden min-h-[40px] max-h-40"
+                    value={currentMessage}
+                    onChange={(e) => {
+                        if(e.target.value.length <= 50) {
+                            setCurrentMessage(e.target.value);
+                            // 자동 높이 조절
+                            e.target.style.height = 'auto';
+                            e.target.style.height = `${e.target.scrollHeight}px`;
+                        }
+                    }}
+                    onKeyDown={handleKeyPress}
+                    disabled={!canPostComment}
+                    style={{
+                        lineHeight: '24px',
+                        alignItems: 'center',
+                        paddingTop: '8px',
+                        paddingBottom: '8px'
+                    }}
+                />            
+                <button
+                    className={`mr-2 p-1.5 rounded-full ${
+                        !canPostComment || currentMessage.trim() === ""
+                            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                            : "bg-orange-500 text-white"
+                    }`}
+                    onClick={handleSendMessage}
+                    disabled={
+                        !canPostComment || currentMessage.trim() === ""
+                    }
+                >
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                    >
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                        />
+                    </svg>
+                    </button>
+                </div>
+                {/* Character count */}
+                <div className="text-xs text-right mt-1 text-gray-500">
+                    {currentMessage.length}/50
+                </div>
+            </div>
+        
+
             {/* Chat messages */}
-            <div className="flex-1 overflow-y-auto mb-3">
+            <div className="flex-1 overflow-y-auto mb-6">
                 {comments.length === 0 ? (
                     <div className="p-4 text-center text-gray-500">
                         아직 댓글이 없습니다.
@@ -296,45 +396,88 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                             key={comment.comment_id}
                             className="p-2 mb-2 bg-white rounded-lg shadow-sm"
                         >
-                            <div className="flex">
-                                <div
-                                    className="w-8 h-8 mr-2 flex justify-center cursor-pointer"
-                                    onClick={() =>
-                                        handleDiscordLinkCopy(comment.name)
-                                    }
+                            <div className="flex items-center mr-2">
+                            {/* 디스코드+복사 아이콘 버튼 */}
+                            <div
+                                className="flex items-center bg-[#5865F2] bg-opacity-10 hover:bg-opacity-20 rounded-full px-2 py-1 cursor-pointer mr-2"
+                                onClick={() => handleDiscordLinkCopy(comment.name)}
+                            >
+                                {/* 디스코드 아이콘 */}
+                                <img
+                                    src={`${process.env.PUBLIC_URL}/images/discord.png`}
+                                    alt="Discord"
+                                    className="w-4 h-4"
+                                />
+                                
+                                {/* 복사 아이콘 - 클립보드 모양 */}
+                                <svg 
+                                    xmlns="http://www.w3.org/2000/svg" 
+                                    width="12" 
+                                    height="12" 
+                                    viewBox="0 0 24 24" 
+                                    fill="none" 
+                                    stroke="#5865F2"
+                                    strokeWidth="2"
+                                    strokeLinecap="round" 
+                                    strokeLinejoin="round"
+                                    className="ml-1"
                                 >
-                                    <img
-                                        src={`${process.env.PUBLIC_URL}/images/discord.png`}
-                                        alt="Discord"
-                                        className="w-5 h-5"
-                                    />
-                                </div>
-                                <div className="flex flex-1">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                </svg>
+                            </div>
+  
                                     <div className="w-20 min-w-20 mr-2">
                                         <span className="font-medium text-gray-800 truncate block text-xs">
                                             {formatUsername(comment.name)}
                                         </span>
                                     </div>
-                                    <span className="text-gray-400 mr-2 text-xs">
-                                        |
-                                    </span>
+                                    <span className="text-gray-400 mr-2 text-xs"></span>
+                                    
                                     {editingCommentId === comment.comment_id ? (
                                         <div className="flex-1">
-                                            <input
-                                                type="text"
-                                                className="w-full p-1 text-xs border rounded"
+                                            <textarea
+                                                className="w-full p-1 text-xs border rounded resize-none overflow-hidden max-h-40"
                                                 value={editContent}
-                                                onChange={handleEditInputChange}
-                                                onKeyPress={handleKeyPress}
+                                                onChange={(e) => {
+                                                    if(e.target.value.length <= 50) {
+                                                        setEditContent(e.target.value);
+                                                        // 자동 높이 조절
+                                                        e.target.style.height = 'auto';
+                                                        e.target.style.height = `${e.target.scrollHeight}px`;
+                                                    }
+                                                }}
+                                                onKeyPress={(e) => {
+                                                    if (e.key === "Enter" && !e.shiftKey) {
+                                                        e.preventDefault();
+                                                        if(editingCommentId) {
+                                                            handleSaveEdit(editingCommentId);
+                                                        }
+                                                    }
+                                                }}
                                                 autoFocus
+                                                maxLength={50}
+                                                placeholder="최대 50자까지 입력 가능합니다."
                                             />
                                         </div>
                                     ) : (
-                                        <span className="text-gray-600 flex-1 break-words text-xs">
-                                            {comment.content}
-                                        </span>
+                                        <div className="flex-1">
+                                            <span className="text-gray-600 break-words text-xs">
+                                                {comment.content}
+                                            </span>
+                                            <div className="mt-1 text-gray-400 text-xs">
+                                                {comment.updated_at && comment.updated_at !== comment.created_at ? (
+                                                    <span className="inline-block">
+                                                        {getRelativeTime(comment.updated_at)} (수정됨)
+                                                    </span>
+                                                ) : (
+                                                    <span className="inline-block">
+                                                        {getRelativeTime(comment.created_at)}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
                                     )}
-
                                     {/* Edit and Delete buttons for user's own comments */}
                                     {isOwnComment(comment.name) && (
                                         <div className="flex ml-2">
@@ -438,57 +581,11 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                                             )}
                                         </div>
                                     )}
-                                </div>
+                              
                             </div>
                         </div>
                     ))
                 )}
-            </div>
-
-            {/* Message input */}
-            <div className="mt-auto relative">
-                <div className="flex items-center bg-white rounded-full border border-gray-300">
-                    <input
-                        type="text"
-                        placeholder={
-                            !canPostComment
-                                ? "프로필에 디스코드 링크를 등록해주세요."
-                                : "메시지를 입력하세요."
-                        }
-                        className="flex-1 py-2 px-4 bg-transparent outline-none rounded-full text-sm"
-                        value={currentMessage}
-                        onChange={handleInputChange}
-                        onKeyPress={handleKeyPress}
-                        maxLength={100}
-                        disabled={!canPostComment}
-                    />
-                    <button
-                        className={`absolute right-2 p-1.5 rounded-full ${
-                            !canPostComment || currentMessage.trim() === ""
-                                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                                : "bg-orange-500 text-white"
-                        }`}
-                        onClick={handleSendMessage}
-                        disabled={
-                            !canPostComment || currentMessage.trim() === ""
-                        }
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-5 w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                            />
-                        </svg>
-                    </button>
-                </div>
             </div>
 
             <ToastMessage message={toastMessage} isVisible={showToast} />
