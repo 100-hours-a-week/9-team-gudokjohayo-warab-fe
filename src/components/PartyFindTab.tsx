@@ -287,13 +287,10 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
     };
 
     // Handle key press (Enter to send)
-    const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === "Enter") {
-            if (editingCommentId) {
-                handleSaveEdit(editingCommentId);
-            } else {
-                handleSendMessage();
-            }
+    const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault(); 
+            handleSendMessage();
         }
     };
 
@@ -325,50 +322,66 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
         <div className="flex flex-col h-full">
 
             {/* Message input */}
-            <div className="mb-4 relative">
-                <div className="flex items-center bg-white rounded-full border border-gray-300">
-                    <input
-                        type="text"
-                        placeholder={
-                            !canPostComment
-                                ? "프로필에 디스코드 링크를 등록해주세요."
-                                : "메시지를 입력하세요."
+            <div className="mb-3 relative">
+            <div className="flex items-center bg-white border border-gray-300 rounded-lg">
+                <textarea
+                    placeholder={
+                        !canPostComment
+                            ? "프로필에 디스코드 링크를 등록해주세요."
+                            : "메시지를 입력하세요."
+                    }
+                    className="flex-1 py-2 px-4 bg-transparent outline-none rounded-lg text-sm resize-none overflow-hidden min-h-[40px] max-h-40"
+                    value={currentMessage}
+                    onChange={(e) => {
+                        if(e.target.value.length <= 50) {
+                            setCurrentMessage(e.target.value);
+                            // 자동 높이 조절
+                            e.target.style.height = 'auto';
+                            e.target.style.height = `${e.target.scrollHeight}px`;
                         }
-                        className="flex-1 py-2 px-4 bg-transparent outline-none rounded-full text-sm"
-                        value={currentMessage}
-                        onChange={handleInputChange}
-                        onKeyPress={handleKeyPress}
-                        maxLength={100}
-                        disabled={!canPostComment}
-                    />
-                    <button
-                        className={`absolute right-2 p-1.5 rounded-full ${
-                            !canPostComment || currentMessage.trim() === ""
-                                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                                : "bg-orange-500 text-white"
-                        }`}
-                        onClick={handleSendMessage}
-                        disabled={
-                            !canPostComment || currentMessage.trim() === ""
-                        }
+                    }}
+                    onKeyDown={handleKeyPress}
+                    disabled={!canPostComment}
+                    style={{
+                        lineHeight: '24px',
+                        alignItems: 'center',
+                        paddingTop: '8px',
+                        paddingBottom: '8px'
+                    }}
+                />            
+                <button
+                    className={`mr-2 p-1.5 rounded-full ${
+                        !canPostComment || currentMessage.trim() === ""
+                            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                            : "bg-orange-500 text-white"
+                    }`}
+                    onClick={handleSendMessage}
+                    disabled={
+                        !canPostComment || currentMessage.trim() === ""
+                    }
+                >
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
                     >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-5 w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                            />
-                        </svg>
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                        />
+                    </svg>
                     </button>
                 </div>
+                {/* Character count */}
+                <div className="text-xs text-right mt-1 text-gray-500">
+                    {currentMessage.length}/50
+                </div>
             </div>
+        
 
             {/* Chat messages */}
             <div className="flex-1 overflow-y-auto mb-6">
@@ -422,13 +435,28 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                                     
                                     {editingCommentId === comment.comment_id ? (
                                         <div className="flex-1">
-                                            <input
-                                                type="text"
-                                                className="w-full p-1 text-xs border rounded"
+                                            <textarea
+                                                className="w-full p-1 text-xs border rounded resize-none overflow-hidden max-h-40"
                                                 value={editContent}
-                                                onChange={handleEditInputChange}
-                                                onKeyPress={handleKeyPress}
+                                                onChange={(e) => {
+                                                    if(e.target.value.length <= 50) {
+                                                        setEditContent(e.target.value);
+                                                        // 자동 높이 조절
+                                                        e.target.style.height = 'auto';
+                                                        e.target.style.height = `${e.target.scrollHeight}px`;
+                                                    }
+                                                }}
+                                                onKeyPress={(e) => {
+                                                    if (e.key === "Enter" && !e.shiftKey) {
+                                                        e.preventDefault();
+                                                        if(editingCommentId) {
+                                                            handleSaveEdit(editingCommentId);
+                                                        }
+                                                    }
+                                                }}
                                                 autoFocus
+                                                maxLength={50}
+                                                placeholder="최대 50자까지 입력 가능합니다."
                                             />
                                         </div>
                                     ) : (
