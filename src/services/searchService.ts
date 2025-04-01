@@ -22,7 +22,8 @@ interface SearchParams {
     ratingMax?: number;
     priceMin?: number;
     priceMax?: number;
-    playerCount?: string;
+    singlePlay?: boolean;
+    multiPlay?: boolean;
     onlinePlayersMin?: number;
     onlinePlayersMax?: number;
     mode?: "discounted" | "recommended" | "default";
@@ -65,10 +66,12 @@ const buildQueryString = (params: SearchParams): string => {
         queryParts.push(`price_max=${params.priceMax}`);
     }
 
-    if (params.playerCount) {
-        queryParts.push(
-            `player_count=${encodeURIComponent(params.playerCount)}`
-        );
+    if (params.singlePlay !== undefined) {
+        queryParts.push(`singleplay=${params.singlePlay}`);
+    }
+
+    if (params.multiPlay !== undefined) {
+        queryParts.push(`multiplay=${params.multiPlay}`);
     }
 
     if (params.onlinePlayersMin !== undefined) {
@@ -165,13 +168,6 @@ const getMockGames = (): Game[] => {
     ];
 };
 
-/**
- * Convert FilterOptions to SearchParams
- * @param filters Filter options from FilterModal
- * @param searchQuery Current search query
- * @param mode Search mode (discount, recommended, default)
- * @returns Formatted search parameters
- */
 export const convertFiltersToParams = (
     filters: any,
     searchQuery?: string,
@@ -197,7 +193,7 @@ export const convertFiltersToParams = (
 
         // Add rating
         if (filters.rating) {
-            params.ratingMin = filters.rating * 2;
+            params.ratingMin = filters.rating;
             params.ratingMax = 10;
         }
 
@@ -207,18 +203,21 @@ export const convertFiltersToParams = (
             params.priceMax = filters.priceRange[1];
         }
 
-        // Add player count
-        if (filters.playerCount) {
-            params.playerCount = filters.playerCount;
+        // Add player type (single/multi)
+        if (filters.singlePlay !== undefined) {
+            params.singlePlay = filters.singlePlay;
+        }
+        console.log(filters.singleplay);
+        console.log(filters.multiplay);
+
+        if (filters.multiPlay !== undefined) {
+            params.multiPlay = filters.multiPlay;
         }
 
-        // Add current player count
-        if (filters.currentPlayerCount) {
-            const playerCounts = parsePlayerCountRange(
-                filters.currentPlayerCount
-            );
-            params.onlinePlayersMin = playerCounts[0];
-            params.onlinePlayersMax = playerCounts[1];
+        // Add player range for concurrent players
+        if (filters.playerRange && filters.playerRange.length === 2) {
+            params.onlinePlayersMin = filters.playerRange[0];
+            params.onlinePlayersMax = filters.playerRange[1];
         }
     }
 
@@ -232,20 +231,4 @@ export const convertFiltersToParams = (
     params.limit = 10;
 
     return params;
-};
-
-/**
- * Parse player count range from string format
- * @param range Player count range string (e.g., "100~500")
- * @returns Array with min and max values
- */
-const parsePlayerCountRange = (range: string): [number, number] => {
-    const numbers = range.replace(/[^0-9~]/g, "").split("~");
-    const start = parseInt(numbers[0]) || 0;
-    // Special case for "500,000명 이상" option
-    if (range.includes("이상")) {
-        return [start, Number.MAX_SAFE_INTEGER];
-    }
-    const end = numbers[1] ? parseInt(numbers[1]) : 1000;
-    return [start, end];
 };
