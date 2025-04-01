@@ -382,28 +382,44 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                             key={comment.comment_id}
                             className="p-2 mb-2 bg-white rounded-lg shadow-sm"
                         >
-                            <div className="flex">
-                                <div
-                                    className="w-8 h-8 mr-2 flex justify-center cursor-pointer"
-                                    onClick={() =>
-                                        handleDiscordLinkCopy(comment.name)
-                                    }
+                            <div className="flex items-center mr-2">
+                            {/* 디스코드+복사 아이콘 버튼 */}
+                            <div
+                                className="flex items-center bg-[#5865F2] bg-opacity-10 hover:bg-opacity-20 rounded-full px-2 py-1 cursor-pointer mr-2"
+                                onClick={() => handleDiscordLinkCopy(comment.name)}
+                            >
+                                {/* 디스코드 아이콘 */}
+                                <img
+                                    src={`${process.env.PUBLIC_URL}/images/discord.png`}
+                                    alt="Discord"
+                                    className="w-4 h-4"
+                                />
+                                
+                                {/* 복사 아이콘 - 클립보드 모양 */}
+                                <svg 
+                                    xmlns="http://www.w3.org/2000/svg" 
+                                    width="12" 
+                                    height="12" 
+                                    viewBox="0 0 24 24" 
+                                    fill="none" 
+                                    stroke="#5865F2"
+                                    strokeWidth="2"
+                                    strokeLinecap="round" 
+                                    strokeLinejoin="round"
+                                    className="ml-1"
                                 >
-                                    <img
-                                        src={`${process.env.PUBLIC_URL}/images/discord.png`}
-                                        alt="Discord"
-                                        className="w-5 h-5"
-                                    />
-                                </div>
-                                <div className="flex flex-1">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                </svg>
+                            </div>
+  
                                     <div className="w-20 min-w-20 mr-2">
                                         <span className="font-medium text-gray-800 truncate block text-xs">
                                             {formatUsername(comment.name)}
                                         </span>
                                     </div>
-                                    <span className="text-gray-400 mr-2 text-xs">
-                                        |
-                                    </span>
+                                    <span className="text-gray-400 mr-2 text-xs"></span>
+                                    
                                     {editingCommentId === comment.comment_id ? (
                                         <div className="flex-1">
                                             <input
@@ -536,7 +552,7 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                                             )}
                                         </div>
                                     )}
-                                </div>
+                              
                             </div>
                         </div>
                     ))
