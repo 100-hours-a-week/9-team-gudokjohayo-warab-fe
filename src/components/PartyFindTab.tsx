@@ -86,6 +86,41 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
         fetchUserProfileAndComments();
     }, [gameId]);
 
+    // Calculate relative time 
+    const getRelativeTime = (dateString: string) => {
+        const date = new Date(dateString);
+        const now = new Date();
+        
+        const secondsDiff = Math.floor((now.getTime() - date.getTime()) / 1000);
+        
+        // Less than 24 hours
+        if (secondsDiff < 86400) {
+            return "오늘";
+        }
+        
+        // Less than 7 days
+        if (secondsDiff < 604800) {
+            const days = Math.floor(secondsDiff / 86400);
+            return `${days}일 전`;
+        }
+        
+        // Less than 30 days
+        if (secondsDiff < 2592000) {
+            const weeks = Math.floor(secondsDiff / 604800);
+            return `${weeks}주 전`;
+        }
+        
+        // Less than 12 months
+        if (secondsDiff < 31536000) {
+            const months = Math.floor(secondsDiff / 2592000);
+            return `${months}개월 전`;
+        }
+        
+        // More than a year
+        const years = Math.floor(secondsDiff / 31536000);
+        return `${years}년 전`;
+    };
+
     // Handle Discord link copy
     const handleDiscordLinkCopy = (username: string) => {
         const discordLink = discordLinkMap[username];
@@ -377,11 +412,23 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                                             />
                                         </div>
                                     ) : (
-                                        <span className="text-gray-600 flex-1 break-words text-xs">
-                                            {comment.content}
-                                        </span>
+                                        <div className="flex-1">
+                                            <span className="text-gray-600 break-words text-xs">
+                                                {comment.content}
+                                            </span>
+                                            <div className="mt-1 text-gray-400 text-xs">
+                                                {comment.updated_at && comment.updated_at !== comment.created_at ? (
+                                                    <span className="inline-block">
+                                                        {getRelativeTime(comment.updated_at)} (수정됨)
+                                                    </span>
+                                                ) : (
+                                                    <span className="inline-block">
+                                                        {getRelativeTime(comment.created_at)}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
                                     )}
-
                                     {/* Edit and Delete buttons for user's own comments */}
                                     {isOwnComment(comment.name) && (
                                         <div className="flex ml-2">
