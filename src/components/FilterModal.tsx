@@ -16,8 +16,9 @@ export interface FilterOptions {
     categoryIds?: number[]; // Added to store category IDs
     rating: number;
     priceRange: [number, number];
-    playerCount: string | null; // Changed to allow null for no selection
-    currentPlayerCount: string | null; // Changed to allow null for no selection
+    playerRange: [number, number]; // For concurrent player count
+    singlePlay: boolean; // For single player mode
+    multiPlay: boolean; // For multi player mode
 }
 
 const FilterModal: React.FC<FilterModalProps> = ({
@@ -33,8 +34,9 @@ const FilterModal: React.FC<FilterModalProps> = ({
         categoryIds: [],
         rating: 4,
         priceRange: [0, 100000],
-        playerCount: null, // Default to null (no selection)
-        currentPlayerCount: null, // Default to null (no selection)
+        playerRange: [0, 500000], // Default to full range
+        singlePlay: false,
+        multiPlay: false,
     };
 
     const [filters, setFilters] = useState<FilterOptions>(
@@ -56,12 +58,14 @@ const FilterModal: React.FC<FilterModalProps> = ({
         }
     }, [initialFilters, isOpen]);
 
-    // disable 스크롤 
+    // disable 스크롤
     useEffect(() => {
         if (isOpen) {
-            const originalStyle = window.getComputedStyle(document.body).overflow;
-            document.body.style.overflow = 'hidden';
-            
+            const originalStyle = window.getComputedStyle(
+                document.body
+            ).overflow;
+            document.body.style.overflow = "hidden";
+
             return () => {
                 document.body.style.overflow = originalStyle;
             };
@@ -115,16 +119,15 @@ const FilterModal: React.FC<FilterModalProps> = ({
 
     const tabs = ["카테고리", "평점", "가격", "인원", "동접자"];
 
-    // Player type options
-    const playerCountOptions = ["싱글 플레이어", "멀티 플레이어"];
-
-    const currentPlayerOptions = [
-        "0~1,000명",
-        "1,000~10,000명",
-        "10,000~50,000명",
-        "50,000~100,000명",
-        "100,000~500,000명",
-        "500,000명 이상",
+    // Concurrent player options - updated to match new requirements
+    const concurrentPlayerOptions: {
+        label: string;
+        value: [number, number];
+    }[] = [
+        { label: "상관 없어요", value: [0, 500000] },
+        { label: "한산해요", value: [0, 10000] },
+        { label: "보통이에요", value: [10001, 100000] },
+        { label: "북적여요", value: [100001, 500000] },
     ];
 
     const toggleCategory = (categoryName: string, categoryId: number) => {
@@ -172,24 +175,20 @@ const FilterModal: React.FC<FilterModalProps> = ({
         setFilters({ ...filters, rating });
     };
 
-    // Modified handler for player count to allow deselection
-    const handlePlayerCountChange = (option: string) => {
-        // If the same option is clicked again, deselect it
-        if (filters.playerCount === option) {
-            setFilters({ ...filters, playerCount: null });
-        } else {
-            setFilters({ ...filters, playerCount: option });
+    // New handler for player type (single/multi/none) segmented control
+    const handlePlayerTypeChange = (type: "none" | "single" | "multi") => {
+        if (type === "none") {
+            setFilters({ ...filters, singlePlay: false, multiPlay: false });
+        } else if (type === "single") {
+            setFilters({ ...filters, singlePlay: true, multiPlay: false });
+        } else if (type === "multi") {
+            setFilters({ ...filters, singlePlay: false, multiPlay: true });
         }
     };
 
-    // Modified handler for current player count to allow deselection
-    const handleCurrentPlayerCountChange = (option: string) => {
-        // If the same option is clicked again, deselect it
-        if (filters.currentPlayerCount === option) {
-            setFilters({ ...filters, currentPlayerCount: null });
-        } else {
-            setFilters({ ...filters, currentPlayerCount: option });
-        }
+    // New handler for concurrent player count radio buttons
+    const handleConcurrentPlayerChange = (range: [number, number]) => {
+        setFilters({ ...filters, playerRange: range });
     };
 
     const handleApply = () => {
@@ -245,6 +244,21 @@ const FilterModal: React.FC<FilterModalProps> = ({
         }`;
     };
 
+    // Function to get current player type selection
+    const getPlayerType = () => {
+        if (filters.singlePlay) return "single";
+        if (filters.multiPlay) return "multi";
+        return "none";
+    };
+
+    // Helper to check if a specific playerRange is selected
+    const isPlayerRangeSelected = (range: [number, number]) => {
+        return (
+            filters.playerRange[0] === range[0] &&
+            filters.playerRange[1] === range[1]
+        );
+    };
+
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end justify-center z-50">
             <div
@@ -262,7 +276,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
                     paddingRight: "16px",
                     overflow: "auto",
                     overscrollBehavior: "contain",
-                    
+
                     scrollbarColor: "#E5E7EB transparent",
                 }}
                 onScroll={handleScroll}
@@ -415,110 +429,95 @@ const FilterModal: React.FC<FilterModalProps> = ({
                         </div>
                     </div>
 
-                    {/* Player Count Section - Changed to checkbox style for toggle selection */}
+                    {/* Player Count Section - Changed to segmented control */}
                     <div ref={playerCountRef} className="pt-2 pb-6">
                         <h3 className="text-lg font-medium my-2">인원</h3>
                         <div className="py-4">
-                            <div className="grid grid-cols-2 gap-3">
-                                {playerCountOptions.map((option, index) => (
-                                    <div
-                                        key={index}
-                                        className="flex items-center"
-                                    >
-                                        <div
-                                            className={`w-5 h-5 rounded border flex items-center justify-center mr-2 cursor-pointer ${
-                                                filters.playerCount === option
-                                                    ? "bg-orange-500 border-orange-500 text-white"
-                                                    : "border-gray-300"
-                                            }`}
-                                            onClick={() =>
-                                                handlePlayerCountChange(option)
-                                            }
-                                        >
-                                            {filters.playerCount === option && (
-                                                <svg
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    className="h-3 w-3"
-                                                    fill="none"
-                                                    viewBox="0 0 24 24"
-                                                    stroke="currentColor"
-                                                >
-                                                    <path
-                                                        strokeLinecap="round"
-                                                        strokeLinejoin="round"
-                                                        strokeWidth={2}
-                                                        d="M5 13l4 4L19 7"
-                                                    />
-                                                </svg>
-                                            )}
-                                        </div>
-                                        <label
-                                            className="cursor-pointer"
-                                            onClick={() =>
-                                                handlePlayerCountChange(option)
-                                            }
-                                        >
-                                            {option}
-                                        </label>
-                                    </div>
-                                ))}
+                            <div className="flex w-full border border-gray-300 rounded-lg overflow-hidden">
+                                <button
+                                    className={`flex-1 py-3 text-center text-sm font-medium ${
+                                        getPlayerType() === "none"
+                                            ? "bg-orange-500 text-white"
+                                            : "bg-white text-gray-700"
+                                    }`}
+                                    onClick={() =>
+                                        handlePlayerTypeChange("none")
+                                    }
+                                >
+                                    상관없어요
+                                </button>
+                                <button
+                                    className={`flex-1 py-3 text-center text-sm font-medium border-l border-r border-gray-300 ${
+                                        getPlayerType() === "single"
+                                            ? "bg-orange-500 text-white"
+                                            : "bg-white text-gray-700"
+                                    }`}
+                                    onClick={() =>
+                                        handlePlayerTypeChange("single")
+                                    }
+                                >
+                                    싱글 플레이어
+                                </button>
+                                <button
+                                    className={`flex-1 py-3 text-center text-sm font-medium ${
+                                        getPlayerType() === "multi"
+                                            ? "bg-orange-500 text-white"
+                                            : "bg-white text-gray-700"
+                                    }`}
+                                    onClick={() =>
+                                        handlePlayerTypeChange("multi")
+                                    }
+                                >
+                                    멀티 플레이어
+                                </button>
                             </div>
                         </div>
                     </div>
 
-                    {/* Current Player Count Section - Changed to checkbox style for toggle selection */}
+                    {/* Current Player Count Section - Changed to radio buttons */}
                     <div ref={currentPlayerRef} className="pt-2 pb-6">
                         <h3 className="text-lg font-medium my-2">동접자</h3>
                         <div className="py-4">
                             <div className="grid grid-cols-2 gap-3">
-                                {currentPlayerOptions.map((option, index) => (
-                                    <div
-                                        key={index}
-                                        className="flex items-center"
-                                    >
+                                {concurrentPlayerOptions.map(
+                                    (option, index) => (
                                         <div
-                                            className={`w-5 h-5 rounded border flex items-center justify-center mr-2 cursor-pointer ${
-                                                filters.currentPlayerCount ===
-                                                option
-                                                    ? "bg-orange-500 border-orange-500 text-white"
-                                                    : "border-gray-300"
-                                            }`}
-                                            onClick={() =>
-                                                handleCurrentPlayerCountChange(
-                                                    option
-                                                )
-                                            }
+                                            key={index}
+                                            className="flex items-center"
                                         >
-                                            {filters.currentPlayerCount ===
-                                                option && (
-                                                <svg
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    className="h-3 w-3"
-                                                    fill="none"
-                                                    viewBox="0 0 24 24"
-                                                    stroke="currentColor"
-                                                >
-                                                    <path
-                                                        strokeLinecap="round"
-                                                        strokeLinejoin="round"
-                                                        strokeWidth={2}
-                                                        d="M5 13l4 4L19 7"
-                                                    />
-                                                </svg>
-                                            )}
+                                            <div
+                                                className={`w-5 h-5 rounded-full border flex items-center justify-center mr-2 cursor-pointer ${
+                                                    isPlayerRangeSelected(
+                                                        option.value
+                                                    )
+                                                        ? "bg-orange-500 border-orange-500"
+                                                        : "border-gray-300"
+                                                }`}
+                                                onClick={() =>
+                                                    handleConcurrentPlayerChange(
+                                                        option.value
+                                                    )
+                                                }
+                                            >
+                                                {isPlayerRangeSelected(
+                                                    option.value
+                                                ) && (
+                                                    <div className="w-3 h-3 rounded-full bg-white"></div>
+                                                )}
+                                            </div>
+                                            <label
+                                                className="cursor-pointer"
+                                                onClick={() =>
+                                                    handleConcurrentPlayerChange(
+                                                        option.value
+                                                    )
+                                                }
+                                            >
+                                                {option.label}
+                                            </label>
                                         </div>
-                                        <label
-                                            className="cursor-pointer"
-                                            onClick={() =>
-                                                handleCurrentPlayerCountChange(
-                                                    option
-                                                )
-                                            }
-                                        >
-                                            {option}
-                                        </label>
-                                    </div>
-                                ))}
+                                    )
+                                )}
                             </div>
                         </div>
                     </div>
