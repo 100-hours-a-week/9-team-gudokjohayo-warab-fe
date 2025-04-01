@@ -67,11 +67,11 @@ const buildQueryString = (params: SearchParams): string => {
     }
 
     if (params.singlePlay !== undefined) {
-        queryParts.push(`singleplay=${params.singlePlay}`);
+        queryParts.push(`single_play=${params.singlePlay}`);
     }
 
     if (params.multiPlay !== undefined) {
-        queryParts.push(`multiplay=${params.multiPlay}`);
+        queryParts.push(`multi_play=${params.multiPlay}`);
     }
 
     if (params.onlinePlayersMin !== undefined) {

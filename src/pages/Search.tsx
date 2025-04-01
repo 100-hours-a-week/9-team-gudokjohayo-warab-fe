@@ -12,18 +12,46 @@ import ScrollToTopButton from "../components/ScrollToTopButton";
 
 const SearchPage: React.FC = () => {
     const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
-    const [searchQuery, setSearchQuery] = useState<string>(
-        searchParams.get("query") || ""
-    );
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    // Initialize state from URL params or sessionStorage when available
+    const initializeStateFromStorage = () => {
+        // Try to get saved state from sessionStorage
+        const savedState = sessionStorage.getItem("searchPageState");
+        if (savedState) {
+            const parsedState = JSON.parse(savedState);
+            return {
+                query: parsedState.searchQuery || "",
+                activeFilters: parsedState.activeFilters,
+                discount: parsedState.discountFilter || false,
+                recommended: parsedState.recommendedFilter || false,
+            };
+        }
+
+        // Fall back to URL params if no saved state
+        return {
+            query: searchParams.get("query") || "",
+            activeFilters: null,
+            discount: searchParams.get("discount") === "true",
+            recommended: searchParams.get("recommended") === "true",
+        };
+    };
+
+    const initialState = initializeStateFromStorage();
+
+    const [searchQuery, setSearchQuery] = useState<string>(initialState.query);
     const [games, setGames] = useState<Game[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
-    const [discountFilter, setDiscountFilter] = useState<boolean>(false);
-    const [recommendedFilter, setRecommendedFilter] = useState<boolean>(false);
+    const [discountFilter, setDiscountFilter] = useState<boolean>(
+        initialState.discount
+    );
+    const [recommendedFilter, setRecommendedFilter] = useState<boolean>(
+        initialState.recommended
+    );
     const [isFilterModalOpen, setIsFilterModalOpen] = useState<boolean>(false);
     const [activeFilters, setActiveFilters] = useState<FilterOptions | null>(
-        null
+        initialState.activeFilters
     );
     const [categorys, setCategorys] = useState<
         { category_id: number; category_name: string }[]
@@ -36,6 +64,30 @@ const SearchPage: React.FC = () => {
     const [loadingMore, setLoadingMore] = useState<boolean>(false);
     const observerRef = useRef<IntersectionObserver | null>(null);
     const lastGameElementRef = useRef<HTMLDivElement | null>(null);
+
+    // Save state to sessionStorage whenever relevant state changes
+    useEffect(() => {
+        const stateToSave = {
+            searchQuery,
+            activeFilters,
+            discountFilter,
+            recommendedFilter,
+        };
+        sessionStorage.setItem("searchPageState", JSON.stringify(stateToSave));
+
+        // Also update URL params for shareable links
+        const newParams = new URLSearchParams();
+        if (searchQuery) newParams.set("query", searchQuery);
+        if (discountFilter) newParams.set("discount", "true");
+        if (recommendedFilter) newParams.set("recommended", "true");
+        setSearchParams(newParams);
+    }, [
+        searchQuery,
+        activeFilters,
+        discountFilter,
+        recommendedFilter,
+        setSearchParams,
+    ]);
 
     // Fetch categories when component mounts
     useEffect(() => {
@@ -184,6 +236,12 @@ const SearchPage: React.FC = () => {
         setCurrentPage(0);
     };
 
+    // Handle the reset functionality from FilterModal
+    const handleResetFilters = () => {
+        setActiveFilters(null);
+        setCurrentPage(0);
+    };
+
     // Navigate to game detail page with category ID if available
     const handleGameClick = (gameId: number) => {
         navigate(`/games/${gameId}`);
@@ -224,6 +282,7 @@ const SearchPage: React.FC = () => {
                                         type="text"
                                         value={searchQuery}
                                         onChange={handleSearchChange}
+                                        maxLength={100}
                                         placeholder="게임 검색"
                                         className="w-full px-4 py-2 rounded-full bg-gray-200 focus:outline-none"
                                     />
@@ -420,6 +479,7 @@ const SearchPage: React.FC = () => {
                 isOpen={isFilterModalOpen}
                 onClose={toggleFilterModal}
                 onApply={handleApplyFilters}
+                onReset={handleResetFilters}
                 initialFilters={activeFilters || undefined}
                 categories={categorys}
                 categoriesLoading={categorysLoading}
