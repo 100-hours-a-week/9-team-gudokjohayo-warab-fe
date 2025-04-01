@@ -284,8 +284,55 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
 
     return (
         <div className="flex flex-col h-full">
+
+            {/* Message input */}
+            <div className="mb-4 relative">
+                <div className="flex items-center bg-white rounded-full border border-gray-300">
+                    <input
+                        type="text"
+                        placeholder={
+                            !canPostComment
+                                ? "프로필에 디스코드 링크를 등록해주세요."
+                                : "메시지를 입력하세요."
+                        }
+                        className="flex-1 py-2 px-4 bg-transparent outline-none rounded-full text-sm"
+                        value={currentMessage}
+                        onChange={handleInputChange}
+                        onKeyPress={handleKeyPress}
+                        maxLength={100}
+                        disabled={!canPostComment}
+                    />
+                    <button
+                        className={`absolute right-2 p-1.5 rounded-full ${
+                            !canPostComment || currentMessage.trim() === ""
+                                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                : "bg-orange-500 text-white"
+                        }`}
+                        onClick={handleSendMessage}
+                        disabled={
+                            !canPostComment || currentMessage.trim() === ""
+                        }
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                            />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
             {/* Chat messages */}
-            <div className="flex-1 overflow-y-auto mb-3">
+            <div className="flex-1 overflow-y-auto mb-6">
                 {comments.length === 0 ? (
                     <div className="p-4 text-center text-gray-500">
                         아직 댓글이 없습니다.
@@ -443,52 +490,6 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                         </div>
                     ))
                 )}
-            </div>
-
-            {/* Message input */}
-            <div className="mt-auto relative">
-                <div className="flex items-center bg-white rounded-full border border-gray-300">
-                    <input
-                        type="text"
-                        placeholder={
-                            !canPostComment
-                                ? "프로필에 디스코드 링크를 등록해주세요."
-                                : "메시지를 입력하세요."
-                        }
-                        className="flex-1 py-2 px-4 bg-transparent outline-none rounded-full text-sm"
-                        value={currentMessage}
-                        onChange={handleInputChange}
-                        onKeyPress={handleKeyPress}
-                        maxLength={100}
-                        disabled={!canPostComment}
-                    />
-                    <button
-                        className={`absolute right-2 p-1.5 rounded-full ${
-                            !canPostComment || currentMessage.trim() === ""
-                                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                                : "bg-orange-500 text-white"
-                        }`}
-                        onClick={handleSendMessage}
-                        disabled={
-                            !canPostComment || currentMessage.trim() === ""
-                        }
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-5 w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                            />
-                        </svg>
-                    </button>
-                </div>
             </div>
 
             <ToastMessage message={toastMessage} isVisible={showToast} />
