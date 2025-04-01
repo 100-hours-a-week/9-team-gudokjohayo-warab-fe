@@ -65,6 +65,10 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
 
                 // Fetch comments
                 const commentsData = await getComments(gameId);
+                // 최신순 정렬
+                const sortedComments = commentsData.sort(
+                    (a: Comment, b: Comment) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+                );
                 setComments(commentsData);
 
                 // Create discord link map from comments
