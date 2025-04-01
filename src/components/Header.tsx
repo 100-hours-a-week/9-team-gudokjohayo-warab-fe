@@ -1,12 +1,28 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const Header: React.FC = () => {
     const navigate = useNavigate();
+    const location = useLocation();
+
+    const handleBackButton = () => {
+        // If we're on the main page and would go back to login, go to main instead
+        // This assumes login page path is "/" or "/login"
+        if (
+            location.pathname === "/main" &&
+            (document.referrer.includes("/login") ||
+                document.referrer === "" ||
+                document.referrer.endsWith("/"))
+        ) {
+            navigate("/main", { replace: true });
+        } else {
+            navigate(-1);
+        }
+    };
 
     return (
         <div className="flex items-center p-4 bg-white border-b">
-            <button onClick={() => navigate(-1)} className="mr-4">
+            <button onClick={handleBackButton} className="mr-4">
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-6 w-6 text-gray-600"
@@ -24,7 +40,7 @@ const Header: React.FC = () => {
             </button>
             <h1
                 className="font-bitbit text-xl font-bold flex-1 text-center cursor-pointer"
-                onClick={() => navigate("/main")}
+                onClick={() => navigate("/main", { replace: true })}
             >
                 WARA :B
             </h1>
