@@ -11,6 +11,7 @@ import {
     checkDiscordLinkDuplication,
     updateUserProfile,
     userLogOut,
+    checkAuthentication,
 } from "../services/userService";
 import { debounce } from "lodash"; // 디바운스 함수를 위해 lodash 가져오기
 
@@ -25,6 +26,8 @@ interface ProfilePageProps {
 
 const ProfilePage: React.FC<ProfilePageProps> = () => {
     const navigate = useNavigate();
+    const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+    const [authLoading, setAuthLoading] = useState<boolean>(true);
     const [nickname, setNickname] = useState<string>("");
     const [discordUrl, setDiscordUrl] = useState<string>("");
     const [originalNickname, setOriginalNickname] = useState<string>("");
@@ -60,55 +63,79 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
     const [showLogoutConfirmation, setShowLogoutConfirmation] =
         useState<boolean>(false);
 
-    // 초기 프로필 정보 불러오기
+    // 인증 상태 확인
     useEffect(() => {
-        const fetchProfileData = async () => {
-            setIsLoading(true);
+        const checkUserAuthentication = async () => {
+            setAuthLoading(true);
             try {
-                const profileData = await getUserProfile();
-                console.log(profileData);
-                setNickname(profileData.data.nickname);
-                setDiscordUrl(profileData.data.discord_link);
-                setOriginalNickname(profileData.data.nickname);
-                setOriginalDiscordUrl(profileData.data.discord_link);
-
-                // 디스코드 링크가 비어있는 경우 헬퍼 텍스트 설정
-                if (!profileData.data.discord_link) {
-                    setDiscordHelperText(
-                        "*링크를 등록하지 않으면 게임 상세 페이지 내 댓글 기능 사용이 제한됩니다."
-                    );
-                }
-
-                // Extract category data from the response
+                const authResponse = await checkAuthentication();
+                // 인증 성공: data가 null이 아니고, message가 "not_authenticated"가 아닌 경우
                 if (
-                    profileData.data.categorys &&
-                    profileData.data.categorys.length > 0
+                    authResponse &&
+                    authResponse.data !== null &&
+                    authResponse.message !== "not_authenticated"
                 ) {
-                    // Set the category data directly
-                    setCategoryData(profileData.data.categorys);
-
-                    // Extract and set just the IDs for the selected categories
-                    const categoryIds = profileData.data.categorys.map(
-                        (cat) => cat.category_id
-                    );
-                    setSelectedCategoryIds(categoryIds);
-                    setOriginalCategoryIds([...categoryIds]);
-
-                    // Extract and set the names for display
-                    const categoryNames = profileData.data.categorys.map(
-                        (cat) => cat.category_name
-                    );
-                    setCategoryDisplayNames(categoryNames);
+                    setIsAuthenticated(true);
+                    await fetchProfileData(); // 인증된 경우에만 프로필 데이터 가져오기
+                } else {
+                    setIsAuthenticated(false);
                 }
             } catch (error) {
-                console.error("프로필 정보를 가져오는 중 오류 발생:", error);
+                console.error("인증 상태 확인 중 오류 발생:", error);
+                setIsAuthenticated(false);
             } finally {
-                setIsLoading(false);
+                setAuthLoading(false);
             }
         };
 
-        fetchProfileData();
+        checkUserAuthentication();
     }, []);
+
+    // 초기 프로필 정보 불러오기
+    const fetchProfileData = async () => {
+        setIsLoading(true);
+        try {
+            const profileData = await getUserProfile();
+            console.log(profileData);
+            setNickname(profileData.data.nickname);
+            setDiscordUrl(profileData.data.discord_link);
+            setOriginalNickname(profileData.data.nickname);
+            setOriginalDiscordUrl(profileData.data.discord_link);
+
+            // 디스코드 링크가 비어있는 경우 헬퍼 텍스트 설정
+            if (!profileData.data.discord_link) {
+                setDiscordHelperText(
+                    "*링크를 등록하지 않으면 게임 상세 페이지 내 댓글 기능 사용이 제한됩니다."
+                );
+            }
+
+            // Extract category data from the response
+            if (
+                profileData.data.categorys &&
+                profileData.data.categorys.length > 0
+            ) {
+                // Set the category data directly
+                setCategoryData(profileData.data.categorys);
+
+                // Extract and set just the IDs for the selected categories
+                const categoryIds = profileData.data.categorys.map(
+                    (cat) => cat.category_id
+                );
+                setSelectedCategoryIds(categoryIds);
+                setOriginalCategoryIds([...categoryIds]);
+
+                // Extract and set the names for display
+                const categoryNames = profileData.data.categorys.map(
+                    (cat) => cat.category_name
+                );
+                setCategoryDisplayNames(categoryNames);
+            }
+        } catch (error) {
+            console.error("프로필 정보를 가져오는 중 오류 발생:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     // 변경사항 감지
     useEffect(() => {
@@ -453,6 +480,7 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
         try {
             await userLogOut(); // Call the logout API to clear the session
             console.log("Logged out successfully");
+            setIsAuthenticated(false); // Update authentication state
             navigate("/login"); // Navigate to the login page after logout
         } catch (error) {
             console.error("Logout failed:", error);
@@ -461,6 +489,33 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
 
     const handleLogoutDismiss = () => {
         setShowLogoutConfirmation(false);
+    };
+
+    // Handler for login button
+    const handleLoginClick = () => {
+        navigate("/login");
+    };
+
+    // 로그인하지 않은 사용자를 위한 컴포넌트
+    const UnauthenticatedView = () => {
+        return (
+            <div className="flex flex-col items-center justify-center h-full min-h-[70vh] p-6">
+                <div className="text-center mb-8">
+                    <h2 className="text-2xl font-bold mb-2">
+                        로그인이 필요합니다
+                    </h2>
+                    <p className="text-gray-600 mb-6">
+                        프로필을 보거나 수정하려면 먼저 로그인해주세요.
+                    </p>
+                    <button
+                        className="bg-orange-500 text-white rounded-full py-3 px-8 font-medium"
+                        onClick={handleLoginClick}
+                    >
+                        로그인하기
+                    </button>
+                </div>
+            </div>
+        );
     };
 
     return (
@@ -481,7 +536,13 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
 
                 {/* Scrollable Content */}
                 <div className="flex-1 overflow-auto">
-                    {isLoading ? (
+                    {authLoading ? (
+                        <div className="flex justify-center items-center h-64">
+                            <p>인증 상태를 확인하는 중...</p>
+                        </div>
+                    ) : !isAuthenticated ? (
+                        <UnauthenticatedView />
+                    ) : isLoading ? (
                         <div className="flex justify-center items-center h-64">
                             <p>프로필 정보를 불러오는 중...</p>
                         </div>
