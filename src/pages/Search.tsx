@@ -106,10 +106,22 @@ const SearchPage: React.FC = () => {
         fetchCategorys();
     }, []);
 
-    // Fetch games based on current filters and search query
+    // 현재 활성화된 요청에 대한 AbortController 참조 추가
+    const abortControllerRef = useRef<AbortController | null>(null);
+
+    // Fetch games 함수 수정
     const fetchGames = useCallback(
         async (page = 0, isLoadingMore = false) => {
             try {
+                // 이전 요청이 있다면 중단
+                if (abortControllerRef.current) {
+                    abortControllerRef.current.abort();
+                }
+
+                // 새 AbortController 생성
+                abortControllerRef.current = new AbortController();
+                const signal = abortControllerRef.current.signal;
+
                 if (page === 0) {
                     setLoading(true);
                     setHasMore(true);
@@ -133,8 +145,11 @@ const SearchPage: React.FC = () => {
                 // Add page parameter
                 searchParams.page = page;
 
-                // Fetch games with the search parameters
-                const gameResults = await searchGames(searchParams);
+                // Fetch games with the search parameters and AbortController signal
+                const gameResults = await searchGames(searchParams, signal);
+
+                // 이미 중단된 요청에 대한 응답이면 처리하지 않음
+                if (signal.aborted) return;
 
                 // If we got fewer results than expected or none, there's no more data
                 if (gameResults.length === 0) {
@@ -147,16 +162,40 @@ const SearchPage: React.FC = () => {
                 } else {
                     setGames(gameResults);
                 }
-            } catch (error) {
+            } catch (error: unknown) {
+                // 중단된 요청에 대한 에러는 무시
+                if (
+                    error instanceof DOMException &&
+                    error.name === "AbortError"
+                ) {
+                    console.log("요청이 중단되었습니다.");
+                    return;
+                }
+
                 console.error("Error fetching games:", error);
                 setError("게임 목록을 불러오는 데 실패했습니다.");
             } finally {
-                setLoading(false);
-                setLoadingMore(false);
+                // 중단된 요청이 아닌 경우에만 로딩 상태 업데이트
+                if (
+                    abortControllerRef.current &&
+                    !abortControllerRef.current.signal.aborted
+                ) {
+                    setLoading(false);
+                    setLoadingMore(false);
+                }
             }
         },
         [searchQuery, activeFilters, discountFilter, recommendedFilter]
     );
+
+    // 컴포넌트 언마운트 시 모든 요청 중단
+    useEffect(() => {
+        return () => {
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort();
+            }
+        };
+    }, []);
 
     // Setup intersection observer for infinite scrolling
     useEffect(() => {
