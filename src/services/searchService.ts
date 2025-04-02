@@ -104,14 +104,19 @@ const buildQueryString = (params: SearchParams): string => {
 /**
  * Search games with various filter options
  * @param params Search parameters
+ * @param signal AbortController signal for cancelling requests
  * @returns List of games matching the search criteria
  */
-export const searchGames = async (params: SearchParams): Promise<Game[]> => {
+export const searchGames = async (
+    params: SearchParams,
+    signal?: AbortSignal
+): Promise<Game[]> => {
     try {
         const queryString = buildQueryString(params);
         console.log("Search query string:", queryString);
         const response = await api.get<SearchResponseData>(
-            `/games${queryString}`
+            `/games${queryString}`,
+            { signal } // AbortController signal 전달
         );
 
         if (response.data.message === "game_list_inquiry_success") {
@@ -119,10 +124,24 @@ export const searchGames = async (params: SearchParams): Promise<Game[]> => {
         } else {
             throw new Error(response.data.message || "Failed to fetch games");
         }
-    } catch (error) {
-        console.error("Error fetching games:", error);
+    } catch (error: unknown) {
+        // AbortError는 상위로 전달하여 적절히 처리
+        if (error instanceof DOMException && error.name === "AbortError") {
+            throw error;
+        }
 
-        // Return mock data if API fails
+        // axios 오류인 경우 (axios가 AxiosError 타입을 사용함)
+        if (
+            typeof error === "object" &&
+            error !== null &&
+            "isAxiosError" in error
+        ) {
+            console.error("Axios error fetching games:", error);
+        } else {
+            console.error("Error fetching games:", error);
+        }
+
+        // Return mock data if API fails (not aborted)
         return getMockGames();
     }
 };
