@@ -1,5 +1,8 @@
 // import React, { useEffect, useState } from "react";
 
+import React from "react";
+import { kakaoBaseURL } from "../api/config";
+
 interface LoginButtonProps {
     icon: string;
     text: string;
@@ -34,22 +37,25 @@ interface LoginPageProps {
 }
 
 const LoginPage: React.FC<LoginPageProps> = ({
-    logoSrc = "/images/warab_logo.png",
+    logoSrc = `${process.env.PUBLIC_URL}/images/warab_logo.png`,
 }) => {
     const handleKakaoLogin = () => {
-        console.log("Kakao login attempted");
-        // Implement Kakao login logic here
+        const kakaoAuthUrl = `${kakaoBaseURL}/oauth2/authorization/kakao`;
+
+        // 카카오 로그인 페이지로 리다이렉트
+        window.location.href = kakaoAuthUrl;
     };
 
-    const handleDiscordLogin = () => {
-        console.log("Discord login attempted");
-        // Implement Discord login logic here
-    };
+    // mvp 기능에서 제외
+    // const handleDiscordLogin = () => {
+    //     console.log("Discord login attempted");
+    //     // Implement Discord login logic here
+    // };
 
-    const handleSteamLogin = () => {
-        console.log("Steam login attempted");
-        // Implement Steam login logic here
-    };
+    // const handleSteamLogin = () => {
+    //     console.log("Steam login attempted");
+    //     // Implement Steam login logic here
+    // };
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-white">
@@ -76,26 +82,26 @@ const LoginPage: React.FC<LoginPageProps> = ({
                         {/* Login Buttons Section */}
                         <div className="w-full">
                             <LoginButton
-                                icon="/images/kakao.png"
+                                icon={`${process.env.PUBLIC_URL}/images/kakao.png`}
                                 text="카카오로 3초만에 시작하기"
                                 backgroundColor="#FAE100"
                                 textColor="#3A1D1D"
                                 onClick={handleKakaoLogin}
                             />
 
-                            <LoginButton
-                                icon="/images/discord.png"
+                            {/* <LoginButton
+                                icon={`${process.env.PUBLIC_URL}/images/discord.png`}
                                 text="디스코드 계정으로 로그인하기"
                                 backgroundColor="#5F70BE"
                                 onClick={handleDiscordLogin}
                             />
 
                             <LoginButton
-                                icon="/images/steam.png"
+                                icon={`${process.env.PUBLIC_URL}/images/steam.png`}
                                 text="스팀 계정으로 로그인하기"
                                 backgroundColor="#101B38"
                                 onClick={handleSteamLogin}
-                            />
+                            /> */}
                         </div>
                     </div>
                 </div>

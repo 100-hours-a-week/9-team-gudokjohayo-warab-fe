@@ -1,149 +1,149 @@
 import React, { useState, useEffect } from "react";
+import {
+    // getCurrentPricesByPlatform,
+    getHistoricalLowestPrice,
+} from "../services/gameService";
 
 interface PriceTabProps {
-    // Add any props if needed
+    gameId: string;
+    currentPrice: number;
 }
 
-interface PriceInfo {
-    id: string;
-    store: string;
-    logo: string;
-    price: number;
-}
-
-const PriceTab: React.FC<PriceTabProps> = () => {
-    // 가격 정보 데이터
-    const [priceInfo] = useState<PriceInfo[]>([
-        {
-            id: "1",
-            store: "Epic games",
-            logo: "/images/epic-logo.png",
-            price: 1330,
-        },
-        {
-            id: "2",
-            store: "Steam",
-            logo: "/images/steam-logo.png",
-            price: 1800,
-        },
-        {
-            id: "3",
-            store: "Epic games",
-            logo: "/images/epic-logo.png",
-            price: 1990,
-        },
-    ]);
-
-    // 가격 정보 API 호출을 위한 함수 (실제 구현에서는 API 호출)
-    const fetchPriceInfo = async () => {
-        try {
-            // 실제 구현에서는 API에서 가격 정보를 가져옴
-            // const response = await fetch('your-api-endpoint');
-            // const data = await response.json();
-            // setPriceInfo(data);
-
-            console.log(
-                "가격 정보를 API에서 가져오는 로직이 여기에 들어갑니다"
-            );
-        } catch (error) {
-            console.error("가격 정보 가져오기 오류:", error);
-        }
-    };
+const PriceTab: React.FC<PriceTabProps> = ({ gameId, currentPrice }) => {
+    const [historicalLowestPrice, setHistoricalLowestPrice] =
+        useState<number>(0);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        // 컴포넌트 마운트 시 가격 정보 가져오기
-        fetchPriceInfo();
-    }, []);
+        const fetchLowestPrice = async () => {
+            try {
+                // Fetch historical lowest price
+                const historicalLowest = await getHistoricalLowestPrice(gameId);
+                setHistoricalLowestPrice(historicalLowest);
+                setIsLoading(false);
+            } catch (err) {
+                console.error("Error fetching historical lowest price:", err);
+                setError("가격 정보를 불러오는 데 실패했습니다.");
+                setIsLoading(false);
+            }
+        };
+
+        fetchLowestPrice();
+    }, [gameId]);
 
     // 가격 포맷 함수 (예: 1800 -> ₩1,800)
     const formatPrice = (price: number) => {
         return `₩${price.toLocaleString()}`;
     };
 
-    // 최저가 확인 함수
-    const isLowestPrice = (price: number) => {
-        const lowestPrice = Math.min(...priceInfo.map((item) => item.price));
-        return price === lowestPrice;
+    // 역대 최저가 대비 현재 가격 비율 계산
+    const calculatePriceRatio = () => {
+        if (historicalLowestPrice === 0) return 100;
+        return Math.round((currentPrice / historicalLowestPrice) * 100);
     };
+
+    // 가격 차이 계산
+    const calculatePriceDifference = () => {
+        return currentPrice - historicalLowestPrice;
+    };
+
+    if (isLoading) {
+        return <div className="p-4 text-center">로딩 중...</div>;
+    }
+
+    if (error) {
+        return <div className="p-4 text-red-500">{error}</div>;
+    }
 
     return (
         <div className="flex flex-col h-full bg-white">
-            {/* 가격 비교 헤더 */}
-            <div className="p-3 border-b border-gray-200">
-                <h3 className="text-sm font-medium">
-                    출시일부터 현재까지의 최저가에요.
-                </h3>
-            </div>
+            {/* 역대 최저가 비교 섹션 */}
+            <div className="p-4 border-b border-gray-200">
+                <h3 className="text-sm font-medium mb-3">역대 최저가 비교</h3>
 
-            {/* 가격 정보 시각화 (그래프) */}
-            <div className="p-3 border-b border-gray-200 bg-gray-900">
-                <div className="h-16 w-full relative">
-                    {/* 실제 구현에서는 여기에 그래프가 들어갑니다 */}
-                    <div className="absolute top-0 left-0 right-0 h-full">
-                        <svg
-                            width="100%"
-                            height="100%"
-                            viewBox="0 0 400 60"
-                            preserveAspectRatio="none"
-                        >
-                            <path
-                                d="M0,40 L20,20 L40,40 L60,20 L80,40 L100,20 L120,40 L140,20 L160,40 L180,20 L240,20 L260,40 L280,20 L300,40 L320,20 L340,40 L360,20 L380,40 L400,20"
-                                stroke="#9AE6B4"
-                                strokeWidth="2"
-                                fill="none"
-                            />
-                        </svg>
+                <div className="bg-gray-50 rounded-lg p-4 shadow-sm">
+                    <div className="flex justify-between items-center mb-3">
+                        <div>
+                            <p className="text-xs text-gray-500">역대 최저가</p>
+                            <p className="text-lg font-bold text-green-600">
+                                {formatPrice(historicalLowestPrice)}
+                            </p>
+                        </div>
+                        <div className="flex items-center">
+                            <div className="w-10 h-10 bg-gray-200 flex items-center justify-center rounded-full overflow-hidden">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-6 w-6 text-gray-500"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M13 7l5 5m0 0l-5 5m5-5H6"
+                                    />
+                                </svg>
+                            </div>
+                        </div>
+                        <div className="text-right">
+                            <p className="text-xs text-gray-500">현재 가격</p>
+                            <p className="text-lg font-bold">
+                                {formatPrice(currentPrice)}
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* 가격 비교 바 */}
+                    <div className="mt-4">
+                        <div className="relative pt-1">
+                            <div className="flex items-center justify-between mb-2">
+                                <div>
+                                    <span className="text-xs font-semibold inline-block text-green-600">
+                                        역대가 대비 {calculatePriceRatio()}%
+                                    </span>
+                                </div>
+                                <div>
+                                    <span
+                                        className={`text-xs font-semibold inline-block ${
+                                            calculatePriceDifference() > 0
+                                                ? "text-orange-500"
+                                                : "text-green-600"
+                                        }`}
+                                    >
+                                        {calculatePriceDifference() > 0
+                                            ? "+"
+                                            : ""}
+                                        {formatPrice(
+                                            calculatePriceDifference()
+                                        )}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {/* 가격 정보 목록 */}
-            <div className="p-3">
-                <p className="text-xs mb-3">
+            {/* 가격 정보 목록 (MVP에서는 주석 처리) */}
+            {/* <div className="p-4">
+                <p className="text-sm font-medium mb-3">
                     여러 플랫폼에서 현재 구매가능한 가격이에요.
                 </p>
 
                 <div className="space-y-2">
-                    {priceInfo.map((item) => (
-                        <div
-                            key={item.id}
-                            className={`flex items-center justify-between p-3 rounded-lg ${
-                                isLowestPrice(item.price)
-                                    ? "bg-gray-100"
-                                    : "bg-gray-50"
-                            }`}
-                        >
-                            <div className="flex items-center">
-                                <div className="w-8 h-8 mr-2 flex-shrink-0 flex items-center justify-center bg-gray-200 rounded-md overflow-hidden">
-                                    <img
-                                        src={item.logo}
-                                        alt={item.store}
-                                        className="w-6 h-6 object-contain"
-                                        onError={(e) => {
-                                            // 이미지 로드 실패 시 대체 이미지
-                                            (e.target as HTMLImageElement).src =
-                                                "/images/placeholder.png";
-                                        }}
-                                    />
-                                </div>
-                                <span className="text-xs font-medium">
-                                    {item.store}
-                                </span>
-                            </div>
-                            <span className="text-xs font-medium">
-                                {formatPrice(item.price)}
-                            </span>
-                        </div>
-                    ))}
+                    // 가격 목록 내용 주석 처리
                 </div>
-            </div>
+            </div> */}
 
-            {/* 더 많은 플랫폼 보기 버튼 */}
-            <div className="mt-2 px-3">
+            {/* 더 많은 플랫폼 보기 버튼 (MVP에서는 주석 처리) */}
+            {/* <div className="mt-2 px-3 pb-4">
                 <button className="w-full py-3 bg-gray-100 text-gray-500 rounded-lg text-xs hover:bg-gray-200 transition">
                     더 많은 플랫폼 보기
                 </button>
-            </div>
+            </div> */}
         </div>
     );
 };

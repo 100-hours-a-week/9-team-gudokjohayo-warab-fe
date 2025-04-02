@@ -1,21 +1,42 @@
 name: Deploy React App (Production)
+
 on:
   push:
     branches:
       - main
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v3
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Generate .env file
+        run: |
+          cat <<EOF > .env
+          REACT_APP_KAKAOURL=https://api.warab.store
+          REACT_APP_BASEURL=https://api.warab.store/api/v1
+          PUBLIC_URL=https://d1o0m970emoglm.cloudfront.net/production
+          EOF
+
+      - name: Update package.json homepage
+        run: |
+          npm pkg set homepage="https://d1o0m970emoglm.cloudfront.net/production/"
 
       - name: Install dependencies
         run: npm install
@@ -23,15 +44,14 @@ jobs:
       - name: Build project
         run: npm run build
 
-      - name: Deploy to S3 (Production)
+      - name: Deploy to S3 (Production) with correct Content-Type
         run: |
           aws s3 sync ./build s3://${{ secrets.S3_BUCKET_NAME }}/production --delete
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+          aws s3 cp --recursive s3://${{ secrets.S3_BUCKET_NAME }}/production/static/js/ s3://${{ secrets.S3_BUCKET_NAME }}/production/static/js/ \
+          --metadata-directive REPLACE --content-type application/javascript
+          aws s3 cp --recursive s3://${{ secrets.S3_BUCKET_NAME }}/production/static/css/ s3://${{ secrets.S3_BUCKET_NAME }}/production/static/css/ \
+          --metadata-directive REPLACE --content-type text/css
 
       - name: Invalidate CloudFront cache
         run: |
-          aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/production/*"
+          aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"

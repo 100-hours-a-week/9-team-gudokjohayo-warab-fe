@@ -1,21 +1,42 @@
 name: Deploy React App (Development)
+
 on:
   push:
     branches:
       - develop
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v3
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Generate .env file
+        run: |
+          cat <<EOF > .env
+          REACT_APP_KAKAOURL=https://dev.api.warab.store
+          REACT_APP_BASEURL=https://dev.api.warab.store/api/v1
+          PUBLIC_URL=https://d2khgun68ocfq1.cloudfront.net/dev
+          EOF
+
+      - name: Update package.json homepage
+        run: |
+          npm pkg set homepage="https://d2khgun68ocfq1.cloudfront.net/dev/"
 
       - name: Install dependencies
         run: npm install
@@ -23,11 +44,14 @@ jobs:
       - name: Build project
         run: npm run build
 
-      - name: Deploy to S3 (Development)
+      - name: Deploy to S3 (Development) with correct Content-Type
         run: |
-          echo "Using bucket: ${{ secrets.S3_BUCKET_NAME }}"
-          aws s3 sync ./build s3://${{ secrets.S3_BUCKET_NAME }}/development --delete
+          aws s3 sync ./build s3://${{ secrets.S3_BUCKET_NAME }}/dev --delete
+          aws s3 cp --recursive s3://${{ secrets.S3_BUCKET_NAME }}/dev/static/js/ s3://${{ secrets.S3_BUCKET_NAME }}/dev/static/js/ \
+          --metadata-directive REPLACE --content-type application/javascript
+          aws s3 cp --recursive s3://${{ secrets.S3_BUCKET_NAME }}/dev/static/css/ s3://${{ secrets.S3_BUCKET_NAME }}/dev/static/css/ \
+          --metadata-directive REPLACE --content-type text/css
 
       - name: Invalidate CloudFront cache
         run: |
-          aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/development/*"
+          aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_DEV }} --paths "/*"

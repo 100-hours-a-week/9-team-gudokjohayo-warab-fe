@@ -1,19 +1,27 @@
 import React, { useState, useEffect, useRef } from "react";
 import Header from "../components/Header";
 import { useNavigate } from "react-router-dom";
-import discountedGamesData from "../data/discountedGames.json";
-import gameCategoriesData from "../data/gameCategories.json";
+import api from "../api/config";
+import { getUserProfile } from "../services/userService";
 
 interface Game {
-    id: string;
+    game_id: number;
     title: string;
-    thumbnailUrl: string;
-    discountRate?: number;
+    thumbnail: string;
+    price: number;
+    lowest_price: number;
 }
 
-interface GameCategory {
+interface MainPageSection {
     title: string;
     games: Game[];
+}
+
+interface MainPageResponse {
+    message: string;
+    data: {
+        games: MainPageSection[];
+    };
 }
 
 interface GameSliderProps {
@@ -21,7 +29,8 @@ interface GameSliderProps {
     itemsPerView: number;
     autoSlideInterval?: number;
     title?: string;
-    onGameClick: (gameId: string) => void;
+    subtitle?: string;
+    onGameClick: (gameId: number) => void;
 }
 
 const GameSlider: React.FC<GameSliderProps> = ({
@@ -29,6 +38,7 @@ const GameSlider: React.FC<GameSliderProps> = ({
     itemsPerView,
     autoSlideInterval = 5000,
     title,
+    subtitle,
     onGameClick,
 }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -43,8 +53,8 @@ const GameSlider: React.FC<GameSliderProps> = ({
     useEffect(() => {
         if (autoSlideInterval > 0) {
             intervalRef.current = setInterval(() => {
-                setCurrentIndex(
-                    (prevIndex) => (prevIndex >= maxIndex ? 0 : prevIndex + 1) // 항상 1개씩만 이동
+                setCurrentIndex((prevIndex) =>
+                    prevIndex >= maxIndex ? 0 : prevIndex + 1
                 );
             }, autoSlideInterval);
         }
@@ -58,19 +68,18 @@ const GameSlider: React.FC<GameSliderProps> = ({
 
     const handleNext = () => {
         setCurrentIndex((prevIndex) => {
-            const newIndex = prevIndex + 1; // 항상 1개씩만 이동
+            const newIndex = prevIndex + 1;
             return newIndex > maxIndex ? maxIndex : newIndex;
         });
     };
 
     const handlePrev = () => {
         setCurrentIndex((prevIndex) => {
-            const newIndex = prevIndex - 1; // 항상 1개씩만 이동
+            const newIndex = prevIndex - 1;
             return newIndex < 0 ? 0 : newIndex;
         });
     };
 
-    // Handle touch events for swipe
     const handleTouchStart = (e: React.TouchEvent) => {
         setTouchStart(e.targetTouches[0].clientX);
     };
@@ -98,6 +107,15 @@ const GameSlider: React.FC<GameSliderProps> = ({
         setTouchEnd(null);
     };
 
+    const calculateDiscountRate = (game: Game) => {
+        if (game.price > game.lowest_price) {
+            return Math.round(
+                ((game.price - game.lowest_price) / game.price) * 100
+            );
+        }
+        return 0;
+    };
+
     return (
         <div
             className="relative"
@@ -105,7 +123,14 @@ const GameSlider: React.FC<GameSliderProps> = ({
             onMouseLeave={() => setShowControls(false)}
             ref={sliderRef}
         >
-            {title && <h2 className="text-lg font-medium mb-2">{title}</h2>}
+            {(title || subtitle) && (
+                <div className="mb-2">
+                    {title && <h2 className="text-lg font-medium">{title}</h2>}
+                    {subtitle && (
+                        <p className="text-sm text-gray-500">{subtitle}</p>
+                    )}
+                </div>
+            )}
             <div
                 className="relative overflow-hidden"
                 onTouchStart={handleTouchStart}
@@ -115,37 +140,33 @@ const GameSlider: React.FC<GameSliderProps> = ({
                 <div
                     className="flex transition-transform duration-300 ease-in-out"
                     style={{
-                        transform: `translateX(-${currentIndex * (100 / games.length)}%)`, // 개별 아이템 너비에 맞게 이동하도록 수정
+                        transform: `translateX(-${currentIndex * (100 / games.length)}%)`,
                         width: `${(games.length / itemsPerView) * 100}%`,
                     }}
                 >
                     {games.map((game) => (
                         <div
-                            key={game.id}
+                            key={game.game_id}
                             className="flex-shrink-0 cursor-pointer"
                             style={{ width: `${100 / games.length}%` }}
-                            onClick={() => onGameClick(game.id)}
+                            onClick={() => onGameClick(game.game_id)}
                         >
-                            <div className="aspect-w-16 aspect-h-9 bg-gray-200 rounded-md overflow-hidden mx-1">
-                                {/* 게임 썸네일 이미지 추가 */}
+                            <div className="aspect-w-16 aspect-h-9 bg-gray-200 rounded-md overflow-hidden mx-1 relative">
                                 <img
-                                    src={game.thumbnailUrl}
+                                    src={game.thumbnail}
                                     alt={`${game.title} thumbnail`}
                                     className="w-full h-full object-cover"
                                     onError={(e) => {
-                                        // 이미지 로드 실패 시 기본 이미지로 대체
                                         (e.target as HTMLImageElement).src =
                                             "/default-game-image.jpg";
                                     }}
                                 />
-                                {/* 할인율 표시 (있는 경우) */}
-                                {game.discountRate && (
+                                {calculateDiscountRate(game) > 0 && (
                                     <div className="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold p-1 m-1 rounded">
-                                        {game.discountRate}% OFF
+                                        {calculateDiscountRate(game)}% OFF
                                     </div>
                                 )}
                             </div>
-                            {/* 게임 제목 */}
                             <div className="mt-1 px-1 truncate text-sm font-medium">
                                 {game.title}
                             </div>
@@ -153,11 +174,11 @@ const GameSlider: React.FC<GameSliderProps> = ({
                     ))}
                 </div>
 
-                {/* Navigation arrows - only shown on hover */}
+                {/* Navigation arrows */}
                 {showControls && currentIndex > 0 && (
                     <button
                         onClick={handlePrev}
-                        className="absolute left-0 top-1/2 transform -translate-y-1/2"
+                        className="absolute left-0 top-[calc(50%-1rem)] transform -translate-y-1/2"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -179,7 +200,7 @@ const GameSlider: React.FC<GameSliderProps> = ({
                 {showControls && currentIndex < maxIndex && (
                     <button
                         onClick={handleNext}
-                        className="absolute right-0 top-1/2 transform -translate-y-1/2"
+                        className="absolute right-0 top-[calc(50%-1rem)] transform -translate-y-1/2"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -219,15 +240,48 @@ const GameSlider: React.FC<GameSliderProps> = ({
 
 const MainPage: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState<string>("");
+    const [mainPageSections, setMainPageSections] = useState<MainPageSection[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [showCategoryBanner, setShowCategoryBanner] = useState<boolean>(true);
     const navigate = useNavigate();
 
-    // Import game data from JSON files
-    const discountedGames: Game[] = discountedGamesData;
-    const gameCategories: GameCategory[] = gameCategoriesData;
+    useEffect(() => {
+        const checkUserPreferences = async () => {
+            try {
+                const userProfile = await getUserProfile();
+                // 사용자가 선호 카테고리를 선택했다면 배너를 숨깁니다
+                setShowCategoryBanner(!userProfile.data.categorys || userProfile.data.categorys.length === 0);
+            } catch (error) {
+                console.error("Error fetching user preferences:", error);
+                setShowCategoryBanner(true);
+            }
+        };
+
+        checkUserPreferences();
+    }, []);
+
+    useEffect(() => {
+        const fetchMainPageData = async () => {
+            setLoading(true);
+            try {
+                const response = await api.get<MainPageResponse>("/games/main");
+                if (response.data.message === "main_page_inquiry_success") {
+                    setMainPageSections(response.data.data.games);
+                } else {
+                    throw new Error("Failed to fetch main page data");
+                }
+            } catch (error) {
+                console.error("Error fetching main page data:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchMainPageData();
+    }, []);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        // Navigate to search page with query parameter
         if (searchQuery.trim()) {
             navigate(`/search?query=${encodeURIComponent(searchQuery)}`);
         } else {
@@ -235,40 +289,37 @@ const MainPage: React.FC = () => {
         }
     };
 
-    const handleGameClick = (gameId: string) => {
-        // Navigate to game detail page
-        // navigate(`/detail/${gameId}`);
-        navigate(`/detail`);
+    const handleGameClick = (gameId: number) => {
+        navigate(`/games/${gameId}`);
+    };
+
+    const handleCategoryRegister = () => {
+        navigate("/profile"); 
     };
 
     return (
         <div className="flex items-center justify-center min-h-screen bg-white">
-            {/* 고정 비율 컨테이너 (402*874) */}
             <div
                 className="relative bg-white"
                 style={{
                     width: "402px",
-                    height: "auto", // 높이를 자동으로 조정하여 스크롤 가능하게 함
+                    height: "auto",
                     maxWidth: "100vw",
-                    minHeight: "100vh", // 최소 높이를 뷰포트 높이로 설정
+                    minHeight: "100vh",
                 }}
             >
-                {/* 헤더 고정 */}
                 <div className="sticky top-0 z-10">
                     <Header />
                 </div>
 
                 <div className="flex flex-col">
-                    {/* Search Bar */}
                     <div className="p-4">
                         <form onSubmit={handleSearch}>
                             <div className="relative">
                                 <input
                                     type="text"
                                     value={searchQuery}
-                                    onChange={(e) =>
-                                        setSearchQuery(e.target.value)
-                                    }
+                                    onChange={(e) => setSearchQuery(e.target.value)}
                                     placeholder="게임 검색"
                                     className="w-full px-4 py-2 rounded-full bg-gray-200 focus:outline-none"
                                 />
@@ -295,32 +346,52 @@ const MainPage: React.FC = () => {
                         </form>
                     </div>
 
-                    {/* Featured Discounted Games - Single Row */}
-                    <div className="px-4 mb-6">
-                        <GameSlider
-                            games={discountedGames}
-                            itemsPerView={1}
-                            autoSlideInterval={5000}
-                            onGameClick={handleGameClick}
-                        />
-                    </div>
-
-                    {/* Game Category Sections */}
-                    <div className="px-4 space-y-8 pb-8">
-                        {gameCategories.map((category, index) => (
-                            <div key={index} className="space-y-2">
-                                <h2 className="text-lg font-medium">
-                                    {category.title}
-                                </h2>
-                                <GameSlider
-                                    games={category.games}
-                                    itemsPerView={2}
-                                    autoSlideInterval={0} // No auto-slide for category sections
-                                    onGameClick={handleGameClick}
-                                />
+                    {/* 🎯 선호 장르 배너 표시 */}
+                    {showCategoryBanner && (
+                        <div className="mb-6 px-4">
+                            <div className="p-4 bg-gradient-to-r from-orange-100 to-orange-50 rounded-lg border border-orange-200 shadow-sm">
+                                <div className="flex items-center gap-3">
+                                    <div className="flex-1">
+                                        <h3 className="text-md font-semibold text-gray-800 mb-1">
+                                            나만의 게임 취향을 설정해보세요
+                                        </h3>
+                                        <p className="text-sm text-gray-600">
+                                            선호하는 카테고리를 등록하면 맞춤형 게임 추천을 받을 수 있어요
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={handleCategoryRegister}
+                                        className="flex-shrink-0 px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-full hover:bg-orange-600 transition-colors duration-300 flex items-center gap-1 shadow-sm"
+                                    >
+                                        <span>설정하기</span>
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
-                        ))}
-                    </div>
+                        </div>
+                    )}
+
+                    {loading ? (
+                        <div className="flex justify-center items-center py-12">
+                            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500"></div>
+                        </div>
+                    ) : (
+                        <div className="px-4 space-y-8 pb-8">
+                            {mainPageSections.map((section, index) => (
+                                <div key={index} className="space-y-2">
+                                    <GameSlider
+                                        games={section.games}
+                                        itemsPerView={index === 0 ? 1 : 2}
+                                        autoSlideInterval={index === 0 ? 5000 : 0}
+                                        title={section.title}
+                                        onGameClick={handleGameClick}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
