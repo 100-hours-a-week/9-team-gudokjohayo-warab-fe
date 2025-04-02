@@ -5,6 +5,7 @@ import MainPage from "./pages/Main";
 import LoginPage from "./pages/Login";
 import SearchPage from "./pages/Search";
 import DetailPage from "./pages/Detail";
+import FeaturesPage from "./pages/info";
 
 const App: React.FC = () => {
     //const basename = process.env.REACT_APP_BASENAME || "/";
@@ -19,6 +20,7 @@ const App: React.FC = () => {
                 <Route path="/main" element={<MainPage />} />
                 <Route path="/search" element={<SearchPage />} />
                 <Route path="/games/:gameId" element={<DetailPage />} />
+                <Route path="/info" element={<FeaturesPage />} />
             </Routes>
         </Router>
     );
