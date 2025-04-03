@@ -47,7 +47,7 @@ const GameSkeleton: React.FC = () => {
 
 const SearchPage: React.FC = () => {
     const navigate = useNavigate();
-    const [searchParams, setSearchParams] = useSearchParams();
+    const [searchParams] = useSearchParams();
     const location = useLocation();
     const isInitialMount = useRef(true);
 
@@ -142,6 +142,28 @@ const SearchPage: React.FC = () => {
     // 현재 활성화된 요청에 대한 AbortController 참조 추가
     const abortControllerRef = useRef<AbortController | null>(null);
 
+    const updateUrlWithoutPushingHistory = useCallback(() => {
+        const newParams = new URLSearchParams(searchParams);
+
+        // 기존 파라미터 제거
+        newParams.delete("discount");
+        newParams.delete("recommended");
+
+        // 필요한 파라미터만 추가
+        if (searchQuery) newParams.set("query", searchQuery);
+        if (discountFilter) newParams.set("discount", "true");
+        if (recommendedFilter) newParams.set("recommended", "true");
+
+        // replaceState를 사용하여 현재 URL 업데이트 (히스토리에 추가하지 않음)
+        navigate(`?${newParams.toString()}`, { replace: true });
+    }, [
+        searchParams,
+        searchQuery,
+        discountFilter,
+        recommendedFilter,
+        navigate,
+    ]);
+
     // Save state to sessionStorage but with a debounce effect
     useEffect(() => {
         // Skip on initial mount to prevent double fetching
@@ -160,11 +182,7 @@ const SearchPage: React.FC = () => {
 
         // Only update URL params when explicitly performing a search
         if (pendingSearchRef.current) {
-            const newParams = new URLSearchParams();
-            if (searchQuery) newParams.set("query", searchQuery);
-            if (discountFilter) newParams.set("discount", "true");
-            if (recommendedFilter) newParams.set("recommended", "true");
-            setSearchParams(newParams);
+            updateUrlWithoutPushingHistory();
             pendingSearchRef.current = false;
         }
     }, [
@@ -172,7 +190,7 @@ const SearchPage: React.FC = () => {
         activeFilters,
         discountFilter,
         recommendedFilter,
-        setSearchParams,
+        updateUrlWithoutPushingHistory,
     ]);
 
     // Fetch games 함수 수정
@@ -347,6 +365,10 @@ const SearchPage: React.FC = () => {
         setDiscountFilter(!discountFilter);
         pendingSearchRef.current = true;
         setCurrentPage(0);
+
+        // URL 업데이트 시 replaceState 사용
+        updateUrlWithoutPushingHistory();
+
         fetchGames(0, false);
     };
 
@@ -357,6 +379,10 @@ const SearchPage: React.FC = () => {
         setRecommendedFilter(!recommendedFilter);
         pendingSearchRef.current = true;
         setCurrentPage(0);
+
+        // URL 업데이트 시 replaceState 사용
+        updateUrlWithoutPushingHistory();
+
         fetchGames(0, false);
     };
 
