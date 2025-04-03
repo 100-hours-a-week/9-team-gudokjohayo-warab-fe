@@ -226,8 +226,6 @@ export const convertFiltersToParams = (
         if (filters.singlePlay !== undefined) {
             params.singlePlay = filters.singlePlay;
         }
-        console.log(filters.singleplay);
-        console.log(filters.multiplay);
 
         if (filters.multiPlay !== undefined) {
             params.multiPlay = filters.multiPlay;

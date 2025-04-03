@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import Header from "../components/Header";
 import FilterModal, { FilterOptions } from "../components/FilterModal";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import {
     searchGames,
     Game,
@@ -10,13 +10,63 @@ import {
 import { getAllCategorys } from "../services/categoryService";
 import ScrollToTopButton from "../components/ScrollToTopButton";
 
+// 디바운스 함수 추가
+const useDebounce = (value: string, delay: number) => {
+    const [debouncedValue, setDebouncedValue] = useState(value);
+
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedValue(value);
+        }, delay);
+
+        return () => {
+            clearTimeout(handler);
+        };
+    }, [value, delay]);
+
+    return debouncedValue;
+};
+
+// 스켈레톤 로딩 컴포넌트
+const GameSkeleton: React.FC = () => {
+    return (
+        <div className="flex animate-pulse">
+            <div className="w-40 h-24 bg-gray-300 flex-shrink-0 rounded-md"></div>
+            <div className="flex-1 ml-4 flex flex-col justify-between">
+                <div className="space-y-2">
+                    <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+                    <div className="h-3 bg-gray-300 rounded w-1/2"></div>
+                </div>
+                <div className="self-end">
+                    <div className="h-4 bg-gray-300 rounded w-16"></div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const SearchPage: React.FC = () => {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
+    const location = useLocation();
+    const isInitialMount = useRef(true);
 
     // Initialize state from URL params or sessionStorage when available
     const initializeStateFromStorage = () => {
-        // Try to get saved state from sessionStorage
+        // First check if there's a query parameter in the URL
+        const queryParam = searchParams.get("query");
+
+        // If URL has a query parameter, prioritize it over saved state
+        if (queryParam) {
+            return {
+                query: queryParam,
+                activeFilters: null,
+                discount: searchParams.get("discount") === "true",
+                recommended: searchParams.get("recommended") === "true",
+            };
+        }
+
+        // No URL query parameter, try to get saved state from sessionStorage
         const savedState = sessionStorage.getItem("searchPageState");
         if (savedState) {
             const parsedState = JSON.parse(savedState);
@@ -28,12 +78,12 @@ const SearchPage: React.FC = () => {
             };
         }
 
-        // Fall back to URL params if no saved state
+        // Fall back to empty default state if nothing else
         return {
-            query: searchParams.get("query") || "",
+            query: "",
             activeFilters: null,
-            discount: searchParams.get("discount") === "true",
-            recommended: searchParams.get("recommended") === "true",
+            discount: false,
+            recommended: false,
         };
     };
 
@@ -58,36 +108,19 @@ const SearchPage: React.FC = () => {
     >([]);
     const [categorysLoading, setCategorysLoading] = useState<boolean>(true);
 
+    // 새로운 상태: 결과가 있는지 여부 추적
+    const [hasResults, setHasResults] = useState<boolean>(true);
+
     // 인피니티 스크롤 관련 상태
     const [currentPage, setCurrentPage] = useState<number>(0);
     const [hasMore, setHasMore] = useState<boolean>(true);
     const [loadingMore, setLoadingMore] = useState<boolean>(false);
     const observerRef = useRef<IntersectionObserver | null>(null);
     const lastGameElementRef = useRef<HTMLDivElement | null>(null);
+    const pendingSearchRef = useRef<boolean>(false);
 
-    // Save state to sessionStorage whenever relevant state changes
-    useEffect(() => {
-        const stateToSave = {
-            searchQuery,
-            activeFilters,
-            discountFilter,
-            recommendedFilter,
-        };
-        sessionStorage.setItem("searchPageState", JSON.stringify(stateToSave));
-
-        // Also update URL params for shareable links
-        const newParams = new URLSearchParams();
-        if (searchQuery) newParams.set("query", searchQuery);
-        if (discountFilter) newParams.set("discount", "true");
-        if (recommendedFilter) newParams.set("recommended", "true");
-        setSearchParams(newParams);
-    }, [
-        searchQuery,
-        activeFilters,
-        discountFilter,
-        recommendedFilter,
-        setSearchParams,
-    ]);
+    // 디바운스된 검색어 (타이핑 중지 후 300ms 기다림)
+    const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
     // Fetch categories when component mounts
     useEffect(() => {
@@ -109,6 +142,39 @@ const SearchPage: React.FC = () => {
     // 현재 활성화된 요청에 대한 AbortController 참조 추가
     const abortControllerRef = useRef<AbortController | null>(null);
 
+    // Save state to sessionStorage but with a debounce effect
+    useEffect(() => {
+        // Skip on initial mount to prevent double fetching
+        if (isInitialMount.current) {
+            isInitialMount.current = false;
+            return;
+        }
+
+        const stateToSave = {
+            searchQuery,
+            activeFilters,
+            discountFilter,
+            recommendedFilter,
+        };
+        sessionStorage.setItem("searchPageState", JSON.stringify(stateToSave));
+
+        // Only update URL params when explicitly performing a search
+        if (pendingSearchRef.current) {
+            const newParams = new URLSearchParams();
+            if (searchQuery) newParams.set("query", searchQuery);
+            if (discountFilter) newParams.set("discount", "true");
+            if (recommendedFilter) newParams.set("recommended", "true");
+            setSearchParams(newParams);
+            pendingSearchRef.current = false;
+        }
+    }, [
+        searchQuery,
+        activeFilters,
+        discountFilter,
+        recommendedFilter,
+        setSearchParams,
+    ]);
+
     // Fetch games 함수 수정
     const fetchGames = useCallback(
         async (page = 0, isLoadingMore = false) => {
@@ -123,7 +189,9 @@ const SearchPage: React.FC = () => {
                 const signal = abortControllerRef.current.signal;
 
                 if (page === 0) {
+                    // 처음 로딩할 때만 로딩 상태 변경, 기존 결과는 유지
                     setLoading(true);
+                    // 기존 결과가 계속 보이도록 유지
                     setHasMore(true);
                 } else {
                     setLoadingMore(true);
@@ -138,12 +206,14 @@ const SearchPage: React.FC = () => {
                 // Convert filters to search parameters
                 const searchParams = convertFiltersToParams(
                     activeFilters,
-                    searchQuery,
+                    debouncedSearchQuery, // 디바운스된 검색어 사용
                     mode
                 );
 
                 // Add page parameter
                 searchParams.page = page;
+
+                console.log("Fetching games with params:", searchParams);
 
                 // Fetch games with the search parameters and AbortController signal
                 const gameResults = await searchGames(searchParams, signal);
@@ -152,11 +222,12 @@ const SearchPage: React.FC = () => {
                 if (signal.aborted) return;
 
                 // If we got fewer results than expected or none, there's no more data
+                setHasResults(gameResults.length > 0);
                 if (gameResults.length === 0) {
                     setHasMore(false);
                 }
 
-                // Update the games list
+                // Update the games list with fade transition
                 if (isLoadingMore) {
                     setGames((prevGames) => [...prevGames, ...gameResults]);
                 } else {
@@ -185,7 +256,7 @@ const SearchPage: React.FC = () => {
                 }
             }
         },
-        [searchQuery, activeFilters, discountFilter, recommendedFilter]
+        [debouncedSearchQuery, activeFilters, discountFilter, recommendedFilter]
     );
 
     // 컴포넌트 언마운트 시 모든 요청 중단
@@ -230,17 +301,33 @@ const SearchPage: React.FC = () => {
         }
     }, [games]);
 
-    // Initial fetch when component mounts or filters change
+    // Initial data fetch when URL parameters change
     useEffect(() => {
-        setCurrentPage(0);
-        fetchGames(0, false);
-    }, [
-        searchQuery,
-        activeFilters,
-        discountFilter,
-        recommendedFilter,
-        fetchGames,
-    ]);
+        const shouldFetch =
+            // Either it's the initial load with query params
+            (!isInitialMount.current && location.search.includes("query")) ||
+            // Or it's the first load with saved state
+            (isInitialMount.current && initialState.query);
+
+        if (shouldFetch) {
+            setCurrentPage(0);
+            fetchGames(0, false);
+        }
+
+        isInitialMount.current = false;
+    }, [location.search, fetchGames, initialState.query]);
+
+    // 디바운스된 검색어가 변경될 때마다 검색 실행
+    useEffect(() => {
+        if (
+            debouncedSearchQuery !== initialState.query ||
+            !isInitialMount.current
+        ) {
+            pendingSearchRef.current = true;
+            setCurrentPage(0);
+            fetchGames(0, false);
+        }
+    }, [debouncedSearchQuery, fetchGames, initialState.query]);
 
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearchQuery(e.target.value);
@@ -248,6 +335,7 @@ const SearchPage: React.FC = () => {
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
+        pendingSearchRef.current = true;
         setCurrentPage(0);
         fetchGames(0, false);
     };
@@ -257,6 +345,9 @@ const SearchPage: React.FC = () => {
             setRecommendedFilter(false);
         }
         setDiscountFilter(!discountFilter);
+        pendingSearchRef.current = true;
+        setCurrentPage(0);
+        fetchGames(0, false);
     };
 
     const toggleRecommendedFilter = () => {
@@ -264,6 +355,9 @@ const SearchPage: React.FC = () => {
             setDiscountFilter(false);
         }
         setRecommendedFilter(!recommendedFilter);
+        pendingSearchRef.current = true;
+        setCurrentPage(0);
+        fetchGames(0, false);
     };
 
     const toggleFilterModal = () => {
@@ -272,13 +366,17 @@ const SearchPage: React.FC = () => {
 
     const handleApplyFilters = (filters: FilterOptions) => {
         setActiveFilters(filters);
+        pendingSearchRef.current = true;
         setCurrentPage(0);
+        fetchGames(0, false);
     };
 
     // Handle the reset functionality from FilterModal
     const handleResetFilters = () => {
         setActiveFilters(null);
+        pendingSearchRef.current = true;
         setCurrentPage(0);
+        fetchGames(0, false);
     };
 
     // Navigate to game detail page with category ID if available
@@ -359,7 +457,7 @@ const SearchPage: React.FC = () => {
                             )}
 
                             {activeFilters &&
-                                activeFilters.categories.length > 0 && (
+                                activeFilters.categories?.length > 0 && (
                                     <div className="mb-4">
                                         <p className="text-sm text-gray-600">
                                             CATEGORIES:{" "}
@@ -423,9 +521,16 @@ const SearchPage: React.FC = () => {
 
                         {/* Game Results List */}
                         <div className="flex-1 overflow-y-auto px-4">
-                            {loading && currentPage === 0 ? (
-                                <div className="py-8 text-center text-gray-500">
-                                    게임을 불러오는 중입니다...
+                            {loading &&
+                            currentPage === 0 &&
+                            games.length === 0 ? (
+                                // 스켈레톤 로딩 UI
+                                <div className="space-y-4 pb-6">
+                                    {[...Array(5)].map((_, index) => (
+                                        <GameSkeleton
+                                            key={`skeleton-${index}`}
+                                        />
+                                    ))}
                                 </div>
                             ) : error ? (
                                 <div className="py-8 text-center text-red-500">
@@ -433,70 +538,78 @@ const SearchPage: React.FC = () => {
                                 </div>
                             ) : (
                                 <div className="space-y-4 pb-6">
+                                    {/* 기존 결과가 있을 때는 계속 보여주면서 바뀌도록 함 */}
                                     {games.length > 0 ? (
-                                        games.map((game, index) => (
-                                            <div
-                                                key={`${game.game_id}-${index}`}
-                                                className="flex cursor-pointer"
-                                                onClick={() =>
-                                                    handleGameClick(
-                                                        game.game_id
-                                                    )
-                                                }
-                                                ref={
-                                                    index === games.length - 1
-                                                        ? lastGameElementRef
-                                                        : null
-                                                }
-                                            >
+                                        <div className="transition-opacity duration-300">
+                                            {games.map((game, index) => (
                                                 <div
-                                                    className="w-40 h-24 bg-gray-200 flex-shrink-0 rounded-md bg-cover bg-center"
-                                                    style={{
-                                                        backgroundImage: `url(${game.thumbnail})`,
-                                                    }}
-                                                ></div>
-                                                <div className="flex-1 ml-4 flex flex-col justify-between">
-                                                    <div>
-                                                        <h3 className="font-medium text-medium">
-                                                            {game.title}
-                                                        </h3>
-                                                    </div>
-                                                    <div className="self-end">
-                                                        {game.lowest_price <
-                                                        game.price ? (
-                                                            <div className="flex flex-col items-end">
-                                                                <span className="text-orange-500 font-medium">
-                                                                    {formatPrice(
-                                                                        game.lowest_price
-                                                                    )}
-                                                                </span>
-                                                                <span className="text-gray-500 line-through text-sm">
+                                                    key={`${game.game_id}-${index}`}
+                                                    className="flex cursor-pointer mb-4"
+                                                    onClick={() =>
+                                                        handleGameClick(
+                                                            game.game_id
+                                                        )
+                                                    }
+                                                    ref={
+                                                        index ===
+                                                        games.length - 1
+                                                            ? lastGameElementRef
+                                                            : null
+                                                    }
+                                                >
+                                                    <div
+                                                        className="w-40 h-24 bg-gray-200 flex-shrink-0 rounded-md bg-cover bg-center"
+                                                        style={{
+                                                            backgroundImage: `url(${game.thumbnail})`,
+                                                        }}
+                                                    ></div>
+                                                    <div className="flex-1 ml-4 flex flex-col justify-between">
+                                                        <div>
+                                                            <h3 className="font-medium text-medium">
+                                                                {game.title}
+                                                            </h3>
+                                                        </div>
+                                                        <div className="self-end">
+                                                            {game.lowest_price <
+                                                            game.price ? (
+                                                                <div className="flex flex-col items-end">
+                                                                    <span className="text-orange-500 font-medium">
+                                                                        {formatPrice(
+                                                                            game.lowest_price
+                                                                        )}
+                                                                    </span>
+                                                                    <span className="text-gray-500 line-through text-sm">
+                                                                        {formatPrice(
+                                                                            game.price
+                                                                        )}
+                                                                    </span>
+                                                                </div>
+                                                            ) : (
+                                                                <div className="text-right font-medium">
                                                                     {formatPrice(
                                                                         game.price
                                                                     )}
-                                                                </span>
-                                                            </div>
-                                                        ) : (
-                                                            <div className="text-right font-medium">
-                                                                {formatPrice(
-                                                                    game.price
-                                                                )}
-                                                            </div>
-                                                        )}
+                                                                </div>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        ))
-                                    ) : (
+                                            ))}
+                                        </div>
+                                    ) : !loading && hasResults === false ? (
                                         <div className="py-8 text-center text-gray-500">
                                             해당 검색결과가 없습니다.
                                         </div>
-                                    )}
+                                    ) : null}
 
-                                    {/* Loading indicator for infinite scroll */}
+                                    {/* 추가 로딩 인디케이터 - 무한 스크롤 */}
                                     {loadingMore && (
-                                        <div className="py-4 text-center text-gray-500">
-                                            더 많은 게임을 불러오는 중...
+                                        <div className="space-y-4 pb-6">
+                                            {[...Array(2)].map((_, index) => (
+                                                <GameSkeleton
+                                                    key={`loading-more-${index}`}
+                                                />
+                                            ))}
                                         </div>
                                     )}
 
