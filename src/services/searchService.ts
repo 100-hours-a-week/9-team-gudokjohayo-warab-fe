@@ -113,7 +113,7 @@ export const searchGames = async (
 ): Promise<Game[]> => {
     try {
         const queryString = buildQueryString(params);
-        console.log("Search query string:", queryString);
+        // console.log("Search query string:", queryString);
         const response = await api.get<SearchResponseData>(
             `/games${queryString}`,
             { signal } // AbortController signal 전달

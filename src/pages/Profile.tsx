@@ -96,7 +96,6 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
         setIsLoading(true);
         try {
             const profileData = await getUserProfile();
-            console.log(profileData);
             setNickname(profileData.data.nickname);
             setDiscordUrl(profileData.data.discord_link);
             setOriginalNickname(profileData.data.nickname);

@@ -90,7 +90,6 @@ export const updateUserProfile = async (
     categoryIds: number[] // We'll still pass category IDs for the request
 ): Promise<any> => {
     try {
-        console.log(categoryIds);
         const response = await api.put("/users/profile", {
             nickname,
             discord: discordLink,
@@ -107,7 +106,6 @@ export const updateUserProfile = async (
 export const userLogOut = async (): Promise<any> => {
     try {
         const response = await api.post("/auth/logout"); // Send the logout request to the server
-        console.log(response);
         return response.data; // Return the response data (optional)
     } catch (error) {
         console.error("Logout failed:", error);

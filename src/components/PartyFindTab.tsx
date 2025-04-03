@@ -73,8 +73,6 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
             // Create discord link map from comments
             const linkMap: { [key: string]: string } = {};
             sortedComments.forEach((comment) => {
-                console.log(comment.created_at);
-                console.log(comment.content);
                 if (comment.user_discord) {
                     linkMap[comment.name] = comment.user_discord;
                 }

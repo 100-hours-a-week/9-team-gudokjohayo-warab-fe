@@ -48,7 +48,6 @@ const DetailPage: React.FC<DetailPageProps> = () => {
                 setLoading(true);
                 // Use the gameId from URL params, fallback to "1" if not available
                 const data = await getGameDetails(gameId || "1");
-                console.log(data);
                 setGameDetail(data);
                 setLoading(false);
             } catch (err) {
