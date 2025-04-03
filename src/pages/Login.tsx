@@ -36,7 +36,7 @@ interface LoginPageProps {
 }
 
 const LoginPage: React.FC<LoginPageProps> = ({
-    logoSrc = `${process.env.PUBLIC_URL}/images/warab_logo.png`,
+    logoSrc = `${process.env.PUBLIC_URL}/images/warab_logo_black.png`,
 }) => {
     const navigate = useNavigate(); // Initialize useNavigate hook
 
@@ -52,47 +52,49 @@ const LoginPage: React.FC<LoginPageProps> = ({
     };
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-white">
+        <div className="min-h-screen flex items-center justify-center bg-white">
             <div
-                className="relative bg-white"
+                className="bg-white flex flex-col items-center justify-center"
                 style={{
                     width: "402px",
-                    height: "auto",
                     maxWidth: "100vw",
-                    minHeight: "100vh",
                 }}
             >
-                <div className="flex-1 flex flex-col items-center justify-center p-6">
-                    <div className="w-full max-w-md flex flex-col items-center">
-                        {/* Logo Section - Single Image */}
-                        <div className="flex flex-col items-center mb-16">
-                            <img
-                                src={logoSrc}
-                                alt="Logo"
-                                className="w-64 h-auto mb-4"
-                            />
-                        </div>
+                <div className="w-full max-w-md flex flex-col items-center p-6">
+                    {/* Logo Section - Single Image */}
+                    <div className="flex flex-col items-center mb-16">
+                        <img
+                            src={logoSrc}
+                            alt="Logo"
+                            className="w-40 h-auto mb-4" // Changed from w-64 to w-40
+                        />
+                        <h1
+                            className="font-bitbit text-xl font-bold flex-1 text-center cursor-pointer"
+                            onClick={() => navigate("/main", { replace: true })}
+                        >
+                            WARA :B
+                        </h1>
+                    </div>
 
-                        {/* Login Buttons Section */}
-                        <div className="w-full">
-                            <LoginButton
-                                icon={`${process.env.PUBLIC_URL}/images/kakao.png`}
-                                text="카카오로 3초만에 시작하기"
-                                backgroundColor="#FAE100"
-                                textColor="#3A1D1D"
-                                onClick={handleKakaoLogin}
-                            />
+                    {/* Login Buttons Section */}
+                    <div className="w-full">
+                        <LoginButton
+                            icon={`${process.env.PUBLIC_URL}/images/kakao.png`}
+                            text="카카오로 3초만에 시작하기"
+                            backgroundColor="#FAE100"
+                            textColor="#3A1D1D"
+                            onClick={handleKakaoLogin}
+                        />
 
-                            {/* Guest Access Text Link */}
-                            <div className="w-full text-center mt-6">
-                                {/* Using button styled as a link instead of <a> tag */}
-                                <button
-                                    onClick={handleGuestAccess}
-                                    className="text-gray-600 hover:text-gray-900 underline text-sm cursor-pointer bg-transparent border-none p-0"
-                                >
-                                    비회원으로 계속하기
-                                </button>
-                            </div>
+                        {/* Guest Access Text Link */}
+                        <div className="w-full text-center mt-6">
+                            {/* Using button styled as a link instead of <a> tag */}
+                            <button
+                                onClick={handleGuestAccess}
+                                className="text-gray-600 hover:text-gray-900 underline text-sm cursor-pointer bg-transparent border-none p-0"
+                            >
+                                비회원으로 계속하기
+                            </button>
                         </div>
                     </div>
                 </div>

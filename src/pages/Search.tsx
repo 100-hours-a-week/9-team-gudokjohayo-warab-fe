@@ -213,7 +213,7 @@ const SearchPage: React.FC = () => {
                 // Add page parameter
                 searchParams.page = page;
 
-                console.log("Fetching games with params:", searchParams);
+                // console.log("Fetching games with params:", searchParams);
 
                 // Fetch games with the search parameters and AbortController signal
                 const gameResults = await searchGames(searchParams, signal);

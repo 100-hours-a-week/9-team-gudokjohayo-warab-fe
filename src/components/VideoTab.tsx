@@ -67,9 +67,8 @@ const VideoTab: React.FC<VideoTabProps> = () => {
             // const response = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&q=8번출구게임&type=video&key=${API_KEY}`);
             // const data = await response.json();
             // Process the data and update the videos state
-
             // For now, we'll just use our sample data
-            console.log("Would fetch videos from YouTube API here");
+            // console.log("Would fetch videos from YouTube API here");
         } catch (error) {
             console.error("Error fetching YouTube videos:", error);
         }

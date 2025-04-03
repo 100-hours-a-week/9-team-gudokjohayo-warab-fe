@@ -48,6 +48,11 @@ const PriceTab: React.FC<PriceTabProps> = ({ gameId, currentPrice }) => {
         return currentPrice - historicalLowestPrice;
     };
 
+    // 현재 가격이 역대 최저가인지 확인
+    const isCurrentPriceLowest = () => {
+        return currentPrice <= historicalLowestPrice;
+    };
+
     if (isLoading) {
         return <div className="p-4 text-center">로딩 중...</div>;
     }
@@ -102,7 +107,9 @@ const PriceTab: React.FC<PriceTabProps> = ({ gameId, currentPrice }) => {
                             <div className="flex items-center justify-between mb-2">
                                 <div>
                                     <span className="text-xs font-semibold inline-block text-green-600">
-                                        역대가 대비 {calculatePriceRatio()}%
+                                        {isCurrentPriceLowest()
+                                            ? "현재가 최저가입니다"
+                                            : `역대가 대비 ${calculatePriceRatio()}%`}
                                     </span>
                                 </div>
                                 <div>
