@@ -68,15 +68,15 @@ const GameSlider: React.FC<GameSliderProps> = ({
 
     const handleNext = () => {
         setCurrentIndex((prevIndex) => {
-            const newIndex = prevIndex + 1;
-            return newIndex > maxIndex ? maxIndex : newIndex;
+            // 마지막 인덱스에서 다음으로 가면 처음(0)으로 이동
+            return prevIndex >= maxIndex ? 0 : prevIndex + 1;
         });
     };
 
     const handlePrev = () => {
         setCurrentIndex((prevIndex) => {
-            const newIndex = prevIndex - 1;
-            return newIndex < 0 ? 0 : newIndex;
+            // 첫 인덱스(0)에서 이전으로 가면 마지막으로 이동
+            return prevIndex <= 0 ? maxIndex : prevIndex - 1;
         });
     };
 
@@ -95,11 +95,11 @@ const GameSlider: React.FC<GameSliderProps> = ({
         const isLeftSwipe = distance > 50;
         const isRightSwipe = distance < -50;
 
-        if (isLeftSwipe && currentIndex < maxIndex) {
+        if (isLeftSwipe) {
             handleNext();
         }
 
-        if (isRightSwipe && currentIndex > 0) {
+        if (isRightSwipe) {
             handlePrev();
         }
 
@@ -174,49 +174,49 @@ const GameSlider: React.FC<GameSliderProps> = ({
                     ))}
                 </div>
 
-                {/* Navigation arrows */}
-                {showControls && currentIndex > 0 && (
-                    <button
-                        onClick={handlePrev}
-                        className="absolute left-0 top-[calc(50%-1rem)] transform -translate-y-1/2"
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-8 w-8 text-white drop-shadow-lg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
+                {/* Navigation arrows - 항상 표시 */}
+                {showControls && (
+                    <>
+                        <button
+                            onClick={handlePrev}
+                            className="absolute left-0 top-[calc(50%-1rem)] transform -translate-y-1/2"
                         >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M15 19l-7-7 7-7"
-                            />
-                        </svg>
-                    </button>
-                )}
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-8 w-8 text-white drop-shadow-lg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M15 19l-7-7 7-7"
+                                />
+                            </svg>
+                        </button>
 
-                {showControls && currentIndex < maxIndex && (
-                    <button
-                        onClick={handleNext}
-                        className="absolute right-0 top-[calc(50%-1rem)] transform -translate-y-1/2"
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-8 w-8 text-white drop-shadow-lg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
+                        <button
+                            onClick={handleNext}
+                            className="absolute right-0 top-[calc(50%-1rem)] transform -translate-y-1/2"
                         >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M9 5l7 7-7 7"
-                            />
-                        </svg>
-                    </button>
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-8 w-8 text-white drop-shadow-lg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M9 5l7 7-7 7"
+                                />
+                            </svg>
+                        </button>
+                    </>
                 )}
             </div>
 
