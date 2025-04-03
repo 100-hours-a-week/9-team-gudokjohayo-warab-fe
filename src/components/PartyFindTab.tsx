@@ -73,6 +73,8 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
             // Create discord link map from comments
             const linkMap: { [key: string]: string } = {};
             sortedComments.forEach((comment) => {
+                console.log(comment.created_at);
+                console.log(comment.content);
                 if (comment.user_discord) {
                     linkMap[comment.name] = comment.user_discord;
                 }
@@ -170,7 +172,6 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
             }, 3000);
         }
     };
-
 
     // Handle input change
     const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -327,11 +328,9 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                         }
                         className="flex-1 py-2 px-4 bg-transparent outline-none rounded-lg text-sm resize-none overflow-hidden min-h-[40px] max-h-40"
                         value={currentMessage}
-
                         onChange={handleInputChange}
                         onKeyDown={handleKeyPress}
                         disabled={!canPostComment || isSending}
-
                         style={{
                             lineHeight: "24px",
                             alignItems: "center",
@@ -341,11 +340,9 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                     />
                     <button
                         className={`mr-2 p-1.5 rounded-full ${
-
                             !canPostComment ||
                             currentMessage.trim() === "" ||
                             isSending
-
                                 ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                                 : "bg-orange-500 text-white"
                         }`}
@@ -354,7 +351,6 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                             !canPostComment ||
                             currentMessage.trim() === "" ||
                             isSending
-
                         }
                     >
                         <svg
@@ -442,7 +438,6 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                                 {/* Action buttons for user's own comments */}
                                 {isOwnComment(comment.name) && (
                                     <div className="flex">
-
                                         {editingCommentId ===
                                         comment.comment_id ? (
                                             <>
@@ -492,9 +487,7 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                                         ) : (
                                             <>
                                                 <button
-
                                                     className="text-gray-400 hover:text-gray-600 px-1"
-
                                                     onClick={() =>
                                                         handleStartEdit(comment)
                                                     }
@@ -515,11 +508,7 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                                                     </svg>
                                                 </button>
                                                 <button
-
                                                     className="text-gray-400 hover:text-gray-600 px-1"
-
-
-
                                                     onClick={() =>
                                                         openDeleteModal(
                                                             comment.comment_id
@@ -545,7 +534,6 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                                         )}
                                     </div>
                                 )}
-
                             </div>
 
                             {/* Content area */}
@@ -599,8 +587,6 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                                         </div>
                                     </>
                                 )}
-
-
                             </div>
                         </div>
                     ))
