@@ -174,7 +174,7 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
             return;
         }
 
-        const specialCharRegex = /[~!@#$%^&*()_+`\-={}[\]|\\:;"'<>,.?/]/;
+        const specialCharRegex = /[~!@#$%^&*()_+`\-={}[\]|\\:;"'<>,.?/₩]/;
         if (specialCharRegex.test(value)) {
             setNicknameHelperText("닉네임에 특수문자를 포함할 수 없습니다.");
             setIsNicknameValid(false);
@@ -255,7 +255,7 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
         e: React.KeyboardEvent<HTMLInputElement>
     ) => {
         // 허용되지 않는 키 입력 차단
-        const specialChars = /[~!@#$%^&*()_+`\-={}[\]|\\:;"'<>,.?/ ]/;
+        const specialChars = /[~!@#$%^&*()_+`\-={}[\]|\\:;"'<>,.?/₩ ]/;
         if (specialChars.test(e.key) && e.key.length === 1) {
             e.preventDefault();
             setNicknameHelperText(
