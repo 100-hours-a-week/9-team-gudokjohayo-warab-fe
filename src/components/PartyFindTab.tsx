@@ -7,7 +7,7 @@ import {
 } from "../services/commentService";
 import ConfirmationModal from "./ConfirmationModal";
 import ToastMessage from "./ToastMessage";
-import { getUserProfile } from "../services/userService";
+import { getUserProfile, isAuthenticated } from "../services/userService";
 
 interface PartyFindTabProps {
     gameId: string;
@@ -37,6 +37,8 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
     // 댓글 전송 중 상태 추가
     const [isSending, setIsSending] = useState<boolean>(false);
+    const [isUserAuthenticated, setIsUserAuthenticated] =
+        useState<boolean>(false);
 
     // New state for discord link copying
     const [discordLinkMap, setDiscordLinkMap] = useState<{
@@ -87,18 +89,22 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
     useEffect(() => {
         const fetchUserProfileAndComments = async () => {
             try {
-                // Fetch user profile first
-                const profile = await getUserProfile();
-                setUserProfile(profile.data);
+                const authStatus = await isAuthenticated();
+                setIsUserAuthenticated(authStatus);
 
-                // 댓글 가져오기
+                // Only fetch profile if authenticated
+                if (authStatus) {
+                    const profile = await getUserProfile();
+                    setUserProfile(profile.data);
+                }
+
+                // Always fetch comments regardless of auth status
                 await fetchComments();
-
-                setLoading(false);
             } catch (err) {
-                setError("사용자 정보 또는 댓글을 불러오는 데 실패했습니다.");
-                setLoading(false);
+                setError("데이터를 불러오는 데 실패했습니다.");
                 console.error("Error fetching data:", err);
+            } finally {
+                setLoading(false);
             }
         };
 
@@ -302,6 +308,16 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
         return nickname === userProfile?.nickname;
     };
 
+    const getPlaceholderText = () => {
+        if (!isUserAuthenticated) {
+            return "로그인이 필요합니다";
+        } else if (!canPostComment) {
+            return "프로필 > 디스코드에 링크를 입력해주세요.";
+        } else {
+            return "메시지를 입력하세요.";
+        }
+    };
+
     if (loading) {
         return <div className="p-4 text-center">댓글을 불러오는 중...</div>;
     }
@@ -319,16 +335,14 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
             <div className="mb-3 relative">
                 <div className="flex items-center bg-white border border-gray-300 rounded-lg">
                     <textarea
-                        placeholder={
-                            !canPostComment
-                                ? "프로필 > 디스코드에 링크를 입력해주세요."
-                                : "메시지를 입력하세요."
-                        }
+                        placeholder={getPlaceholderText()}
                         className="flex-1 py-2 px-4 bg-transparent outline-none rounded-lg text-sm resize-none overflow-hidden min-h-[40px] max-h-40"
                         value={currentMessage}
                         onChange={handleInputChange}
                         onKeyDown={handleKeyPress}
-                        disabled={!canPostComment || isSending}
+                        disabled={
+                            !isUserAuthenticated || !canPostComment || isSending
+                        }
                         style={{
                             lineHeight: "24px",
                             alignItems: "center",
@@ -338,6 +352,7 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                     />
                     <button
                         className={`mr-2 p-1.5 rounded-full ${
+                            !isUserAuthenticated ||
                             !canPostComment ||
                             currentMessage.trim() === "" ||
                             isSending
@@ -346,6 +361,7 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                         }`}
                         onClick={handleSendMessage}
                         disabled={
+                            !isUserAuthenticated ||
                             !canPostComment ||
                             currentMessage.trim() === "" ||
                             isSending
