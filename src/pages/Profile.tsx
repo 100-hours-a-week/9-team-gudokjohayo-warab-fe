@@ -422,7 +422,7 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
             setTimeout(() => {
                 setShowToast(false);
                 navigate("/main");
-            }, 3000);
+            }, 500);
         } catch (error) {
             console.error("프로필 저장 중 오류 발생:", error);
             // 저장 실패 시 에러 메시지 표시 (선택적)
@@ -695,13 +695,13 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
 
                                 <div className="flex justify-center space-x-14">
                                     <button
-                                        className="px-6 py-2 rounded-full bg-white border border-gray-300 text-sm"
+                                        className="px-4 py-2 rounded-full bg-white border border-gray-300 text-sm"
                                         onClick={handleCancelClick}
                                     >
                                         취소
                                     </button>
                                     <button
-                                        className={`px-6 py-2 rounded-full bg-orange-500 text-white text-sm ${
+                                        className={`px-4 py-2 rounded-full bg-orange-500 text-white text-sm ${
                                             isSaving ||
                                             !isNicknameValid ||
                                             !hasChanges
