@@ -323,7 +323,7 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                     <textarea
                         placeholder={
                             !canPostComment
-                                ? "프로필에 디스코드 링크를 등록해주세요."
+                                ? "프로필 > 디스코드에 링크를 입력해주세요."
                                 : "메시지를 입력하세요."
                         }
                         className="flex-1 py-2 px-4 bg-transparent outline-none rounded-lg text-sm resize-none overflow-hidden min-h-[40px] max-h-40"
