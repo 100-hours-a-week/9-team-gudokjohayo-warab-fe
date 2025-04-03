@@ -1,7 +1,6 @@
-// import React, { useEffect, useState } from "react";
-
 import React from "react";
 import { kakaoBaseURL } from "../api/config";
+import { useNavigate } from "react-router-dom"; // Import useNavigate for redirection
 
 interface LoginButtonProps {
     icon: string;
@@ -39,23 +38,18 @@ interface LoginPageProps {
 const LoginPage: React.FC<LoginPageProps> = ({
     logoSrc = `${process.env.PUBLIC_URL}/images/warab_logo.png`,
 }) => {
+    const navigate = useNavigate(); // Initialize useNavigate hook
+
     const handleKakaoLogin = () => {
         const kakaoAuthUrl = `${kakaoBaseURL}/oauth2/authorization/kakao`;
-
-        // 카카오 로그인 페이지로 리다이렉트
         window.location.href = kakaoAuthUrl;
     };
 
-    // mvp 기능에서 제외
-    // const handleDiscordLogin = () => {
-    //     console.log("Discord login attempted");
-    //     // Implement Discord login logic here
-    // };
-
-    // const handleSteamLogin = () => {
-    //     console.log("Steam login attempted");
-    //     // Implement Steam login logic here
-    // };
+    // Function to handle guest access
+    const handleGuestAccess = () => {
+        // Navigate to the main page
+        navigate("/main");
+    };
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-white">
@@ -63,9 +57,9 @@ const LoginPage: React.FC<LoginPageProps> = ({
                 className="relative bg-white"
                 style={{
                     width: "402px",
-                    height: "auto", // 높이를 자동으로 조정하여 스크롤 가능하게 함
+                    height: "auto",
                     maxWidth: "100vw",
-                    minHeight: "100vh", // 최소 높이를 뷰포트 높이로 설정
+                    minHeight: "100vh",
                 }}
             >
                 <div className="flex-1 flex flex-col items-center justify-center p-6">
@@ -89,19 +83,16 @@ const LoginPage: React.FC<LoginPageProps> = ({
                                 onClick={handleKakaoLogin}
                             />
 
-                            {/* <LoginButton
-                                icon={`${process.env.PUBLIC_URL}/images/discord.png`}
-                                text="디스코드 계정으로 로그인하기"
-                                backgroundColor="#5F70BE"
-                                onClick={handleDiscordLogin}
-                            />
-
-                            <LoginButton
-                                icon={`${process.env.PUBLIC_URL}/images/steam.png`}
-                                text="스팀 계정으로 로그인하기"
-                                backgroundColor="#101B38"
-                                onClick={handleSteamLogin}
-                            /> */}
+                            {/* Guest Access Text Link */}
+                            <div className="w-full text-center mt-6">
+                                {/* Using button styled as a link instead of <a> tag */}
+                                <button
+                                    onClick={handleGuestAccess}
+                                    className="text-gray-600 hover:text-gray-900 underline text-sm cursor-pointer bg-transparent border-none p-0"
+                                >
+                                    비회원으로 계속하기
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
