@@ -164,7 +164,7 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                     console.error("Failed to copy discord link:", err);
                 });
         } else {
-            setToastMessage("디스코드 링크를 찾을 수 없습니다.");
+            setToastMessage(" 이 링크는 더 이상 존재하지 않습니다.");
             setShowToast(true);
 
             setTimeout(() => {

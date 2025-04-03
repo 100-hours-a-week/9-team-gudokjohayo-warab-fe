@@ -689,7 +689,7 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
                                 {/* Fixed height container for toast to prevent layout shifts */}
                                 <div className="mb-4">
                                     {showToast && (
-                                        <ToastMessage message="프로필을 수정했어요." />
+                                        <ToastMessage message="수정 완료" />
                                     )}
                                 </div>
 
