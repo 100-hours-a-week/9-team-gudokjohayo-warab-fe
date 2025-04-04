@@ -51,40 +51,48 @@ const SearchPage: React.FC = () => {
     const [searchParams] = useSearchParams();
     const location = useLocation();
     const isInitialMount = useRef(true);
+    const hasUserInteracted = useRef(false);
+    const hasProcessedFromMain = useRef(false);
 
-    // Initialize state from URL params or sessionStorage when available
+    // Modify the initializeStateFromStorage function
     const initializeStateFromStorage = () => {
-        // First check if there's a query parameter in the URL
+        // Check if there's a 'from' parameter to identify navigation source
+        const fromParam = searchParams.get("from");
         const queryParam = searchParams.get("query");
+        const savedState = sessionStorage.getItem("searchPageState");
 
-        // If URL has a query parameter, prioritize it over saved state
-        if (queryParam) {
+        // If coming from main page, prioritize the query parameter but otherwise reset filters
+        const isFromMainPage = fromParam === "main";
+
+        // If we're coming from main page and it's the first render
+        if (isFromMainPage && !hasProcessedFromMain.current) {
+            hasProcessedFromMain.current = true;
             return {
-                query: queryParam,
+                // Use the query parameter if it exists, otherwise empty string
+                query: queryParam || "",
                 activeFilters: null,
-                discount: searchParams.get("discount") === "true",
-                recommended: searchParams.get("recommended") === "true",
+                discount: false,
+                recommended: false,
             };
         }
 
-        // No URL query parameter, try to get saved state from sessionStorage
-        const savedState = sessionStorage.getItem("searchPageState");
+        // Otherwise check for saved state or URL parameters
         if (savedState) {
             const parsedState = JSON.parse(savedState);
             return {
-                query: parsedState.searchQuery || "",
+                query: queryParam || parsedState.searchQuery || "",
                 activeFilters: parsedState.activeFilters,
                 discount: parsedState.discountFilter || false,
                 recommended: parsedState.recommendedFilter || false,
             };
         }
 
-        // Fall back to empty default state if nothing else
+        // No saved state, use URL or empty defaults
         return {
-            query: "",
+            query: queryParam || "",
             activeFilters: null,
-            discount: false,
-            recommended: false,
+            discount: searchParams.get("discount") === "true",
+            recommended: searchParams.get("recommended") === "true",
         };
     };
 
@@ -123,7 +131,8 @@ const SearchPage: React.FC = () => {
     // 디바운스된 검색어 (타이핑 중지 후 300ms 기다림)
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
-    const [hasPreferredCategories, setHasPreferredCategories] = useState<boolean>(true);
+    const [hasPreferredCategories, setHasPreferredCategories] =
+        useState<boolean>(true);
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
 
     // 사용자의 선호 카테고리 설정 여부 확인
@@ -132,7 +141,8 @@ const SearchPage: React.FC = () => {
             try {
                 const userProfile = await getUserProfile();
                 setHasPreferredCategories(
-                    userProfile.data.categorys && userProfile.data.categorys.length > 0
+                    userProfile.data.categorys &&
+                        userProfile.data.categorys.length > 0
                 );
                 setIsAuthenticated(true);
             } catch (error) {
@@ -167,6 +177,11 @@ const SearchPage: React.FC = () => {
 
     const updateUrlWithoutPushingHistory = useCallback(() => {
         const newParams = new URLSearchParams(searchParams);
+
+        // from=main 파라미터 제거 (사용자 상호작용 발생 시)
+        if (hasUserInteracted.current) {
+            newParams.delete("from");
+        }
 
         // 기존 파라미터 제거
         newParams.delete("discount");
@@ -220,6 +235,9 @@ const SearchPage: React.FC = () => {
     const fetchGames = useCallback(
         async (page = 0, isLoadingMore = false) => {
             try {
+                // 검색 실행 시 사용자 상호작용 플래그 설정
+                hasUserInteracted.current = true;
+
                 // 이전 요청이 있다면 중단
                 if (abortControllerRef.current) {
                     abortControllerRef.current.abort();
@@ -253,8 +271,6 @@ const SearchPage: React.FC = () => {
 
                 // Add page parameter
                 searchParams.page = page;
-
-                // console.log("Fetching games with params:", searchParams);
 
                 // Fetch games with the search parameters and AbortController signal
                 const gameResults = await searchGames(searchParams, signal);
@@ -344,11 +360,19 @@ const SearchPage: React.FC = () => {
 
     // Initial data fetch when URL parameters change
     useEffect(() => {
+        const fromParam = searchParams.get("from");
+        const queryParam = searchParams.get("query");
+        const isFromMainPage = fromParam === "main";
+
         const shouldFetch =
             // Either it's the initial load with query params
             (!isInitialMount.current && location.search.includes("query")) ||
             // Or it's the first load with saved state
-            (isInitialMount.current && initialState.query);
+            (isInitialMount.current && initialState.query) ||
+            // Or there's a query parameter present (even from main page)
+            queryParam ||
+            // Or there's no query but we're not coming from the main page
+            (!isInitialMount.current && !isFromMainPage);
 
         if (shouldFetch) {
             setCurrentPage(0);
@@ -356,7 +380,7 @@ const SearchPage: React.FC = () => {
         }
 
         isInitialMount.current = false;
-    }, [location.search, fetchGames, initialState.query]);
+    }, [location.search, fetchGames, searchParams, initialState.query]);
 
     // 디바운스된 검색어가 변경될 때마다 검색 실행
     useEffect(() => {
@@ -372,16 +396,23 @@ const SearchPage: React.FC = () => {
 
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearchQuery(e.target.value);
+        // 사용자가 검색어 입력 시 상호작용 플래그 설정
+        hasUserInteracted.current = true;
     };
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
+        // 사용자가 직접 검색 버튼 클릭 시 상호작용 플래그 설정
+        hasUserInteracted.current = true;
         pendingSearchRef.current = true;
         setCurrentPage(0);
         fetchGames(0, false);
     };
 
     const toggleDiscountFilter = () => {
+        // 필터 버튼 클릭 시 사용자 상호작용 플래그 설정
+        hasUserInteracted.current = true;
+
         if (recommendedFilter) {
             setRecommendedFilter(false);
         }
@@ -396,6 +427,9 @@ const SearchPage: React.FC = () => {
     };
 
     const toggleRecommendedFilter = () => {
+        // 필터 버튼 클릭 시 사용자 상호작용 플래그 설정
+        hasUserInteracted.current = true;
+
         if (discountFilter) {
             setDiscountFilter(false);
         }
@@ -410,10 +444,14 @@ const SearchPage: React.FC = () => {
     };
 
     const toggleFilterModal = () => {
+        // 필터 모달 열기/닫기 시 사용자 상호작용 플래그 설정
+        hasUserInteracted.current = true;
         setIsFilterModalOpen(!isFilterModalOpen);
     };
 
     const handleApplyFilters = (filters: FilterOptions) => {
+        // 필터 적용 시 사용자 상호작용 플래그 설정
+        hasUserInteracted.current = true;
         setActiveFilters(filters);
         pendingSearchRef.current = true;
         setCurrentPage(0);
@@ -422,14 +460,26 @@ const SearchPage: React.FC = () => {
 
     // Handle the reset functionality from FilterModal
     const handleResetFilters = () => {
+        // 필터 초기화 시 사용자 상호작용 플래그 설정
+        hasUserInteracted.current = true;
         setActiveFilters(null);
         pendingSearchRef.current = true;
         setCurrentPage(0);
         fetchGames(0, false);
     };
 
-    // Navigate to game detail page with category ID if available
+    // Update handleGameClick to save state before navigation
     const handleGameClick = (gameId: number) => {
+        // 게임 클릭 시 항상 현재 상태 저장
+        const stateToSave = {
+            searchQuery: searchQuery, // Use current input value, not debounced one
+            activeFilters,
+            discountFilter,
+            recommendedFilter,
+        };
+        sessionStorage.setItem("searchPageState", JSON.stringify(stateToSave));
+
+        // Then navigate
         navigate(`/games/${gameId}`);
     };
 
@@ -647,11 +697,11 @@ const SearchPage: React.FC = () => {
                                         </div>
                                     ) : !loading && hasResults === false ? (
                                         <div className="py-8 text-center text-gray-500">
-                                            {recommendedFilter && (!isAuthenticated || !hasPreferredCategories) ? (
-                                                "선호 카테고리를 설정해주세요."
-                                            ) : (
-                                                "해당 검색결과가 없습니다."
-                                            )}
+                                            {recommendedFilter &&
+                                            (!isAuthenticated ||
+                                                !hasPreferredCategories)
+                                                ? "선호 카테고리를 설정해주세요."
+                                                : "해당 검색결과가 없습니다."}
                                         </div>
                                     ) : null}
 

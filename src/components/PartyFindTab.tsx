@@ -49,8 +49,6 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
 
     // Current user message
     const [currentMessage, setCurrentMessage] = useState<string>("");
-    // 개행 카운트 추가
-    const [lineBreakCount, setLineBreakCount] = useState<number>(0);
 
     // Edit state
     const [editingCommentId, setEditingCommentId] = useState<number | null>(
@@ -190,24 +188,23 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
     const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         const newText = e.target.value;
         const newLineBreakCount = countLineBreaks(newText);
-        
+
         // 최대 15개 개행 제한
         if (newLineBreakCount <= 15 && newText.length <= 50) {
             setCurrentMessage(newText);
-            setLineBreakCount(newLineBreakCount);
-            
+
             // 자동 높이 조절
             e.target.style.height = "auto";
             e.target.style.height = `${e.target.scrollHeight}px`;
         } else if (newLineBreakCount > 15) {
             // 개행이 15개를 초과하면 마지막 개행을 무시함
-            const lastNewLineIndex = newText.lastIndexOf('\n');
+            const lastNewLineIndex = newText.lastIndexOf("\n");
             if (lastNewLineIndex !== -1) {
-                const truncatedText = newText.substring(0, lastNewLineIndex) + 
-                                     newText.substring(lastNewLineIndex + 1);
+                const truncatedText =
+                    newText.substring(0, lastNewLineIndex) +
+                    newText.substring(lastNewLineIndex + 1);
                 setCurrentMessage(truncatedText);
-                setLineBreakCount(countLineBreaks(truncatedText));
-                
+
                 // 높이 조절
                 e.target.value = truncatedText;
                 e.target.style.height = "auto";
@@ -222,24 +219,25 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
     ) => {
         const newText = e.target.value;
         const newLineBreakCount = countLineBreaks(newText);
-        
+
         // 최대 15개 개행 제한
         if (newLineBreakCount <= 15 && newText.length <= 50) {
             setEditContent(newText);
             setEditLineBreakCount(newLineBreakCount);
-            
+
             // 자동 높이 조절
             e.target.style.height = "auto";
             e.target.style.height = `${e.target.scrollHeight}px`;
         } else if (newLineBreakCount > 15) {
             // 개행이 15개를 초과하면 마지막 개행을 무시함
-            const lastNewLineIndex = newText.lastIndexOf('\n');
+            const lastNewLineIndex = newText.lastIndexOf("\n");
             if (lastNewLineIndex !== -1) {
-                const truncatedText = newText.substring(0, lastNewLineIndex) + 
-                                     newText.substring(lastNewLineIndex + 1);
+                const truncatedText =
+                    newText.substring(0, lastNewLineIndex) +
+                    newText.substring(lastNewLineIndex + 1);
                 setEditContent(truncatedText);
                 setEditLineBreakCount(countLineBreaks(truncatedText));
-                
+
                 // 높이 조절
                 e.target.value = truncatedText;
                 e.target.style.height = "auto";
@@ -328,7 +326,6 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
 
             await createComment(gameId, currentMessage);
             setCurrentMessage("");
-            setLineBreakCount(0);
 
             // 실제 데이터로 UI 업데이트
             await fetchComments();
@@ -369,16 +366,6 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
         } else {
             return "메시지를 입력하세요.";
         }
-    };
-
-    // 개행을 <br> 태그로 변환하는 함수
-    const formatCommentContent = (content: string) => {
-        return content.split('\n').map((line, i) => (
-            <React.Fragment key={i}>
-                {line}
-                {i < content.split('\n').length - 1 && <br />}
-            </React.Fragment>
-        ));
     };
 
     if (loading) {
@@ -448,7 +435,7 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                 </div>
                 {/* Character count and line break count */}
                 <div className="text-xs text-right mt-1 text-gray-500">
-                    {currentMessage.length}/50 
+                    {currentMessage.length}/50
                 </div>
             </div>
 
@@ -640,7 +627,8 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                                         />
                                         {/* 편집 중 개행 카운터 */}
                                         <div className="text-xs text-right mt-1 text-gray-500">
-                                            {editContent.length}/50 (개행: {editLineBreakCount}/15)
+                                            {editContent.length}/50 (개행:{" "}
+                                            {editLineBreakCount}/15)
                                         </div>
                                     </div>
                                 ) : (
