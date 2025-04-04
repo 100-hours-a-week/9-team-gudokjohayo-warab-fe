@@ -8,9 +8,6 @@ import DetailPage from "./pages/Detail";
 import FeaturesPage from "./pages/info";
 
 const App: React.FC = () => {
-    //const basename = process.env.REACT_APP_BASENAME || "/";
-    //console.log("Router Basename: ", basename);
-
     return (
         <Router>
             <Routes>

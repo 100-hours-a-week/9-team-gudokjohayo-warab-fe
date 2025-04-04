@@ -1,7 +1,6 @@
-// import React, { useEffect, useState } from "react";
-
 import React from "react";
 import { kakaoBaseURL } from "../api/config";
+import { useNavigate } from "react-router-dom"; // Import useNavigate for redirection
 
 interface LoginButtonProps {
     icon: string;
@@ -37,71 +36,65 @@ interface LoginPageProps {
 }
 
 const LoginPage: React.FC<LoginPageProps> = ({
-    logoSrc = `${process.env.PUBLIC_URL}/images/warab_logo.png`,
+    logoSrc = `${process.env.PUBLIC_URL}/images/warab_logo_black.png`,
 }) => {
+    const navigate = useNavigate(); // Initialize useNavigate hook
+
     const handleKakaoLogin = () => {
         const kakaoAuthUrl = `${kakaoBaseURL}/oauth2/authorization/kakao`;
-
-        // 카카오 로그인 페이지로 리다이렉트
         window.location.href = kakaoAuthUrl;
     };
 
-    // mvp 기능에서 제외
-    // const handleDiscordLogin = () => {
-    //     console.log("Discord login attempted");
-    //     // Implement Discord login logic here
-    // };
-
-    // const handleSteamLogin = () => {
-    //     console.log("Steam login attempted");
-    //     // Implement Steam login logic here
-    // };
+    // Function to handle guest access
+    const handleGuestAccess = () => {
+        // Navigate to the main page
+        navigate("/main");
+    };
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-white">
+        <div className="min-h-screen flex items-center justify-center bg-white">
             <div
-                className="relative bg-white"
+                className="bg-white flex flex-col items-center justify-center"
                 style={{
                     width: "402px",
-                    height: "auto", // 높이를 자동으로 조정하여 스크롤 가능하게 함
                     maxWidth: "100vw",
-                    minHeight: "100vh", // 최소 높이를 뷰포트 높이로 설정
                 }}
             >
-                <div className="flex-1 flex flex-col items-center justify-center p-6">
-                    <div className="w-full max-w-md flex flex-col items-center">
-                        {/* Logo Section - Single Image */}
-                        <div className="flex flex-col items-center mb-16">
-                            <img
-                                src={logoSrc}
-                                alt="Logo"
-                                className="w-64 h-auto mb-4"
-                            />
-                        </div>
+                <div className="w-full max-w-md flex flex-col items-center p-6">
+                    {/* Logo Section - Single Image */}
+                    <div className="flex flex-col items-center mb-16">
+                        <img
+                            src={logoSrc}
+                            alt="Logo"
+                            className="w-40 h-auto mb-4" // Changed from w-64 to w-40
+                        />
+                        <h1
+                            className="font-bitbit text-xl font-bold flex-1 text-center cursor-pointer"
+                            onClick={() => navigate("/main", { replace: true })}
+                        >
+                            WARA :B
+                        </h1>
+                    </div>
 
-                        {/* Login Buttons Section */}
-                        <div className="w-full">
-                            <LoginButton
-                                icon={`${process.env.PUBLIC_URL}/images/kakao.png`}
-                                text="카카오로 3초만에 시작하기"
-                                backgroundColor="#FAE100"
-                                textColor="#3A1D1D"
-                                onClick={handleKakaoLogin}
-                            />
+                    {/* Login Buttons Section */}
+                    <div className="w-full">
+                        <LoginButton
+                            icon={`${process.env.PUBLIC_URL}/images/kakao.png`}
+                            text="카카오로 3초만에 시작하기"
+                            backgroundColor="#FAE100"
+                            textColor="#3A1D1D"
+                            onClick={handleKakaoLogin}
+                        />
 
-                            {/* <LoginButton
-                                icon={`${process.env.PUBLIC_URL}/images/discord.png`}
-                                text="디스코드 계정으로 로그인하기"
-                                backgroundColor="#5F70BE"
-                                onClick={handleDiscordLogin}
-                            />
-
-                            <LoginButton
-                                icon={`${process.env.PUBLIC_URL}/images/steam.png`}
-                                text="스팀 계정으로 로그인하기"
-                                backgroundColor="#101B38"
-                                onClick={handleSteamLogin}
-                            /> */}
+                        {/* Guest Access Text Link */}
+                        <div className="w-full text-center mt-6">
+                            {/* Using button styled as a link instead of <a> tag */}
+                            <button
+                                onClick={handleGuestAccess}
+                                className="text-gray-600 hover:text-gray-900 underline text-sm cursor-pointer bg-transparent border-none p-0"
+                            >
+                                비회원으로 계속하기
+                            </button>
                         </div>
                     </div>
                 </div>

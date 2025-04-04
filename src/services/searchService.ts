@@ -113,7 +113,7 @@ export const searchGames = async (
 ): Promise<Game[]> => {
     try {
         const queryString = buildQueryString(params);
-        console.log("Search query string:", queryString);
+        // console.log("Search query string:", queryString);
         const response = await api.get<SearchResponseData>(
             `/games${queryString}`,
             { signal } // AbortController signal 전달
@@ -212,8 +212,9 @@ export const convertFiltersToParams = (
 
         // Add rating
         if (filters.rating) {
-            params.ratingMin = filters.rating;
-            params.ratingMax = 10;
+            // [Min,Max)
+            params.ratingMin = filters.rating * 2;
+            params.ratingMax = filters.rating * 2 + 2;
         }
 
         // Add price range
@@ -226,8 +227,6 @@ export const convertFiltersToParams = (
         if (filters.singlePlay !== undefined) {
             params.singlePlay = filters.singlePlay;
         }
-        console.log(filters.singleplay);
-        console.log(filters.multiplay);
 
         if (filters.multiPlay !== undefined) {
             params.multiPlay = filters.multiPlay;

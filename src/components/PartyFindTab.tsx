@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
     getComments,
     createComment,
@@ -7,7 +7,7 @@ import {
 } from "../services/commentService";
 import ConfirmationModal from "./ConfirmationModal";
 import ToastMessage from "./ToastMessage";
-import { getUserProfile } from "../services/userService";
+import { getUserProfile, isAuthenticated } from "../services/userService";
 
 interface PartyFindTabProps {
     gameId: string;
@@ -35,6 +35,10 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+    // 댓글 전송 중 상태 추가
+    const [isSending, setIsSending] = useState<boolean>(false);
+    const [isUserAuthenticated, setIsUserAuthenticated] =
+        useState<boolean>(false);
 
     // New state for discord link copying
     const [discordLinkMap, setDiscordLinkMap] = useState<{
@@ -56,36 +60,56 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [commentToDelete, setCommentToDelete] = useState<number | null>(null);
 
+    // 댓글 데이터 가져오기 함수 - useCallback으로 감싸서 의존성 문제 해결
+    const fetchComments = useCallback(async () => {
+        try {
+            const commentsData = await getComments(gameId);
+            // 최신순 정렬
+            const sortedComments = commentsData.sort(
+                (a: Comment, b: Comment) =>
+                    new Date(b.created_at).getTime() -
+                    new Date(a.created_at).getTime()
+            );
+            setComments(sortedComments);
+
+            // Create discord link map from comments
+            const linkMap: { [key: string]: string } = {};
+            sortedComments.forEach((comment) => {
+                if (comment.user_discord) {
+                    linkMap[comment.name] = comment.user_discord;
+                }
+            });
+            setDiscordLinkMap(linkMap);
+        } catch (err) {
+            setError("댓글을 불러오는 데 실패했습니다.");
+            console.error("Error fetching comments:", err);
+        }
+    }, [gameId]);
+
     useEffect(() => {
         const fetchUserProfileAndComments = async () => {
             try {
-                // Fetch user profile first
-                const profile = await getUserProfile();
-                setUserProfile(profile.data);
+                const authStatus = await isAuthenticated();
+                setIsUserAuthenticated(authStatus);
 
-                // Fetch comments
-                const commentsData = await getComments(gameId);
+                // Only fetch profile if authenticated
+                if (authStatus) {
+                    const profile = await getUserProfile();
+                    setUserProfile(profile.data);
+                }
 
-                setComments(commentsData);
-
-                // Create discord link map from comments
-                const linkMap: { [key: string]: string } = {};
-                commentsData.forEach((comment) => {
-                    if (comment.user_discord) {
-                        linkMap[comment.name] = comment.user_discord;
-                    }
-                });
-                setDiscordLinkMap(linkMap);
-                setLoading(false);
+                // Always fetch comments regardless of auth status
+                await fetchComments();
             } catch (err) {
-                setError("사용자 정보 또는 댓글을 불러오는 데 실패했습니다.");
-                setLoading(false);
+                setError("데이터를 불러오는 데 실패했습니다.");
                 console.error("Error fetching data:", err);
+            } finally {
+                setLoading(false);
             }
         };
 
         fetchUserProfileAndComments();
-    }, [gameId]);
+    }, [gameId, fetchComments]);
 
     // Calculate relative time
     const getRelativeTime = (dateString: string) => {
@@ -144,12 +168,34 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                     console.error("Failed to copy discord link:", err);
                 });
         } else {
-            setToastMessage("디스코드 링크를 찾을 수 없습니다.");
+            setToastMessage(" 이 링크는 더 이상 존재하지 않습니다.");
             setShowToast(true);
 
             setTimeout(() => {
                 setShowToast(false);
             }, 3000);
+        }
+    };
+
+    // Handle input change
+    const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        if (e.target.value.length <= 50) {
+            setCurrentMessage(e.target.value);
+            // 자동 높이 조절
+            e.target.style.height = "auto";
+            e.target.style.height = `${e.target.scrollHeight}px`;
+        }
+    };
+
+    // Handle edit input change
+    const handleEditInputChange = (
+        e: React.ChangeEvent<HTMLTextAreaElement>
+    ) => {
+        if (e.target.value.length <= 50) {
+            setEditContent(e.target.value);
+            // 자동 높이 조절
+            e.target.style.height = "auto";
+            e.target.style.height = `${e.target.scrollHeight}px`;
         }
     };
 
@@ -172,28 +218,12 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
         try {
             await updateComment(commentId, editContent);
 
-            // Update UI optimistically
-            setComments(
-                comments.map((comment) =>
-                    comment.comment_id === commentId
-                        ? {
-                              ...comment,
-                              content: editContent,
-                              updated_at: new Date()
-                                  .toISOString()
-                                  .split("T")[0],
-                          }
-                        : comment
-                )
-            );
-
             // Reset edit state
             setEditingCommentId(null);
             setEditContent("");
 
             // Refresh comments from server
-            const updatedComments = await getComments(gameId);
-            setComments(updatedComments);
+            await fetchComments();
         } catch (error) {
             console.error("Error updating comment:", error);
         }
@@ -218,19 +248,11 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
         try {
             await deleteComment(commentToDelete);
 
-            // Update UI
-            setComments(
-                comments.filter(
-                    (comment) => comment.comment_id !== commentToDelete
-                )
-            );
-
             // Close modal
             closeModal();
 
             // Refresh comments from server
-            const updatedComments = await getComments(gameId);
-            setComments(updatedComments);
+            await fetchComments();
         } catch (error) {
             console.error("Error deleting comment:", error);
             closeModal();
@@ -246,30 +268,22 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
             return;
         }
 
-        if (currentMessage.trim() === "") return;
+        if (currentMessage.trim() === "" || isSending) return;
 
         try {
+            // 전송 중 상태로 설정
+            setIsSending(true);
+
             await createComment(gameId, currentMessage);
-
-            // Optimistic update of UI
-            const newComment: Comment = {
-                comment_id: Date.now(), // 임시 ID
-                user_id: -1, // 임시 사용자 ID
-                name: userProfile?.nickname || "나",
-                content: currentMessage,
-                created_at: new Date().toISOString().split("T")[0],
-                updated_at: new Date().toISOString().split("T")[0],
-                deleted_at: null,
-            };
-
-            setComments([...comments, newComment]);
             setCurrentMessage("");
 
             // 실제 데이터로 UI 업데이트
-            const updatedComments = await getComments(gameId);
-            setComments(updatedComments);
+            await fetchComments();
         } catch (error) {
             console.error("Error sending comment:", error);
+        } finally {
+            // 전송 완료 상태로 설정
+            setIsSending(false);
         }
     };
 
@@ -294,6 +308,16 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
         return nickname === userProfile?.nickname;
     };
 
+    const getPlaceholderText = () => {
+        if (!isUserAuthenticated) {
+            return "로그인이 필요합니다";
+        } else if (!canPostComment) {
+            return "프로필 > 디스코드에 링크를 입력해주세요.";
+        } else {
+            return "메시지를 입력하세요.";
+        }
+    };
+
     if (loading) {
         return <div className="p-4 text-center">댓글을 불러오는 중...</div>;
     }
@@ -311,23 +335,14 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
             <div className="mb-3 relative">
                 <div className="flex items-center bg-white border border-gray-300 rounded-lg">
                     <textarea
-                        placeholder={
-                            !canPostComment
-                                ? "프로필에 디스코드 링크를 등록해주세요."
-                                : "메시지를 입력하세요."
-                        }
+                        placeholder={getPlaceholderText()}
                         className="flex-1 py-2 px-4 bg-transparent outline-none rounded-lg text-sm resize-none overflow-hidden min-h-[40px] max-h-40"
                         value={currentMessage}
-                        onChange={(e) => {
-                            if (e.target.value.length <= 50) {
-                                setCurrentMessage(e.target.value);
-                                // 자동 높이 조절
-                                e.target.style.height = "auto";
-                                e.target.style.height = `${e.target.scrollHeight}px`;
-                            }
-                        }}
+                        onChange={handleInputChange}
                         onKeyDown={handleKeyPress}
-                        disabled={!canPostComment}
+                        disabled={
+                            !isUserAuthenticated || !canPostComment || isSending
+                        }
                         style={{
                             lineHeight: "24px",
                             alignItems: "center",
@@ -337,13 +352,19 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                     />
                     <button
                         className={`mr-2 p-1.5 rounded-full ${
-                            !canPostComment || currentMessage.trim() === ""
+                            !isUserAuthenticated ||
+                            !canPostComment ||
+                            currentMessage.trim() === "" ||
+                            isSending
                                 ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                                 : "bg-orange-500 text-white"
                         }`}
                         onClick={handleSendMessage}
                         disabled={
-                            !canPostComment || currentMessage.trim() === ""
+                            !isUserAuthenticated ||
+                            !canPostComment ||
+                            currentMessage.trim() === "" ||
+                            isSending
                         }
                     >
                         <svg
@@ -378,119 +399,59 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                     comments.map((comment) => (
                         <div
                             key={comment.comment_id}
-                            className="p-2 mb-2 bg-white rounded-lg shadow-sm"
+                            className="p-3 mb-3 bg-white rounded-lg shadow-sm"
                         >
-                            <div className="flex items-center mr-2">
-                                {/* 디스코드+복사 아이콘 버튼 */}
-                                <div
-                                    className="flex items-center bg-[#5865F2] bg-opacity-10 hover:bg-opacity-20 rounded-full px-2 py-1 cursor-pointer mr-2"
-                                    onClick={() =>
-                                        handleDiscordLinkCopy(comment.name)
-                                    }
-                                >
-                                    {/* 디스코드 아이콘 */}
-                                    <img
-                                        src={`${process.env.PUBLIC_URL}/images/discord.png`}
-                                        alt="Discord"
-                                        className="w-4 h-4"
-                                    />
-
-                                    {/* 복사 아이콘 - 클립보드 모양 */}
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        width="12"
-                                        height="12"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="#5865F2"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        className="ml-1"
+                            {/* Header row with username and actions */}
+                            <div className="flex justify-between items-center mb-2">
+                                <div className="flex items-center">
+                                    {/* Discord copy button */}
+                                    <div
+                                        className="flex items-center bg-[#5865F2] bg-opacity-10 hover:bg-opacity-20 rounded-full px-2 py-1 cursor-pointer mr-2"
+                                        onClick={() =>
+                                            handleDiscordLinkCopy(comment.name)
+                                        }
                                     >
-                                        <rect
-                                            x="9"
-                                            y="9"
-                                            width="13"
-                                            height="13"
-                                            rx="2"
-                                            ry="2"
-                                        ></rect>
-                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                                    </svg>
-                                </div>
+                                        {/* Discord icon */}
+                                        <img
+                                            src={`${process.env.PUBLIC_URL}/images/discord.png`}
+                                            alt="Discord"
+                                            className="w-4 h-4"
+                                        />
 
-                                <div className="w-20 min-w-20 mr-2">
-                                    <span className="font-medium text-gray-800 truncate block text-xs">
+                                        {/* Copy icon */}
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            width="12"
+                                            height="12"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="#5865F2"
+                                            strokeWidth="2"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            className="ml-1"
+                                        >
+                                            <rect
+                                                x="9"
+                                                y="9"
+                                                width="13"
+                                                height="13"
+                                                rx="2"
+                                                ry="2"
+                                            ></rect>
+                                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                        </svg>
+                                    </div>
+
+                                    {/* Username */}
+                                    <span className="font-medium text-black font-800 text-sm">
                                         {formatUsername(comment.name)}
                                     </span>
                                 </div>
-                                <span className="text-gray-400 mr-2 text-xs"></span>
 
-                                {editingCommentId === comment.comment_id ? (
-                                    <div className="flex-1">
-                                        <textarea
-                                            className="w-full p-1 text-xs border rounded resize-none overflow-hidden max-h-40"
-                                            value={editContent}
-                                            onChange={(e) => {
-                                                if (
-                                                    e.target.value.length <= 50
-                                                ) {
-                                                    setEditContent(
-                                                        e.target.value
-                                                    );
-                                                    // 자동 높이 조절
-                                                    e.target.style.height =
-                                                        "auto";
-                                                    e.target.style.height = `${e.target.scrollHeight}px`;
-                                                }
-                                            }}
-                                            onKeyPress={(e) => {
-                                                if (
-                                                    e.key === "Enter" &&
-                                                    !e.shiftKey
-                                                ) {
-                                                    e.preventDefault();
-                                                    if (editingCommentId) {
-                                                        handleSaveEdit(
-                                                            editingCommentId
-                                                        );
-                                                    }
-                                                }
-                                            }}
-                                            autoFocus
-                                            maxLength={50}
-                                            placeholder="최대 50자까지 입력 가능합니다."
-                                        />
-                                    </div>
-                                ) : (
-                                    <div className="flex-1">
-                                        <span className="text-gray-600 break-words text-xs">
-                                            {comment.content}
-                                        </span>
-                                        <div className="mt-1 text-gray-400 text-xs">
-                                            {comment.updated_at &&
-                                            comment.updated_at !==
-                                                comment.created_at ? (
-                                                <span className="inline-block">
-                                                    {getRelativeTime(
-                                                        comment.updated_at
-                                                    )}{" "}
-                                                    (수정됨)
-                                                </span>
-                                            ) : (
-                                                <span className="inline-block">
-                                                    {getRelativeTime(
-                                                        comment.created_at
-                                                    )}
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-                                {/* Edit and Delete buttons for user's own comments */}
+                                {/* Action buttons for user's own comments */}
                                 {isOwnComment(comment.name) && (
-                                    <div className="flex ml-2">
+                                    <div className="flex">
                                         {editingCommentId ===
                                         comment.comment_id ? (
                                             <>
@@ -540,7 +501,7 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                                         ) : (
                                             <>
                                                 <button
-                                                    className="text-gray-400 px-1"
+                                                    className="text-gray-400 hover:text-gray-600 px-1"
                                                     onClick={() =>
                                                         handleStartEdit(comment)
                                                     }
@@ -561,7 +522,7 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                                                     </svg>
                                                 </button>
                                                 <button
-                                                    className="text-gray-400 px-1"
+                                                    className="text-gray-400 hover:text-gray-600 px-1"
                                                     onClick={() =>
                                                         openDeleteModal(
                                                             comment.comment_id
@@ -586,6 +547,59 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                                             </>
                                         )}
                                     </div>
+                                )}
+                            </div>
+
+                            {/* Content area */}
+                            <div className="pl-1">
+                                {editingCommentId === comment.comment_id ? (
+                                    <div className="w-full">
+                                        <textarea
+                                            className="w-full p-2 text-sm border rounded resize-none overflow-hidden max-h-40"
+                                            value={editContent}
+                                            onChange={handleEditInputChange}
+                                            onKeyPress={(e) => {
+                                                if (
+                                                    e.key === "Enter" &&
+                                                    !e.shiftKey
+                                                ) {
+                                                    e.preventDefault();
+                                                    if (editingCommentId) {
+                                                        handleSaveEdit(
+                                                            editingCommentId
+                                                        );
+                                                    }
+                                                }
+                                            }}
+                                            autoFocus
+                                            maxLength={50}
+                                            placeholder="최대 50자까지 입력 가능합니다."
+                                        />
+                                    </div>
+                                ) : (
+                                    <>
+                                        <p className="text-gray-700 break-words text-sm mb-1">
+                                            {comment.content}
+                                        </p>
+                                        <div className="text-gray-400 text-xs">
+                                            {comment.updated_at &&
+                                            comment.updated_at !==
+                                                comment.created_at ? (
+                                                <span className="inline-block">
+                                                    {getRelativeTime(
+                                                        comment.updated_at
+                                                    )}{" "}
+                                                    (수정됨)
+                                                </span>
+                                            ) : (
+                                                <span className="inline-block">
+                                                    {getRelativeTime(
+                                                        comment.created_at
+                                                    )}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </>
                                 )}
                             </div>
                         </div>
