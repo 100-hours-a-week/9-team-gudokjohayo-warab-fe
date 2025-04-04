@@ -8,6 +8,7 @@ import {
     convertFiltersToParams,
 } from "../services/searchService";
 import { getAllCategorys } from "../services/categoryService";
+import { getUserProfile } from "../services/userService";
 import ScrollToTopButton from "../components/ScrollToTopButton";
 
 // 디바운스 함수 추가
@@ -121,6 +122,28 @@ const SearchPage: React.FC = () => {
 
     // 디바운스된 검색어 (타이핑 중지 후 300ms 기다림)
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
+    const [hasPreferredCategories, setHasPreferredCategories] = useState<boolean>(true);
+    const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
+
+    // 사용자의 선호 카테고리 설정 여부 확인
+    useEffect(() => {
+        const checkUserPreferences = async () => {
+            try {
+                const userProfile = await getUserProfile();
+                setHasPreferredCategories(
+                    userProfile.data.categorys && userProfile.data.categorys.length > 0
+                );
+                setIsAuthenticated(true);
+            } catch (error) {
+                console.error("Error fetching user preferences:", error);
+                setHasPreferredCategories(false);
+                setIsAuthenticated(false);
+            }
+        };
+
+        checkUserPreferences();
+    }, []);
 
     // Fetch categories when component mounts
     useEffect(() => {
@@ -624,7 +647,11 @@ const SearchPage: React.FC = () => {
                                         </div>
                                     ) : !loading && hasResults === false ? (
                                         <div className="py-8 text-center text-gray-500">
-                                            해당 검색결과가 없습니다.
+                                            {recommendedFilter && (!isAuthenticated || !hasPreferredCategories) ? (
+                                                "선호 카테고리를 설정해주세요."
+                                            ) : (
+                                                "해당 검색결과가 없습니다."
+                                            )}
                                         </div>
                                     ) : null}
 
