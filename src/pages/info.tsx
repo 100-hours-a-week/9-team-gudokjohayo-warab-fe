@@ -5,8 +5,12 @@ import { useNavigate } from "react-router-dom";
 const FeaturesPage = () => {
     const navigate = useNavigate();
 
-    const handleCategoryRegister = () => {
-        navigate("/profile");
+    // const handleCategoryRegister = () => {
+    //     navigate("/profile");
+    // };
+
+    const handleMain = () => {
+        navigate("/main");
     };
 
     return (
@@ -121,10 +125,10 @@ const FeaturesPage = () => {
                 {/* Profile Setup Button */}
                 <div className="mt-8">
                     <button
-                        onClick={handleCategoryRegister}
+                        onClick={handleMain}
                         className="w-full bg-orange-500 text-white font-medium py-3 rounded-full shadow-sm hover:bg-orange-600 transition-colors"
                     >
-                        프로필 설정하기
+                        메인으로 가기 
                     </button>
                 </div>
             </div>

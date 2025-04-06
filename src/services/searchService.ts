@@ -142,7 +142,7 @@ export const searchGames = async (
         }
 
         // Return mock data if API fails (not aborted)
-        return getMockGames();
+        return [];
     }
 };
 

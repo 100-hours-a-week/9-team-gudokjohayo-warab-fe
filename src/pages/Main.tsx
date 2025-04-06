@@ -288,12 +288,13 @@ const MainPage: React.FC = () => {
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         if (searchQuery.trim()) {
-            // Instead of removing, just set a flag that we're navigating away
-            sessionStorage.setItem("isDirectNavigation", "true");
-            navigate(`/search?query=${encodeURIComponent(searchQuery)}`);
+            // Add from=main parameter to let Search page know we're coming from Main
+            navigate(
+                `/search?query=${encodeURIComponent(searchQuery)}&from=main`
+            );
         } else {
-            sessionStorage.setItem("isDirectNavigation", "true");
-            navigate("/search");
+            // Same for empty search
+            navigate("/search?from=main");
         }
     };
 
