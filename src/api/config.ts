@@ -1,6 +1,7 @@
 import axios from "axios";
 
 export const kakaoBaseURL = process.env.REACT_APP_KAKAOURL;
+export const GA_ID = process.env.REACT_APP_GA_ID;
 
 /*
 local test 용 링크
