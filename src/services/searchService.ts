@@ -146,46 +146,46 @@ export const searchGames = async (
     }
 };
 
-/**
- * Get mock games data as fallback
- * @returns Mock game data
- */
-const getMockGames = (): Game[] => {
-    return [
-        {
-            game_id: 1,
-            title: "Dota 2",
-            thumbnail:
-                "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/570/header.jpg?t=1739210483",
-            price: 0,
-            lowest_price: 0,
-        },
-        {
-            game_id: 2,
-            title: "New World: Aeternum",
-            thumbnail:
-                "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1063730/header.jpg?t=1739224826",
-            price: 5999,
-            lowest_price: 4199,
-        },
-        {
-            game_id: 3,
-            title: "Black Myth: Wukong",
-            thumbnail:
-                "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2358720/header.jpg?t=1739542141",
-            price: 5999,
-            lowest_price: 5999,
-        },
-        {
-            game_id: 4,
-            title: "Call of Duty: Modern Warfare II",
-            thumbnail:
-                "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1962660/header.jpg?t=1710969334",
-            price: 6999,
-            lowest_price: 4899,
-        },
-    ];
-};
+// /**
+//  * Get mock games data as fallback
+//  * @returns Mock game data
+//  */
+// const getMockGames = (): Game[] => {
+//     return [
+//         {
+//             game_id: 1,
+//             title: "Dota 2",
+//             thumbnail:
+//                 "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/570/header.jpg?t=1739210483",
+//             price: 0,
+//             lowest_price: 0,
+//         },
+//         {
+//             game_id: 2,
+//             title: "New World: Aeternum",
+//             thumbnail:
+//                 "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1063730/header.jpg?t=1739224826",
+//             price: 5999,
+//             lowest_price: 4199,
+//         },
+//         {
+//             game_id: 3,
+//             title: "Black Myth: Wukong",
+//             thumbnail:
+//                 "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2358720/header.jpg?t=1739542141",
+//             price: 5999,
+//             lowest_price: 5999,
+//         },
+//         {
+//             game_id: 4,
+//             title: "Call of Duty: Modern Warfare II",
+//             thumbnail:
+//                 "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1962660/header.jpg?t=1710969334",
+//             price: 6999,
+//             lowest_price: 4899,
+//         },
+//     ];
+// };
 
 export const convertFiltersToParams = (
     filters: any,
