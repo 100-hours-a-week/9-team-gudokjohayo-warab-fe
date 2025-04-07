@@ -32,6 +32,7 @@ jobs:
           REACT_APP_KAKAOURL=https://api.warab.store
           REACT_APP_BASEURL=https://api.warab.store/api/v1
           PUBLIC_URL=https://d1o0m970emoglm.cloudfront.net/production
+          REACT_APP_GA_ID=${{ secrets.REACT_APP_GA_ID }}
           EOF
 
       - name: Update package.json homepage
