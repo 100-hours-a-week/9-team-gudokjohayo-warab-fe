@@ -6,6 +6,7 @@ import LoginPage from "./pages/Login";
 import SearchPage from "./pages/Search";
 import DetailPage from "./pages/Detail";
 import FeaturesPage from "./pages/info";
+import MyServerPage from "./pages/MyServer";
 import ReactGA from "react-ga4";
 import TrackingWrapper from "./components/TrackingWrapper";
 import { GA_ID } from "./api/config";
@@ -27,6 +28,7 @@ const App: React.FC = () => {
                 <Route path="/search" element={<SearchPage />} />
                 <Route path="/games/:gameId" element={<DetailPage />} />
                 <Route path="/info" element={<FeaturesPage />} />
+                <Route path="/my-server" element={<MyServerPage />} />
             </Routes>
         </Router>
     );

@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import Header from "../components/Header";
 import PartyFindTab from "../components/PartyFindTab";
-// mvp 기능에서 제외
-// import VideoTab from "../components/VideoTab";
+import VideoTab from "../components/VideoTab";
 import PriceTab from "../components/PriceTab";
 import { getGameDetails } from "../services/gameService";
+import PartyRegistration from "../components/PartyRegistration";
 
 interface GameDetail {
     title: string;
@@ -42,6 +42,10 @@ const DetailPage: React.FC<DetailPageProps> = () => {
     // Tab state
     const [activeTab, setActiveTab] = useState<string>("price-comparison");
 
+    // Tabs scroll reference
+    const tabsContainerRef = useRef<HTMLDivElement>(null);
+    const [isScrollable, setIsScrollable] = useState<boolean>(false);
+
     useEffect(() => {
         const fetchGameDetails = async () => {
             try {
@@ -60,12 +64,47 @@ const DetailPage: React.FC<DetailPageProps> = () => {
         fetchGameDetails();
     }, [gameId]);
 
+    // Check if tabs container is scrollable
+    useEffect(() => {
+        const checkScrollable = () => {
+            if (tabsContainerRef.current) {
+                const { scrollWidth, clientWidth } = tabsContainerRef.current;
+                setIsScrollable(scrollWidth > clientWidth);
+            }
+        };
+
+        checkScrollable();
+        window.addEventListener("resize", checkScrollable);
+
+        return () => {
+            window.removeEventListener("resize", checkScrollable);
+        };
+    }, []);
+
     const toggleCategoryExpansion = () => {
         setIsCategoryExpanded(!isCategoryExpanded);
     };
 
     const handleTabChange = (tabId: string) => {
         setActiveTab(tabId);
+
+        // Scroll tab into view when selected
+        if (tabsContainerRef.current) {
+            const tabElement = document.getElementById(`tab-${tabId}`);
+            if (tabElement) {
+                const containerRect =
+                    tabsContainerRef.current.getBoundingClientRect();
+                const tabRect = tabElement.getBoundingClientRect();
+
+                if (tabRect.right > containerRect.right) {
+                    tabsContainerRef.current.scrollLeft +=
+                        tabRect.right - containerRect.right + 16;
+                } else if (tabRect.left < containerRect.left) {
+                    tabsContainerRef.current.scrollLeft -=
+                        containerRect.left - tabRect.left + 16;
+                }
+            }
+        }
     };
 
     const renderScore = (rating: number) => {
@@ -120,6 +159,22 @@ const DetailPage: React.FC<DetailPageProps> = () => {
         return text.length > maxLength
             ? `${text.substring(0, maxLength)}...`
             : text;
+    };
+
+    // Function to scroll tabs left or right
+    const scrollTabs = (direction: "left" | "right") => {
+        if (tabsContainerRef.current) {
+            const scrollAmount = 100; // Amount to scroll by
+            const newScrollLeft =
+                direction === "left"
+                    ? tabsContainerRef.current.scrollLeft - scrollAmount
+                    : tabsContainerRef.current.scrollLeft + scrollAmount;
+
+            tabsContainerRef.current.scrollTo({
+                left: newScrollLeft,
+                behavior: "smooth",
+            });
+        }
     };
 
     if (loading) {
@@ -209,29 +264,6 @@ const DetailPage: React.FC<DetailPageProps> = () => {
                                             ₩{gameDetail.price.toLocaleString()}
                                         </span>
                                     )}
-                                    {/* External link icon remains the same */}
-                                    {/* mvp 기능 제거 */}
-                                    {/* <button className="ml-0">
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            className="h-3 w-3 text-orange-500 -translate-y-1"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            strokeWidth="2"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                        >
-                                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                                            <polyline points="15 3 21 3 21 9" />
-                                            <line
-                                                x1="10"
-                                                y1="14"
-                                                x2="21"
-                                                y2="3"
-                                            />
-                                        </svg>
-                                    </button> */}
                                 </div>
                                 <div className="flex items-center space-x-2 mt-1">
                                     <svg
@@ -331,43 +363,113 @@ const DetailPage: React.FC<DetailPageProps> = () => {
 
                         {/* Tabs */}
                         <div className="mt-8">
-                            <div className="flex space-x-2">
-                                <button
-                                    className={`px-4 py-2 rounded-full text-sm ${
-                                        activeTab === "price-comparison"
-                                            ? "bg-orange-500 text-white"
-                                            : "bg-gray-100 text-gray-600"
-                                    }`}
-                                    onClick={() =>
-                                        handleTabChange("price-comparison")
-                                    }
+                            <div className="relative">
+                                {/* Arrow indicators for scrollable tabs */}
+                                {isScrollable && (
+                                    <>
+                                        <button
+                                            onClick={() => scrollTabs("left")}
+                                            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-6 h-6 flex items-center justify-center bg-white rounded-full shadow-md text-gray-600"
+                                            style={{ marginLeft: "-12px" }}
+                                        >
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                width="16"
+                                                height="16"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="2"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                            >
+                                                <polyline points="15 18 9 12 15 6"></polyline>
+                                            </svg>
+                                        </button>
+                                        <button
+                                            onClick={() => scrollTabs("right")}
+                                            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-6 h-6 flex items-center justify-center bg-white rounded-full shadow-md text-gray-600"
+                                            style={{ marginRight: "-12px" }}
+                                        >
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                width="16"
+                                                height="16"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="2"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                            >
+                                                <polyline points="9 18 15 12 9 6"></polyline>
+                                            </svg>
+                                        </button>
+                                    </>
+                                )}
+
+                                {/* Tabs scroll container */}
+                                <div
+                                    ref={tabsContainerRef}
+                                    className="flex space-x-2 overflow-x-auto hide-scrollbar"
+                                    style={{
+                                        scrollbarWidth: "none",
+                                        msOverflowStyle: "none",
+                                    }}
                                 >
-                                    가격 비교
-                                </button>
-                                <button
-                                    className={`px-4 py-2 rounded-full text-sm ${
-                                        activeTab === "find-party"
-                                            ? "bg-orange-500 text-white"
-                                            : "bg-gray-100 text-gray-600"
-                                    }`}
-                                    onClick={() =>
-                                        handleTabChange("find-party")
-                                    }
-                                >
-                                    파티 찾기
-                                </button>
-                                <button
-                                    className={`px-4 py-2 rounded-full text-sm ${
-                                        activeTab === "related-videos"
-                                            ? "bg-orange-500 text-white"
-                                            : "bg-gray-100 text-gray-600"
-                                    }`}
-                                    onClick={() =>
-                                        handleTabChange("related-videos")
-                                    }
-                                >
-                                    관련 영상
-                                </button>
+                                    <button
+                                        id="tab-price-comparison"
+                                        className={`px-4 py-2 rounded-full text-sm whitespace-nowrap ${
+                                            activeTab === "price-comparison"
+                                                ? "bg-orange-500 text-white"
+                                                : "bg-gray-100 text-gray-600"
+                                        }`}
+                                        onClick={() =>
+                                            handleTabChange("price-comparison")
+                                        }
+                                    >
+                                        가격 비교
+                                    </button>
+                                    <button
+                                        id="tab-find-party"
+                                        className={`px-4 py-2 rounded-full text-sm whitespace-nowrap ${
+                                            activeTab === "find-party"
+                                                ? "bg-orange-500 text-white"
+                                                : "bg-gray-100 text-gray-600"
+                                        }`}
+                                        onClick={() =>
+                                            handleTabChange("find-party")
+                                        }
+                                    >
+                                        파티 찾기
+                                    </button>
+                                    <button
+                                        id="tab-create-party"
+                                        className={`px-4 py-2 rounded-full text-sm whitespace-nowrap ${
+                                            activeTab === "create-party"
+                                                ? "bg-orange-500 text-white"
+                                                : "bg-gray-100 text-gray-600"
+                                        }`}
+                                        onClick={() =>
+                                            handleTabChange("create-party")
+                                        }
+                                    >
+                                        파티 등록
+                                    </button>
+                                    <button
+                                        id="tab-related-videos"
+                                        className={`px-4 py-2 rounded-full text-sm whitespace-nowrap ${
+                                            activeTab === "related-videos"
+                                                ? "bg-orange-500 text-white"
+                                                : "bg-gray-100 text-gray-600"
+                                        }`}
+                                        onClick={() =>
+                                            handleTabChange("related-videos")
+                                        }
+                                    >
+                                        관련 영상
+                                    </button>
+                                </div>
                             </div>
 
                             {/* Tab content */}
@@ -384,17 +486,17 @@ const DetailPage: React.FC<DetailPageProps> = () => {
                                 )}
                                 {activeTab === "find-party" && gameId && (
                                     <div>
-                                        <div>
-                                            <PartyFindTab gameId={gameId} />
-                                        </div>
+                                        <PartyFindTab gameId={gameId} />
                                     </div>
                                 )}
-                                {activeTab === "related-videos" && (
+                                {activeTab === "create-party" && gameId && (
                                     <div>
-                                        <div className="p-4 text-center text-gray-500">
-                                            Coming Soon!
-                                        </div>
-                                        {/* <VideoTab /> */}
+                                        <PartyRegistration gameId={gameId} />
+                                    </div>
+                                )}
+                                {activeTab === "related-videos" && gameId && (
+                                    <div>
+                                        <VideoTab gameId={gameId} />
                                     </div>
                                 )}
                             </div>
