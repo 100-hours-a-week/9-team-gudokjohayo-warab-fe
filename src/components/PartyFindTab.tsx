@@ -41,9 +41,9 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
         useState<boolean>(false);
 
     // New state for discord link copying
-    const [discordLinkMap, setDiscordLinkMap] = useState<{
-        [key: string]: string;
-    }>({});
+    // const [discordLinkMap, setDiscordLinkMap] = useState<{
+    //     [key: string]: string;
+    // }>({});
     const [toastMessage, setToastMessage] = useState<string>("");
     const [showToast, setShowToast] = useState<boolean>(false);
 
@@ -81,7 +81,7 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                     linkMap[comment.name] = comment.user_discord;
                 }
             });
-            setDiscordLinkMap(linkMap);
+            // setDiscordLinkMap(linkMap);
         } catch (err) {
             setError("댓글을 불러오는 데 실패했습니다.");
             console.error("Error fetching comments:", err);
@@ -149,35 +149,35 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
     };
 
     // Handle Discord link copy
-    const handleDiscordLinkCopy = (username: string) => {
-        const discordLink = discordLinkMap[username];
+    // const handleDiscordLinkCopy = (username: string) => {
+    //     const discordLink = discordLinkMap[username];
 
-        if (discordLink) {
-            navigator.clipboard
-                .writeText(discordLink)
-                .then(() => {
-                    setToastMessage(
-                        `${username}의 디스코드 링크가 복사되었습니다.`
-                    );
-                    setShowToast(true);
+    //     if (discordLink) {
+    //         navigator.clipboard
+    //             .writeText(discordLink)
+    //             .then(() => {
+    //                 setToastMessage(
+    //                     `${username}의 디스코드 링크가 복사되었습니다.`
+    //                 );
+    //                 setShowToast(true);
 
-                    // Hide toast after 3 seconds
-                    setTimeout(() => {
-                        setShowToast(false);
-                    }, 3000);
-                })
-                .catch((err) => {
-                    console.error("Failed to copy discord link:", err);
-                });
-        } else {
-            setToastMessage(" 이 링크는 더 이상 존재하지 않습니다.");
-            setShowToast(true);
+    //                 // Hide toast after 3 seconds
+    //                 setTimeout(() => {
+    //                     setShowToast(false);
+    //                 }, 3000);
+    //             })
+    //             .catch((err) => {
+    //                 console.error("Failed to copy discord link:", err);
+    //             });
+    //     } else {
+    //         setToastMessage(" 이 링크는 더 이상 존재하지 않습니다.");
+    //         setShowToast(true);
 
-            setTimeout(() => {
-                setShowToast(false);
-            }, 3000);
-        }
-    };
+    //         setTimeout(() => {
+    //             setShowToast(false);
+    //         }, 3000);
+    //     }
+    // };
 
     // 개행 수를 계산하는 함수
     const countLineBreaks = (text: string): number => {
