@@ -43,7 +43,7 @@ export interface UserServerInfo {
 export const getGameServers = async (gameId: string) => {
     try {
         const response = await api.get<ServerResponse>(
-            `/api/v1/games/${gameId}/server`
+            `/games/${gameId}/server`
         );
         return response.data.data.servers;
     } catch (error) {
@@ -55,9 +55,7 @@ export const getGameServers = async (gameId: string) => {
 // Function to get all servers for a user
 export const getUserServers = async () => {
     try {
-        const response = await api.get<UserServerResponse>(
-            "/api/v1/users/server"
-        );
+        const response = await api.get<UserServerResponse>("/users/server");
         return response.data.data.servers;
     } catch (error) {
         console.error("Error fetching user servers:", error);
@@ -71,10 +69,7 @@ export const addServer = async (
     serverData: { discord_url: string }
 ) => {
     try {
-        const response = await api.post(
-            `/api/v1/games/${gameId}/server`,
-            serverData
-        );
+        const response = await api.post(`/games/${gameId}/server`, serverData);
         return response.data;
     } catch (error) {
         console.error("Error adding server:", error);
@@ -86,7 +81,7 @@ export const addServer = async (
 export const deleteServer = async (gameId: string, serverId: number) => {
     try {
         const response = await api.delete(
-            `/api/v1/games/${gameId}/server/${serverId}`
+            `/games/${gameId}/server/${serverId}`
         );
         return response.data;
     } catch (error) {
