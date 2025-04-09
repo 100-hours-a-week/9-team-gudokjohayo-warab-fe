@@ -377,7 +377,7 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
     }
 
     // Check if Discord link is set before rendering comment input
-    const canPostComment = !!userProfile?.discord_link;
+    // const canPostComment = !!userProfile?.discord_link;
 
     return (
         <div className="flex flex-col h-full">
@@ -390,9 +390,7 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                         value={currentMessage}
                         onChange={handleInputChange}
                         onKeyDown={handleKeyPress}
-                        disabled={
-                            !isUserAuthenticated || !canPostComment || isSending
-                        }
+                        disabled={!isUserAuthenticated || isSending}
                         style={{
                             lineHeight: "24px",
                             alignItems: "center",
@@ -403,7 +401,6 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                     <button
                         className={`mr-2 p-1.5 rounded-full ${
                             !isUserAuthenticated ||
-                            !canPostComment ||
                             currentMessage.trim() === "" ||
                             isSending
                                 ? "bg-gray-200 text-gray-400 cursor-not-allowed"
@@ -412,7 +409,6 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                         onClick={handleSendMessage}
                         disabled={
                             !isUserAuthenticated ||
-                            !canPostComment ||
                             currentMessage.trim() === "" ||
                             isSending
                         }
