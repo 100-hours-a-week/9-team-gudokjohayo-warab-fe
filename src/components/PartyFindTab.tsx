@@ -455,21 +455,21 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                             <div className="flex justify-between items-center mb-2">
                                 <div className="flex items-center">
                                     {/* Discord copy button */}
-                                    <div
+                                    {/* <div
                                         className="flex items-center bg-[#5865F2] bg-opacity-10 hover:bg-opacity-20 rounded-full px-2 py-1 cursor-pointer mr-2"
                                         onClick={() =>
                                             handleDiscordLinkCopy(comment.name)
                                         }
-                                    >
-                                        {/* Discord icon */}
-                                        <img
+                                    > */}
+                                    {/* Discord icon */}
+                                    {/* <img
                                             src={`${process.env.PUBLIC_URL}/images/discord.png`}
                                             alt="Discord"
                                             className="w-4 h-4"
-                                        />
+                                        /> */}
 
-                                        {/* Copy icon */}
-                                        <svg
+                                    {/* Copy icon */}
+                                    {/* <svg
                                             xmlns="http://www.w3.org/2000/svg"
                                             width="12"
                                             height="12"
@@ -490,8 +490,8 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                                                 ry="2"
                                             ></rect>
                                             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                                        </svg>
-                                    </div>
+                                        </svg> */}
+                                    {/* </div> */}
 
                                     {/* Username */}
                                     <span className="font-medium text-black font-800 text-sm">
