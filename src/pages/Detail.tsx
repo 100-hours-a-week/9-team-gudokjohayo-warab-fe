@@ -169,35 +169,41 @@ const DetailPage: React.FC<DetailPageProps> = () => {
 
     // Render stars based on rating
     const renderStars = (rating: number) => {
-        const fullStars = Math.floor(rating / 2);
-        const halfStar = rating % 2 >= 1 ? 1 : 0;
-        const emptyStars = 5 - fullStars - halfStar;
-
         const stars = [];
-        // Full stars
-        for (let i = 0; i < fullStars; i++) {
-            stars.push(
-                <span key={`full-${i}`} className="text-yellow-400">
-                    ★
-                </span>
-            );
+        const convertedRating = (rating / 10) * 5; // 10점 만점을 5점 만점으로 변환
+
+        // 각 별에 대해 순회
+        for (let i = 0; i < 5; i++) {
+            if (convertedRating >= i + 1) {
+                // 꽉 찬 별
+                stars.push(
+                    <span key={`full-${i}`} className="text-yellow-400">
+                        ★
+                    </span>
+                );
+            } else if (convertedRating > i && convertedRating < i + 1) {
+                // 반 별 (0.5)
+                stars.push(
+                    <span key={`half-${i}`} className="relative">
+                        <span
+                            className="absolute text-yellow-400 overflow-hidden"
+                            style={{ width: "50%" }}
+                        >
+                            ★
+                        </span>
+                        <span className="text-gray-300">★</span>
+                    </span>
+                );
+            } else {
+                // 빈 별
+                stars.push(
+                    <span key={`empty-${i}`} className="text-gray-300">
+                        ★
+                    </span>
+                );
+            }
         }
-        // Half star
-        if (halfStar) {
-            stars.push(
-                <span key="half" className="text-yellow-400">
-                    ★
-                </span>
-            );
-        }
-        // Empty stars
-        for (let i = 0; i < emptyStars; i++) {
-            stars.push(
-                <span key={`empty-${i}`} className="text-gray-300">
-                    ★
-                </span>
-            );
-        }
+
         return stars;
     };
 
