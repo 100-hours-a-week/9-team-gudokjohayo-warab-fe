@@ -4,7 +4,10 @@ import Header from "../components/Header";
 import PartyFindTab from "../components/PartyFindTab";
 import VideoTab from "../components/VideoTab";
 import PriceTab from "../components/PriceTab";
-import { getGameDetails } from "../services/gameService";
+import {
+    getGameDetails,
+    getLowestPricePlatform,
+} from "../services/gameService";
 import PartyRegistration from "../components/PartyRegistration";
 
 interface GameDetail {
@@ -24,6 +27,11 @@ interface GameDetail {
     updated_at: string;
 }
 
+interface LowestPriceLink {
+    platform: string;
+    store_url: string;
+}
+
 interface DetailPageProps {
     // Add any props if needed
 }
@@ -34,6 +42,8 @@ const DetailPage: React.FC<DetailPageProps> = () => {
     const [gameDetail, setGameDetail] = useState<GameDetail | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
+    const [lowestPriceLink, setLowestPriceLink] =
+        useState<LowestPriceLink | null>(null);
 
     // Category state for accordion
     const [isCategoryExpanded, setIsCategoryExpanded] =
@@ -53,6 +63,31 @@ const DetailPage: React.FC<DetailPageProps> = () => {
                 // Use the gameId from URL params, fallback to "1" if not available
                 const data = await getGameDetails(gameId || "1");
                 setGameDetail(data);
+
+                // Fetch lowest price link
+                if (gameId) {
+                    try {
+                        const lowestPriceData =
+                            await getLowestPricePlatform(gameId);
+                        if (
+                            lowestPriceData &&
+                            typeof lowestPriceData === "object" &&
+                            "platform" in lowestPriceData &&
+                            "store_url" in lowestPriceData
+                        ) {
+                            setLowestPriceLink(lowestPriceData);
+                        } else {
+                            setLowestPriceLink(null); // 혹시 0이나 잘못된 데이터가 들어오면 null로 처리
+                        }
+                    } catch (linkError) {
+                        console.error(
+                            "Error fetching lowest price link:",
+                            linkError
+                        );
+                        // Don't set error state here to not interrupt the main flow
+                    }
+                }
+
                 setLoading(false);
             } catch (err) {
                 setError("게임 정보를 불러오는 데 실패했습니다.");
@@ -80,6 +115,26 @@ const DetailPage: React.FC<DetailPageProps> = () => {
             window.removeEventListener("resize", checkScrollable);
         };
     }, []);
+
+    // SVG redirect icon component
+    const RedirectIcon = ({ className = "" }: { className?: string }) => (
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className={`text-gray-500 hover:text-orange-500 transition-colors ${className}`}
+        >
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+            <polyline points="15 3 21 3 21 9"></polyline>
+            <line x1="10" y1="14" x2="21" y2="3"></line>
+        </svg>
+    );
 
     const toggleCategoryExpansion = () => {
         setIsCategoryExpanded(!isCategoryExpanded);
@@ -258,11 +313,44 @@ const DetailPage: React.FC<DetailPageProps> = () => {
                                                 ₩
                                                 {gameDetail.lowest_price.toLocaleString()}
                                             </span>
+
+                                            {/* Lowest price platform link with SVG icon */}
+                                            {lowestPriceLink && (
+                                                <a
+                                                    href={
+                                                        lowestPriceLink.store_url
+                                                    }
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="ml-1 flex items-center"
+                                                    title={`최저가: ${lowestPriceLink.platform}`}
+                                                >
+                                                    <RedirectIcon />
+                                                </a>
+                                            )}
                                         </>
                                     ) : (
-                                        <span className="text-gray-800 font-bold text-xl">
-                                            ₩{gameDetail.price.toLocaleString()}
-                                        </span>
+                                        <>
+                                            <span className="text-gray-800 font-bold text-xl">
+                                                ₩
+                                                {gameDetail.price.toLocaleString()}
+                                            </span>
+
+                                            {/* Regular price platform link with SVG icon */}
+                                            {lowestPriceLink && (
+                                                <a
+                                                    href={
+                                                        lowestPriceLink.store_url
+                                                    }
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="ml-1 flex items-center"
+                                                    title={`구매처: ${lowestPriceLink.platform}`}
+                                                >
+                                                    <RedirectIcon />
+                                                </a>
+                                            )}
+                                        </>
                                     )}
                                 </div>
                                 <div className="flex items-center space-x-2 mt-1">

@@ -24,11 +24,12 @@ interface GameDetailResponse {
 interface CurrentPriceResponse {
     message: string;
     data: {
-        lowest_prices: {
+        current_price: number;
+        discount_info: {
             platform: string;
-            price: number;
+            discount_price: number;
+            discount_rate: number;
             store_url: string;
-            logo?: string; // Optional logo URL
         }[];
     };
 }
@@ -37,6 +38,14 @@ interface LowestPriceResponse {
     message: string;
     data: {
         history_lowest_price: number;
+    };
+}
+
+interface LowestPlatformResponse {
+    message: string;
+    data: {
+        platform: string;
+        store_url: string;
     };
 }
 
@@ -113,11 +122,11 @@ export const getGameVideos = async (id: string) => {
 export const getCurrentPricesByPlatform = async (id: string) => {
     try {
         const response = await api.get<CurrentPriceResponse>(
-            `/games/${id}/current-price`
+            `/games/prices_by_platform/${id}`
         );
 
-        if (response.data.message === "get_lowest_price_by_platform_success") {
-            return response.data.data.lowest_prices.map((price) => ({
+        if (response.data.message === "get_prices_by_platform_success") {
+            return response.data.data.discount_info.map((price) => ({
                 ...price,
                 // Map platform names to match existing logos in PriceTab
                 logo: getPlatformLogo(price.platform),
@@ -142,6 +151,29 @@ const getPlatformLogo = (platform: string): string => {
     };
 
     return platformLogos[platform] || platformLogos["default"];
+};
+
+/**
+ * Get platform url that has the lowest price
+ * @param id Game ID
+ * @returns Lowest price platform url
+ */
+export const getLowestPricePlatform = async (id: string) => {
+    try {
+        const response = await api.get<LowestPlatformResponse>(
+            `/games/lowest_price_link/${id}`
+        );
+
+        if (response.data.message === "get_lowest_price_link_success") {
+            return response.data.data;
+        } else {
+            throw new Error("Failed to fetch lowest price platform url");
+        }
+    } catch (error) {
+        console.error("Error fetching lowest price platform url:", error);
+        // Return a fallback value or re-throw the error
+        return 0;
+    }
 };
 
 /**
