@@ -16,6 +16,7 @@ const VideoTab: React.FC<VideoTabProps> = ({ gameId }) => {
                 setLoading(true);
                 console.log(`Loading videos for game ID: ${gameId}`);
                 const gameVideos = await fetchGameVideos(gameId);
+                console.log(gameVideos);
                 setVideos(gameVideos);
                 setError(null);
             } catch (err) {
@@ -71,6 +72,11 @@ const VideoTab: React.FC<VideoTabProps> = ({ gameId }) => {
         }
     };
 
+    // Function to handle video click
+    const handleVideoClick = (videoUrl: string) => {
+        window.open(videoUrl, "_blank", "noopener,noreferrer");
+    };
+
     if (loading) {
         return (
             <div className="flex justify-center items-center h-full p-4">
@@ -102,7 +108,8 @@ const VideoTab: React.FC<VideoTabProps> = ({ gameId }) => {
                 {videos.map((video, index) => (
                     <div
                         key={index}
-                        className="flex py-4 border-b border-gray-100 last:border-b-0"
+                        className="flex py-4 border-b border-gray-100 last:border-b-0 cursor-pointer hover:bg-gray-50 transition-colors"
+                        onClick={() => handleVideoClick(video.video_url)}
                     >
                         {/* Video thumbnail - 고정된 크기로 설정 */}
                         <div className="w-32 h-20 bg-gray-200 mr-3 flex-shrink-0 rounded overflow-hidden">

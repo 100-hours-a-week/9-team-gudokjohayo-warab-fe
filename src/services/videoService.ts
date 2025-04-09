@@ -8,6 +8,7 @@ export interface GameVideo {
     upload_date: string;
     channel_thumbnail: string;
     channel_name: string;
+    video_url: string;
 }
 
 export async function fetchGameVideos(gameId: string): Promise<GameVideo[]> {
