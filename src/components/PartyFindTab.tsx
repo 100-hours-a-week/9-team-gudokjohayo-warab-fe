@@ -361,8 +361,8 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
     const getPlaceholderText = () => {
         if (!isUserAuthenticated) {
             return "로그인이 필요합니다";
-        } else if (!canPostComment) {
-            return "프로필 > 디스코드에 링크를 입력해주세요.";
+            // } else if (!canPostComment) {
+            //     return "프로필 > 디스코드에 링크를 입력해주세요.";
         } else {
             return "메시지를 입력하세요.";
         }
