@@ -66,7 +66,7 @@ export const getUserServers = async () => {
 // Function to add a new server
 export const addServer = async (
     gameId: string,
-    serverData: { discord_url: string }
+    serverData: { url: string }
 ) => {
     try {
         const response = await api.post(`/games/${gameId}/server`, serverData);
