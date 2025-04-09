@@ -529,7 +529,7 @@ const DetailPage: React.FC<DetailPageProps> = () => {
                                             handleTabChange("find-party")
                                         }
                                     >
-                                        파티 찾기
+                                        관련 댓글
                                     </button>
                                     <button
                                         id="tab-create-party"

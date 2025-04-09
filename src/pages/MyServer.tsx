@@ -3,78 +3,26 @@ import Header from "../components/Header";
 import ConfirmationModal from "../components/ConfirmationModal";
 import { useNavigate } from "react-router-dom";
 import { checkAuthentication } from "../services/userService";
-
-interface ServerInfo {
-    id: string;
-    discordLink: string;
-    expiresAt: string;
-    createdAt: string;
-    gameName: string;
-    gameId: string;
-    ownerId: string;
-}
-
-// 사용자의 서버 정보를 가져오는 서비스 함수
-const getUserServers = async (userId: string): Promise<ServerInfo[]> => {
-    // 샘플 데이터 반환
-    return [
-        {
-            id: "1",
-            discordLink: "https://discord.gg/example1",
-            expiresAt: "2025-06-15",
-            createdAt: "2023-04-15",
-            gameName: "엘든 링",
-            gameId: "elden-ring",
-            ownerId: "user1",
-        },
-        {
-            id: "2",
-            discordLink: "https://discord.gg/example2",
-            expiresAt: "2025-04-30",
-            createdAt: "2023-03-22",
-            gameName: "팔월드",
-            gameId: "palworld",
-            ownerId: "user1",
-        },
-        {
-            id: "3",
-            discordLink: "https://discord.gg/example3",
-            expiresAt: "2025-05-10",
-            createdAt: "2023-05-10",
-            gameName: "발로란트",
-            gameId: "valorant",
-            ownerId: "user1",
-        },
-        {
-            id: "4",
-            discordLink: "https://discord.gg/example4",
-            expiresAt: "2025-07-20",
-            createdAt: "2023-06-05",
-            gameName: "철권 8",
-            gameId: "tekken-8",
-            ownerId: "user1",
-        },
-    ];
-};
-
-// 서버 삭제 서비스 함수
-const deleteUserServer = async (serverId: string): Promise<boolean> => {
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    return true;
-};
+import {
+    getUserServers,
+    deleteServer,
+    UserServerInfo,
+} from "../services/serverService";
 
 const MyServer: React.FC = () => {
     const navigate = useNavigate();
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
     const [authLoading, setAuthLoading] = useState<boolean>(true);
-    const [servers, setServers] = useState<ServerInfo[]>([]);
+    const [servers, setServers] = useState<UserServerInfo[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [sortOrder, setSortOrder] = useState<
         "newest" | "expiration" | "game"
     >("game");
-    const [serverToDelete, setServerToDelete] = useState<string | null>(null);
+    const [serverToDelete, setServerToDelete] = useState<{
+        gameId: number;
+        serverId: number;
+    } | null>(null);
     const [successMessage, setSuccessMessage] = useState<string>("");
-    const userId = "user1"; // 테스트용 사용자 ID
 
     // 인증 상태 확인
     useEffect(() => {
@@ -107,7 +55,7 @@ const MyServer: React.FC = () => {
     const fetchUserServers = async () => {
         setIsLoading(true);
         try {
-            const serverData = await getUserServers(userId);
+            const serverData = await getUserServers();
             setServers(serverData);
         } catch (error) {
             console.error("서버 정보를 가져오는 중 오류 발생:", error);
@@ -117,7 +65,9 @@ const MyServer: React.FC = () => {
     };
 
     // 만료 시간 형식화 함수
-    const formatRelativeTime = (dateString: string): string => {
+    const formatRelativeTime = (dateString: string | null): string => {
+        if (!dateString) return "만료 없음";
+
         const now = new Date();
         const date = new Date(dateString);
         const diffTime = date.getTime() - now.getTime();
@@ -137,43 +87,56 @@ const MyServer: React.FC = () => {
         if (sortOrder === "newest") {
             return sorted.sort(
                 (a, b) =>
-                    new Date(b.createdAt).getTime() -
-                    new Date(a.createdAt).getTime()
+                    new Date(b.created_at).getTime() -
+                    new Date(a.created_at).getTime()
             );
         } else if (sortOrder === "expiration") {
-            return sorted.sort(
-                (a, b) =>
-                    new Date(a.expiresAt).getTime() -
-                    new Date(b.expiresAt).getTime()
-            );
+            // null 값은 가장 나중에 정렬되도록 처리
+            return sorted.sort((a, b) => {
+                if (!a.expires_at) return 1;
+                if (!b.expires_at) return -1;
+                return (
+                    new Date(a.expires_at).getTime() -
+                    new Date(b.expires_at).getTime()
+                );
+            });
         } else {
             // 게임 이름 기준 정렬
-            return sorted.sort((a, b) => a.gameName.localeCompare(b.gameName));
+            return sorted.sort((a, b) =>
+                a.game_name.localeCompare(b.game_name)
+            );
         }
     }, [sortOrder, servers]);
 
     // 서버 삭제 확인 모달 표시
-    const handleDeletePrompt = (serverId: string, e: React.MouseEvent) => {
+    const handleDeletePrompt = (
+        gameId: number,
+        serverId: number,
+        e: React.MouseEvent
+    ) => {
         e.stopPropagation();
-        setServerToDelete(serverId);
+        setServerToDelete({ gameId, serverId });
     };
 
     // 서버 삭제 확정
     const confirmDeleteServer = async () => {
         if (serverToDelete) {
             try {
-                const success = await deleteUserServer(serverToDelete);
-                if (success) {
-                    setServers((prevServers) =>
-                        prevServers.filter(
-                            (server) => server.id !== serverToDelete
-                        )
-                    );
-                    setSuccessMessage(
-                        "디스코드 서버 링크가 성공적으로 삭제되었습니다!"
-                    );
-                    setTimeout(() => setSuccessMessage(""), 3000);
-                }
+                await deleteServer(
+                    serverToDelete.gameId.toString(),
+                    serverToDelete.serverId
+                );
+                setServers((prevServers) =>
+                    prevServers.filter(
+                        (server) =>
+                            server.server_id !== serverToDelete.serverId ||
+                            server.game_id !== serverToDelete.gameId
+                    )
+                );
+                setSuccessMessage(
+                    "디스코드 서버 링크가 성공적으로 삭제되었습니다!"
+                );
+                setTimeout(() => setSuccessMessage(""), 3000);
             } catch (error) {
                 console.error("서버 삭제 중 오류 발생:", error);
                 setSuccessMessage("서버 삭제 중 오류가 발생했습니다.");
@@ -185,7 +148,7 @@ const MyServer: React.FC = () => {
     };
 
     // 게임 상세 페이지로 이동
-    const handleGameClick = (gameId: string) => {
+    const handleGameClick = (gameId: number) => {
         navigate(`/game/${gameId}`);
     };
 
@@ -307,21 +270,21 @@ const MyServer: React.FC = () => {
                                 <div className="space-y-3">
                                     {sortedServers.map((server) => (
                                         <div
-                                            key={server.id}
+                                            key={`${server.game_id}-${server.server_id}`}
                                             className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition"
                                             onClick={() =>
-                                                handleGameClick(server.gameId)
+                                                handleGameClick(server.game_id)
                                             }
                                         >
                                             <div className="flex items-center justify-between">
                                                 {/* 게임 이름 (하이퍼링크처럼 보이게) */}
                                                 <div className="flex-1">
                                                     <h3 className="font-bold text-black-600 hover:underline cursor-pointer">
-                                                        {server.gameName}
+                                                        {server.game_name}
                                                     </h3>
                                                     <div className="text-xs text-gray-500 mt-1">
                                                         <span className="truncate block">
-                                                            {server.discordLink}
+                                                            {server.discord_url}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -330,13 +293,14 @@ const MyServer: React.FC = () => {
                                                 <div className="flex flex-col items-end">
                                                     <span className="text-xs text-orange-500 mb-2">
                                                         {formatRelativeTime(
-                                                            server.expiresAt
+                                                            server.expires_at
                                                         )}
                                                     </span>
                                                     <button
                                                         onClick={(e) =>
                                                             handleDeletePrompt(
-                                                                server.id,
+                                                                server.game_id,
+                                                                server.server_id,
                                                                 e
                                                             )
                                                         }

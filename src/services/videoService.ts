@@ -13,8 +13,6 @@ export interface GameVideo {
 
 export async function fetchGameVideos(gameId: string): Promise<GameVideo[]> {
     try {
-        console.log(`Fetching videos for game: ${gameId}`);
-
         // axios 인스턴스를 사용하여 API 호출
         const response = await api.get(`/games/${gameId}/video`);
 

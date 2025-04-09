@@ -14,9 +14,7 @@ const VideoTab: React.FC<VideoTabProps> = ({ gameId }) => {
         const loadVideos = async () => {
             try {
                 setLoading(true);
-                console.log(`Loading videos for game ID: ${gameId}`);
                 const gameVideos = await fetchGameVideos(gameId);
-                console.log(gameVideos);
                 setVideos(gameVideos);
                 setError(null);
             } catch (err) {

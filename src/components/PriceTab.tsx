@@ -33,7 +33,6 @@ const PriceTab: React.FC<PriceTabProps> = ({ gameId, currentPrice }) => {
 
                 // Fetch current prices by platform
                 const pricesData = await getCurrentPricesByPlatform(gameId);
-                console.log(pricesData);
                 setPlatformPrices(pricesData);
 
                 setIsLoading(false);

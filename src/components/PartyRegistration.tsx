@@ -1,95 +1,77 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import ConfirmationModal from "./ConfirmationModal";
 import AddServerModal from "./AddServerModal";
+import {
+    getGameServers,
+    addServer,
+    deleteServer,
+    ServerInfo,
+} from "../services/serverService";
 
 interface PartyRegistrationProps {
     gameId: string;
-    userId?: string; // Current user ID
+    userId?: number; // Current user ID
 }
-
-interface ServerInfo {
-    id: string;
-    name: string;
-    description: string;
-    iconUrl: string;
-    discordLink: string;
-    memberCount: number;
-    expiresAt: string; // When the server listing expires
-    createdAt: string;
-    ownerId: string; // To check if current user is the owner
-}
-
-// Sample data
-const sampleServers: ServerInfo[] = [
-    {
-        id: "1",
-        name: "엘든 링 초보자 모임",
-        description: "처음 게임을 시작하는 초보자들을 위한 서버입니다.",
-        iconUrl: "/api/placeholder/80/80",
-        discordLink: "https://discord.gg/example1",
-        memberCount: 328,
-        expiresAt: "2023-06-15",
-        createdAt: "2023-04-15",
-        ownerId: "user1",
-    },
-    {
-        id: "2",
-        name: "프로 플레이어 길드",
-        description:
-            "숙련된 플레이어들의 모임. PVP 및 보스 레이드를 함께합니다.",
-        iconUrl: "/api/placeholder/80/80",
-        discordLink: "https://discord.gg/example2",
-        memberCount: 156,
-        expiresAt: "2025-04-30",
-        createdAt: "2023-03-22",
-        ownerId: "user2",
-    },
-    {
-        id: "3",
-        name: "주말 게이머 클럽",
-        description:
-            "주로 주말에 모여서 함께 게임하는 편안한 분위기의 서버입니다.",
-        iconUrl: "/api/placeholder/80/80",
-        discordLink: "https://discord.gg/example3",
-        memberCount: 87,
-        expiresAt: "2025-04-10",
-        createdAt: "2023-05-10",
-        ownerId: "user1", // This user owns this server (same as first mock user)
-    },
-];
 
 const PartyRegistration: React.FC<PartyRegistrationProps> = ({
     gameId,
-    userId = "user1",
+    userId,
 }) => {
-    const [servers, setServers] = useState<ServerInfo[]>(sampleServers);
+    const [servers, setServers] = useState<ServerInfo[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [sortOrder, setSortOrder] = useState<"newest" | "expiration">(
         "newest"
     );
     const [showAddModal, setShowAddModal] = useState(false);
-    const [serverToDelete, setServerToDelete] = useState<string | null>(null);
+    const [serverToDelete, setServerToDelete] = useState<number | null>(null);
     const [successMessage, setSuccessMessage] = useState("");
 
-    // Sort servers using useMemo to avoid infinite re-renders
+    // Fetch servers on component mount
+    useEffect(() => {
+        const fetchServers = async () => {
+            try {
+                setLoading(true);
+                const serverData = await getGameServers(gameId);
+                setServers(serverData);
+                setError(null);
+            } catch (err) {
+                setError("서버 목록을 불러오는데 실패했습니다.");
+                console.error(err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchServers();
+    }, [gameId]);
+
+    // Sort servers using useMemo to avoid unnecessary re-renders
     const sortedServers = useMemo(() => {
         const sorted = [...servers];
         if (sortOrder === "newest") {
             return sorted.sort(
                 (a, b) =>
-                    new Date(b.createdAt).getTime() -
-                    new Date(a.createdAt).getTime()
+                    new Date(b.created_at).getTime() -
+                    new Date(a.created_at).getTime()
             );
         } else {
-            return sorted.sort(
-                (a, b) =>
-                    new Date(a.expiresAt).getTime() -
-                    new Date(b.expiresAt).getTime()
-            );
+            // Handle null expires_at by putting them at the end
+            return sorted.sort((a, b) => {
+                if (!a.expires_at) return 1;
+                if (!b.expires_at) return -1;
+                return (
+                    new Date(a.expires_at).getTime() -
+                    new Date(b.expires_at).getTime()
+                );
+            });
         }
     }, [sortOrder, servers]);
 
     // Format relative time (e.g., "3일 전", "일주일 전")
-    const formatRelativeTime = (dateString: string): string => {
+    const formatRelativeTime = (dateString: string | null): string => {
+        if (!dateString) return "무기한";
+
         const now = new Date();
         const date = new Date(dateString);
         const diffTime = date.getTime() - now.getTime();
@@ -104,48 +86,61 @@ const PartyRegistration: React.FC<PartyRegistrationProps> = ({
     };
 
     // Delete server handler - shows confirmation dialog
-    const handleDeletePrompt = (serverId: string) => {
+    const handleDeletePrompt = (serverId: number) => {
         setServerToDelete(serverId);
     };
 
     // Confirm delete server
-    const confirmDeleteServer = () => {
+    const confirmDeleteServer = async () => {
         if (serverToDelete) {
-            setServers((prevServers) =>
-                prevServers.filter((server) => server.id !== serverToDelete)
-            );
-            setServerToDelete(null);
-            setSuccessMessage("서버가 성공적으로 삭제되었습니다!");
-            setTimeout(() => setSuccessMessage(""), 3000);
+            try {
+                await deleteServer(gameId, serverToDelete);
+                setServers((prevServers) =>
+                    prevServers.filter(
+                        (server) => server.server_id !== serverToDelete
+                    )
+                );
+                setSuccessMessage("서버가 성공적으로 삭제되었습니다!");
+                setTimeout(() => setSuccessMessage(""), 3000);
+            } catch (err) {
+                setError("서버 삭제에 실패했습니다.");
+                console.error(err);
+            } finally {
+                setServerToDelete(null);
+            }
         }
     };
 
     // Handle adding a new server
-    const handleAddServer = (discordLink: string) => {
-        // Simulating server response with mock data
-        const newServer: ServerInfo = {
-            id: `${servers.length + 1}`,
-            name: "새로운 디스코드 서버",
-            description: "디스코드 API에서 가져온 서버 설명",
-            iconUrl: "/api/placeholder/80/80",
-            discordLink: discordLink,
-            memberCount: 42,
-            expiresAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
-                .toISOString()
-                .split("T")[0], // 14 days from now
-            createdAt: new Date().toISOString().split("T")[0],
-            ownerId: userId,
-        };
-
-        setServers((prevServers) => [newServer, ...prevServers]);
-        setSuccessMessage("서버가 성공적으로 등록되었습니다!");
-        setTimeout(() => setSuccessMessage(""), 3000);
+    const handleAddServer = async (discordLink: string) => {
+        try {
+            await addServer(gameId, { discord_url: discordLink });
+            // Refresh server list
+            const serverData = await getGameServers(gameId);
+            setServers(serverData);
+            setSuccessMessage("서버가 성공적으로 등록되었습니다!");
+            setTimeout(() => setSuccessMessage(""), 3000);
+            setShowAddModal(false);
+        } catch (err) {
+            setError("서버 등록에 실패했습니다.");
+            console.error(err);
+        }
     };
 
     // Join Discord server
     const handleJoinServer = (discordLink: string) => {
         window.open(discordLink, "_blank");
     };
+
+    if (loading) {
+        return (
+            <div className="py-8 text-center">서버 목록을 불러오는 중...</div>
+        );
+    }
+
+    if (error) {
+        return <div className="py-8 text-center text-red-500">{error}</div>;
+    }
 
     return (
         <div className="py-2">
@@ -203,91 +198,107 @@ const PartyRegistration: React.FC<PartyRegistrationProps> = ({
 
             {/* Server list */}
             <div className="space-y-3">
-                {sortedServers.map((server) => (
-                    <div
-                        key={server.id}
-                        className="bg-white border border-gray-100 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition p-4"
-                    >
-                        <div className="flex">
-                            {/* Server icon */}
-                            <div className="mr-3 flex-shrink-0">
-                                <img
-                                    src={server.iconUrl}
-                                    alt={`${server.name} 아이콘`}
-                                    className="w-12 h-12 rounded-full object-cover"
-                                />
-                            </div>
-
-                            {/* Server details */}
-                            <div className="flex-1">
-                                <div className="flex justify-between">
-                                    <h3 className="font-bold text-gray-800">
-                                        {server.name}
-                                    </h3>
-                                    <span className="text-xs text-orange-500">
-                                        {formatRelativeTime(server.expiresAt)}
-                                    </span>
+                {sortedServers.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                        등록된 서버가 없습니다. 새 서버를 추가해보세요!
+                    </div>
+                ) : (
+                    sortedServers.map((server) => (
+                        <div
+                            key={server.server_id}
+                            className="bg-white border border-gray-100 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition p-4"
+                        >
+                            <div className="flex">
+                                {/* Server icon */}
+                                <div className="mr-3 flex-shrink-0">
+                                    <img
+                                        src={
+                                            server.icon_url ||
+                                            "/api/placeholder/80/80"
+                                        }
+                                        alt={`${server.name} 아이콘`}
+                                        className="w-12 h-12 rounded-full object-cover"
+                                        onError={(e) => {
+                                            // If image fails to load, use placeholder
+                                            (e.target as HTMLImageElement).src =
+                                                "/api/placeholder/80/80";
+                                        }}
+                                    />
                                 </div>
-                                <p className="text-sm text-gray-600 mt-1 mb-3">
-                                    {server.description}
-                                </p>
 
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center text-xs text-gray-500">
-                                        <svg
-                                            className="w-3 h-3 mr-1"
-                                            fill="currentColor"
-                                            viewBox="0 0 20 20"
-                                        >
-                                            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v2h8v-2zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-2a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 015-2.906z" />
-                                        </svg>
-                                        {server.memberCount}명
+                                {/* Server details */}
+                                <div className="flex-1">
+                                    <div className="flex justify-between">
+                                        <h3 className="font-bold text-gray-800">
+                                            {server.name}
+                                        </h3>
+                                        <span className="text-xs text-orange-500">
+                                            {formatRelativeTime(
+                                                server.expires_at
+                                            )}
+                                        </span>
                                     </div>
+                                    <p className="text-sm text-gray-600 mt-1 mb-3">
+                                        {server.description}
+                                    </p>
 
-                                    {/* Action buttons */}
-                                    <div className="flex space-x-2">
-                                        {server.ownerId === userId && (
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center text-xs text-gray-500">
+                                            <svg
+                                                className="w-3 h-3 mr-1"
+                                                fill="currentColor"
+                                                viewBox="0 0 20 20"
+                                            >
+                                                <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v2h8v-2zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-2a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 015-2.906z" />
+                                            </svg>
+                                            {server.member_count}명
+                                        </div>
+
+                                        {/* Action buttons */}
+                                        <div className="flex space-x-2">
+                                            {server.user_id === userId && (
+                                                <button
+                                                    onClick={() =>
+                                                        handleDeletePrompt(
+                                                            server.server_id
+                                                        )
+                                                    }
+                                                    className="p-2 bg-red-50 text-red-500 rounded-full hover:bg-red-100 transition"
+                                                    aria-label="서버 삭제"
+                                                >
+                                                    <svg
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                        className="h-4 w-4"
+                                                        fill="none"
+                                                        viewBox="0 0 24 24"
+                                                        stroke="currentColor"
+                                                    >
+                                                        <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            strokeWidth={2}
+                                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                                        />
+                                                    </svg>
+                                                </button>
+                                            )}
                                             <button
                                                 onClick={() =>
-                                                    handleDeletePrompt(
-                                                        server.id
+                                                    handleJoinServer(
+                                                        server.discord_url
                                                     )
                                                 }
-                                                className="p-2 bg-red-50 text-red-500 rounded-full hover:bg-red-100 transition"
-                                                aria-label="서버 삭제"
+                                                className="px-4 py-1.5 bg-orange-500 text-white rounded-full text-xs hover:bg-orange-600 transition"
                                             >
-                                                <svg
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    className="h-4 w-4"
-                                                    fill="none"
-                                                    viewBox="0 0 24 24"
-                                                    stroke="currentColor"
-                                                >
-                                                    <path
-                                                        strokeLinecap="round"
-                                                        strokeLinejoin="round"
-                                                        strokeWidth={2}
-                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                                    />
-                                                </svg>
+                                                참가하기
                                             </button>
-                                        )}
-                                        <button
-                                            onClick={() =>
-                                                handleJoinServer(
-                                                    server.discordLink
-                                                )
-                                            }
-                                            className="px-4 py-1.5 bg-orange-500 text-white rounded-full text-xs hover:bg-orange-600 transition"
-                                        >
-                                            참가하기
-                                        </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                ))}
+                    ))
+                )}
             </div>
 
             {/* Delete confirmation modal using ConfirmationModal component */}
