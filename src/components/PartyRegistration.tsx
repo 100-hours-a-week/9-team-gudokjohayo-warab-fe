@@ -114,7 +114,7 @@ const PartyRegistration: React.FC<PartyRegistrationProps> = ({
     // Handle adding a new server
     const handleAddServer = async (discordLink: string) => {
         try {
-            await addServer(gameId, { discord_url: discordLink });
+            await addServer(gameId, { url: discordLink });
             // Refresh server list
             const serverData = await getGameServers(gameId);
             setServers(serverData);
