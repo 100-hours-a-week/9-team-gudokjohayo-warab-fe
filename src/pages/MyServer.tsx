@@ -149,7 +149,7 @@ const MyServer: React.FC = () => {
 
     // 게임 상세 페이지로 이동
     const handleGameClick = (gameId: number) => {
-        navigate(`/game/${gameId}`);
+        navigate(`/games/${gameId}`);
     };
 
     // 로그인하지 않은 사용자를 위한 컴포넌트

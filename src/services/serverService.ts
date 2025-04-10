@@ -12,7 +12,7 @@ export interface ServerResponse {
 export interface ServerInfo {
     server_id: number;
     user_id: number;
-    discord_url: string;
+    url: string;
     name: string;
     description: string;
     member_count: number;

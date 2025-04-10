@@ -214,14 +214,14 @@ const PartyRegistration: React.FC<PartyRegistrationProps> = ({
                                     <img
                                         src={
                                             server.icon_url ||
-                                            "/api/placeholder/80/80"
+                                            `${process.env.PUBLIC_URL}/images/discord.png`
                                         }
                                         alt={`${server.name} 아이콘`}
                                         className="w-12 h-12 rounded-full object-cover"
                                         onError={(e) => {
-                                            // If image fails to load, use placeholder
+                                            // If image fails to load, use Discord default image
                                             (e.target as HTMLImageElement).src =
-                                                "/api/placeholder/80/80";
+                                                `${process.env.PUBLIC_URL}/images/discord.png`;
                                         }}
                                     />
                                 </div>
@@ -284,9 +284,7 @@ const PartyRegistration: React.FC<PartyRegistrationProps> = ({
                                             )}
                                             <button
                                                 onClick={() =>
-                                                    handleJoinServer(
-                                                        server.discord_url
-                                                    )
+                                                    handleJoinServer(server.url)
                                                 }
                                                 className="px-4 py-1.5 bg-orange-500 text-white rounded-full text-xs hover:bg-orange-600 transition"
                                             >
