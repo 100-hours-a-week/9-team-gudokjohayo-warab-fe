@@ -147,6 +147,13 @@ const MyServer: React.FC = () => {
         }
     };
 
+    // New utility function to truncate text
+    const truncateText = (text: string, maxLength: number = 30) => {
+        return text.length > maxLength
+            ? `${text.substring(0, maxLength)}...`
+            : text;
+    };
+
     // 게임 상세 페이지로 이동
     const handleGameClick = (gameId: number) => {
         navigate(`/games/${gameId}`);
@@ -280,7 +287,9 @@ const MyServer: React.FC = () => {
                                                 {/* 게임 이름 (하이퍼링크처럼 보이게) */}
                                                 <div className="flex-1">
                                                     <h3 className="font-bold text-black-600 hover:underline cursor-pointer">
-                                                        {server.game_name}
+                                                        {truncateText(
+                                                            server.game_name
+                                                        )}
                                                     </h3>
                                                     <div className="text-xs text-gray-500 mt-1">
                                                         <span className="truncate block">
