@@ -9,6 +9,7 @@ import {
     getLowestPricePlatform,
 } from "../services/gameService";
 import PartyRegistration from "../components/PartyRegistration";
+import { safeRequest } from "../sentry/errorHandler";
 
 interface GameDetail {
     title: string;
@@ -61,14 +62,22 @@ const DetailPage: React.FC<DetailPageProps> = () => {
             try {
                 setLoading(true);
                 // Use the gameId from URL params, fallback to "1" if not available
-                const data = await getGameDetails(gameId || "1");
+                const data = await safeRequest(
+                    () => getGameDetails(gameId || "1"),
+                    "DetailPage - getGameDetails",
+                    { gameId: gameId || "none" }
+                );
                 setGameDetail(data);
 
                 // Fetch lowest price link
                 if (gameId) {
                     try {
-                        const lowestPriceData =
-                            await getLowestPricePlatform(gameId);
+                        const lowestPriceData = await safeRequest(
+                            () => getLowestPricePlatform(gameId),
+                            "DetailPage - getLowestPricePlatform",
+                            { gameId }
+                        );
+
                         if (
                             lowestPriceData &&
                             typeof lowestPriceData === "object" &&
