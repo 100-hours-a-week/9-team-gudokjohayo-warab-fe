@@ -24,6 +24,11 @@ const PriceTab: React.FC<PriceTabProps> = ({ gameId, currentPrice }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    // 게임이 무료인지 확인하는 함수
+    const isFreeGame = () => {
+        return currentPrice === 0;
+    };
+
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -54,6 +59,7 @@ const PriceTab: React.FC<PriceTabProps> = ({ gameId, currentPrice }) => {
 
     // 가격 포맷 함수 (예: 1800 -> ₩1,800)
     const formatPrice = (price: number) => {
+        if (price === 0) return "무료";
         return `₩${price.toLocaleString()}`;
     };
 
@@ -89,6 +95,27 @@ const PriceTab: React.FC<PriceTabProps> = ({ gameId, currentPrice }) => {
 
     if (error) {
         return <div className="p-4 text-red-500">{error}</div>;
+    }
+
+    // 무료 게임일 경우 보여줄 특별 컴포넌트
+    if (isFreeGame()) {
+        return (
+            <div className="flex flex-col h-full bg-white">
+                <div className="flex flex-col items-center justify-center p-8 text-center">
+                    <img
+                        src={`${process.env.PUBLIC_URL}/images/warab_logo_black.png`}
+                        alt="와랩 로고"
+                        className="w-32 h-32 mb-4"
+                    />
+                    <h2 className="text-2xl font-bold text-green-600 mb-2">
+                        와! 이 게임은 무료예요!
+                    </h2>
+                    <p className="text-gray-600 mb-6">
+                        지금 바로 다운로드하고 플레이해보세요!
+                    </p>
+                </div>
+            </div>
+        );
     }
 
     return (
