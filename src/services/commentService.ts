@@ -3,7 +3,6 @@ import api from "../api/config";
 interface Comment {
     comment_id: number;
     user_id: number;
-    user_discord: string;
     name: string;
     content: string;
     created_at: string;

@@ -15,7 +15,6 @@ interface PartyFindTabProps {
 interface Comment {
     comment_id: number;
     user_id: number;
-    user_discord?: string;
     name: string;
     content: string;
     created_at: string;
@@ -25,7 +24,6 @@ interface Comment {
 
 interface UserProfile {
     nickname: string;
-    discord_link?: string;
 }
 
 const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
@@ -67,12 +65,12 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
             setComments(sortedComments);
 
             // Create discord link map from comments
-            const linkMap: { [key: string]: string } = {};
-            sortedComments.forEach((comment) => {
-                if (comment.user_discord) {
-                    linkMap[comment.name] = comment.user_discord;
-                }
-            });
+            // const linkMap: { [key: string]: string } = {};
+            // sortedComments.forEach((comment) => {
+            //     if (comment.user_discord) {
+            //         linkMap[comment.name] = comment.user_discord;
+            //     }
+            // });
             // setDiscordLinkMap(linkMap);
         } catch (err) {
             setError("댓글을 불러오는 데 실패했습니다.");
