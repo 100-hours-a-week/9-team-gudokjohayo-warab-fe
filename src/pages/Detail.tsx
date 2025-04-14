@@ -9,6 +9,7 @@ import {
     getLowestPricePlatform,
 } from "../services/gameService";
 import PartyRegistration from "../components/PartyRegistration";
+import { safeRequest } from "../sentry/errorHandler";
 
 interface GameDetail {
     title: string;
@@ -61,14 +62,22 @@ const DetailPage: React.FC<DetailPageProps> = () => {
             try {
                 setLoading(true);
                 // Use the gameId from URL params, fallback to "1" if not available
-                const data = await getGameDetails(gameId || "1");
+                const data = await safeRequest(
+                    () => getGameDetails(gameId || "1"),
+                    "DetailPage - getGameDetails",
+                    { gameId: gameId || "none" }
+                );
                 setGameDetail(data);
 
                 // Fetch lowest price link
                 if (gameId) {
                     try {
-                        const lowestPriceData =
-                            await getLowestPricePlatform(gameId);
+                        const lowestPriceData = await safeRequest(
+                            () => getLowestPricePlatform(gameId),
+                            "DetailPage - getLowestPricePlatform",
+                            { gameId }
+                        );
+
                         if (
                             lowestPriceData &&
                             typeof lowestPriceData === "object" &&
@@ -222,6 +231,14 @@ const DetailPage: React.FC<DetailPageProps> = () => {
             : text;
     };
 
+    // Function to format price or show "무료" if price is 0
+    const formatPrice = (price: number) => {
+        if (price === 0) {
+            return "무료";
+        }
+        return `₩${price.toLocaleString()}`;
+    };
+
     // Function to scroll tabs left or right
     const scrollTabs = (direction: "left" | "right") => {
         if (tabsContainerRef.current) {
@@ -312,12 +329,12 @@ const DetailPage: React.FC<DetailPageProps> = () => {
                                     gameDetail.lowest_price ? (
                                         <>
                                             <span className="text-gray-500 line-through">
-                                                ₩
-                                                {gameDetail.price.toLocaleString()}
+                                                {formatPrice(gameDetail.price)}
                                             </span>
                                             <span className="text-orange-500 font-bold text-xl">
-                                                ₩
-                                                {gameDetail.lowest_price.toLocaleString()}
+                                                {formatPrice(
+                                                    gameDetail.lowest_price
+                                                )}
                                             </span>
 
                                             {/* Lowest price platform link with SVG icon */}
@@ -338,8 +355,7 @@ const DetailPage: React.FC<DetailPageProps> = () => {
                                     ) : (
                                         <>
                                             <span className="text-gray-800 font-bold text-xl">
-                                                ₩
-                                                {gameDetail.price.toLocaleString()}
+                                                {formatPrice(gameDetail.price)}
                                             </span>
 
                                             {/* Regular price platform link with SVG icon */}
@@ -414,6 +430,7 @@ const DetailPage: React.FC<DetailPageProps> = () => {
                             </div>
                         </div>
 
+                        {/* 이하 코드는 변경 없음 */}
                         {/* Game description */}
                         <div className="mt-4">
                             <p className="mt-2 text-sm">

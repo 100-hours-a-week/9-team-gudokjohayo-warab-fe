@@ -46,9 +46,23 @@ const PartyRegistration: React.FC<PartyRegistrationProps> = ({
         fetchServers();
     }, [gameId]);
 
-    // Sort servers using useMemo to avoid unnecessary re-renders
-    const sortedServers = useMemo(() => {
-        const sorted = [...servers];
+    // Check if a server is expired
+    const isServerExpired = (server: ServerInfo): boolean => {
+        if (!server.expires_at) return false; // 무기한 서버는 만료되지 않음
+
+        const now = new Date();
+        const expiryDate = new Date(server.expires_at);
+        return expiryDate < now;
+    };
+
+    // Filter out expired servers and sort remaining using useMemo
+    const sortedActiveServers = useMemo(() => {
+        // 만료되지 않은 서버만 필터링
+        const activeServers = servers.filter(
+            (server) => !isServerExpired(server)
+        );
+
+        const sorted = [...activeServers];
         if (sortOrder === "newest") {
             return sorted.sort(
                 (a, b) =>
@@ -121,9 +135,11 @@ const PartyRegistration: React.FC<PartyRegistrationProps> = ({
             setSuccessMessage("서버가 성공적으로 등록되었습니다!");
             setTimeout(() => setSuccessMessage(""), 3000);
             setShowAddModal(false);
+            return Promise.resolve(); // 성공 시 Promise 반환
         } catch (err) {
-            setError("서버 등록에 실패했습니다.");
-            console.error(err);
+            console.error("서버 등록에 실패했습니다:", err);
+            // 에러를 전파하여 AddServerModal에서 처리할 수 있게 함
+            return Promise.reject(err);
         }
     };
 
@@ -198,12 +214,12 @@ const PartyRegistration: React.FC<PartyRegistrationProps> = ({
 
             {/* Server list */}
             <div className="space-y-3">
-                {sortedServers.length === 0 ? (
+                {sortedActiveServers.length === 0 ? (
                     <div className="text-center py-8 text-gray-500">
-                        등록된 서버가 없습니다. 새 서버를 추가해보세요!
+                        표시할 활성 서버가 없습니다. 새 서버를 추가해보세요!
                     </div>
                 ) : (
-                    sortedServers.map((server) => (
+                    sortedActiveServers.map((server) => (
                         <div
                             key={server.server_id}
                             className="bg-white border border-gray-100 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition p-4"

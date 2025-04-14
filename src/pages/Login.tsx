@@ -2,6 +2,7 @@ import React from "react";
 import { kakaoBaseURL } from "../api/config";
 import { useNavigate } from "react-router-dom"; // Import useNavigate for redirection
 import { userLogOut } from "../services/userService"; // Import userLogOut function
+import { captureError } from "../sentry/errorHandler";
 
 interface LoginButtonProps {
     icon: string;
@@ -51,18 +52,19 @@ const LoginPage: React.FC<LoginPageProps> = ({
         try {
             // 서버에 로그아웃 요청을 보내 세션과 토큰을 무효화
             await userLogOut();
-            
+
             // 추가적인 안전장치로 클라이언트 쿠키도 모두 삭제
-            document.cookie.split(";").forEach(cookie => {
+            document.cookie.split(";").forEach((cookie) => {
                 const [name] = cookie.trim().split("=");
                 // 모든 경로와 도메인에서 쿠키 삭제
                 document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
             });
-            
+
             // Navigate to the main page
             navigate("/main");
         } catch (error) {
             console.error("비회원 전환 중 오류 발생:", error);
+            captureError(error, "LoginPage - handleGuestAccess");
             // 오류가 발생해도 메인 페이지로 이동
             navigate("/main");
         }

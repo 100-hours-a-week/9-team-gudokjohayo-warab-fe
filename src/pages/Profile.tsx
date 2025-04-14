@@ -13,6 +13,7 @@ import {
     checkAuthentication,
 } from "../services/userService";
 import { debounce } from "lodash";
+import { safeRequest, captureError } from "../sentry/errorHandler";
 
 interface Category {
     category_id: number;
@@ -63,7 +64,10 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
         const checkUserAuthentication = async () => {
             setAuthLoading(true);
             try {
-                const authResponse = await checkAuthentication();
+                const authResponse = await safeRequest(
+                    () => checkAuthentication(),
+                    "ProfilePage - checkAuthentication"
+                );
                 if (
                     authResponse &&
                     authResponse.data !== null &&
@@ -89,7 +93,11 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
     const fetchProfileData = async () => {
         setIsLoading(true);
         try {
-            const profileData = await getUserProfile();
+            const profileData = await safeRequest(
+                () => getUserProfile(),
+                "ProfilePage - getUserProfile"
+            );
+            if (!profileData) return;
             setNickname(profileData.data.nickname);
             setOriginalNickname(profileData.data.nickname);
 
@@ -400,6 +408,7 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
             navigate("/login"); // Navigate to the login page after logout
         } catch (error) {
             console.error("Logout failed:", error);
+            captureError(error, "ProfilePage - userLogOut");
         }
     };
 

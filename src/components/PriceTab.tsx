@@ -33,7 +33,13 @@ const PriceTab: React.FC<PriceTabProps> = ({ gameId, currentPrice }) => {
 
                 // Fetch current prices by platform
                 const pricesData = await getCurrentPricesByPlatform(gameId);
-                setPlatformPrices(pricesData);
+
+                // 가격 낮은 순으로 정렬
+                const sortedPrices = [...pricesData].sort(
+                    (a, b) => a.discount_price - b.discount_price
+                );
+
+                setPlatformPrices(sortedPrices);
 
                 setIsLoading(false);
             } catch (err) {
@@ -71,11 +77,8 @@ const PriceTab: React.FC<PriceTabProps> = ({ gameId, currentPrice }) => {
     const findLowestPricePlatform = () => {
         if (platformPrices.length === 0) return null;
 
-        return platformPrices.reduce((lowest, current) => {
-            return current.discount_price < lowest.discount_price
-                ? current
-                : lowest;
-        }, platformPrices[0]);
+        // 이미 정렬되어 있으므로 첫 번째 항목이 최저가
+        return platformPrices[0];
     };
 
     const lowestPricePlatform = findLowestPricePlatform();
@@ -200,19 +203,6 @@ const PriceTab: React.FC<PriceTabProps> = ({ gameId, currentPrice }) => {
                             } ${lowestPricePlatform && item.platform === lowestPricePlatform.platform ? "bg-green-50" : ""}`}
                         >
                             <div className="flex items-center space-x-3">
-                                {/* <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm">
-                                    {item.logo ? (
-                                        <img
-                                            src={item.logo}
-                                            alt={`${item.platform} 로고`}
-                                            className="w-6 h-6 object-contain"
-                                        />
-                                    ) : (
-                                        <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center text-xs font-bold text-gray-500">
-                                            {item.platform.charAt(0)}
-                                        </div>
-                                    )}
-                                </div> */}
                                 <div>
                                     <p className="font-medium text-gray-800">
                                         {item.platform}

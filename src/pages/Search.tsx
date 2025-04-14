@@ -10,6 +10,7 @@ import {
 import { getAllCategorys } from "../services/categoryService";
 import { getUserProfile } from "../services/userService";
 import ScrollToTopButton from "../components/ScrollToTopButton";
+import { safeRequest } from "../sentry/errorHandler";
 
 // 디바운스 함수 추가
 const useDebounce = (value: string, delay: number) => {
@@ -139,11 +140,21 @@ const SearchPage: React.FC = () => {
     useEffect(() => {
         const checkUserPreferences = async () => {
             try {
-                const userProfile = await getUserProfile();
-                setHasPreferredCategories(
-                    userProfile.data.categorys &&
-                        userProfile.data.categorys.length > 0
+                const userProfile = await safeRequest(
+                    () => getUserProfile(),
+                    "SearchPage - getUserProfile"
                 );
+
+                if (
+                    userProfile &&
+                    userProfile.data &&
+                    userProfile.data.categorys
+                ) {
+                    setHasPreferredCategories(
+                        userProfile.data.categorys.length > 0
+                    );
+                }
+
                 setIsAuthenticated(true);
             } catch (error) {
                 console.error("Error fetching user preferences:", error);
@@ -158,17 +169,14 @@ const SearchPage: React.FC = () => {
     // Fetch categories when component mounts
     useEffect(() => {
         const fetchCategorys = async () => {
-            try {
-                setCategorysLoading(true);
-                const categoryData = await getAllCategorys();
-                setCategorys(categoryData);
-            } catch (err) {
-                console.error("Error fetching categorys:", err);
-            } finally {
-                setCategorysLoading(false);
-            }
+            setCategorysLoading(true);
+            const categoryData = await safeRequest(
+                () => getAllCategorys(),
+                "SearchPage - getAllCategorys"
+            );
+            if (categoryData) setCategorys(categoryData);
+            setCategorysLoading(false);
         };
-
         fetchCategorys();
     }, []);
 
@@ -272,23 +280,30 @@ const SearchPage: React.FC = () => {
                 // Add page parameter
                 searchParams.page = page;
 
-                // Fetch games with the search parameters and AbortController signal
-                const gameResults = await searchGames(searchParams, signal);
+                const gameResults = await safeRequest(
+                    () => searchGames(searchParams, signal),
+                    "SearchPage - searchGames",
+                    {
+                        page: String(page),
+                        query: debouncedSearchQuery,
+                    }
+                );
 
                 // 이미 중단된 요청에 대한 응답이면 처리하지 않음
                 if (signal.aborted) return;
 
                 // If we got fewer results than expected or none, there's no more data
-                setHasResults(gameResults.length > 0);
-                if (gameResults.length === 0) {
-                    setHasMore(false);
-                }
-
-                // Update the games list with fade transition
-                if (isLoadingMore) {
-                    setGames((prevGames) => [...prevGames, ...gameResults]);
-                } else {
-                    setGames(gameResults);
+                if (gameResults && Array.isArray(gameResults)) {
+                    setHasResults(gameResults.length > 0);
+                    if (gameResults.length === 0) {
+                        setHasMore(false);
+                    }
+                    // Update the games list with fade transition
+                    if (isLoadingMore) {
+                        setGames((prevGames) => [...prevGames, ...gameResults]);
+                    } else {
+                        setGames(gameResults);
+                    }
                 }
             } catch (error: unknown) {
                 // 중단된 요청에 대한 에러는 무시

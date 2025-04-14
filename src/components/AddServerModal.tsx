@@ -40,10 +40,16 @@ const AddServerModal: React.FC<AddServerModalProps> = ({
                 setIsLoading(false);
             } else {
                 // 유효하고 중복되지 않은 링크인 경우
-                onAddServer(inviteLink);
-                setInviteLink("");
-                setIsLoading(false);
-                onClose();
+                try {
+                    await onAddServer(inviteLink);
+                    setInviteLink("");
+                    setIsLoading(false);
+                    onClose();
+                } catch (serverAddErr) {
+                    // onAddServer 실행 중 오류 발생 시 여기서 처리
+                    setError("한 게임당 하나의 서버만 등록할 수 있습니다.");
+                    setIsLoading(false);
+                }
             }
         } catch (err) {
             // error를 AxiosError로 타입 캐스팅
@@ -64,6 +70,9 @@ const AddServerModal: React.FC<AddServerModalProps> = ({
                         break;
                     case 404:
                         setError("요청한 리소스를 찾을 수 없습니다.");
+                        break;
+                    case 409:
+                        setError("한 게임당 하나의 서버만 등록할 수 있습니다.");
                         break;
                     case 429:
                         setError(
@@ -114,16 +123,19 @@ const AddServerModal: React.FC<AddServerModalProps> = ({
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                             placeholder="https://discord.gg/your-invite-code"
                         />
-                        {error && (
-                            <p className="mt-1 text-sm text-red-500">{error}</p>
-                        )}
                         <p className="mt-2 text-xs text-gray-500">
                             [서버 &gt; 채널 &gt; 초대 코드 만들기 아이콘 클릭
                             &gt; 주소 복사]
                             <br />
                             디스코드 초대 링크를 입력하면 서버 정보가 자동으로
                             가져와집니다.
+                            <br />한 게임당 하나의 서버만 등록할 수 있습니다.
                         </p>
+                        {error && (
+                            <p className="mt-2 text-sm text-red-500 font-medium">
+                                등록이 실패하였습니다. {error}
+                            </p>
+                        )}
                     </div>
 
                     <div className="flex space-x-4 justify-center mt-6">
