@@ -135,9 +135,11 @@ const PartyRegistration: React.FC<PartyRegistrationProps> = ({
             setSuccessMessage("서버가 성공적으로 등록되었습니다!");
             setTimeout(() => setSuccessMessage(""), 3000);
             setShowAddModal(false);
+            return Promise.resolve(); // 성공 시 Promise 반환
         } catch (err) {
-            setError("서버 등록에 실패했습니다.");
-            console.error(err);
+            console.error("서버 등록에 실패했습니다:", err);
+            // 에러를 전파하여 AddServerModal에서 처리할 수 있게 함
+            return Promise.reject(err);
         }
     };
 
