@@ -6,7 +6,6 @@ import {
     deleteComment,
 } from "../services/commentService";
 import ConfirmationModal from "./ConfirmationModal";
-import ToastMessage from "./ToastMessage";
 import { getUserProfile, isAuthenticated } from "../services/userService";
 
 interface PartyFindTabProps {
@@ -39,13 +38,6 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
     const [isSending, setIsSending] = useState<boolean>(false);
     const [isUserAuthenticated, setIsUserAuthenticated] =
         useState<boolean>(false);
-
-    // New state for discord link copying
-    const [discordLinkMap, setDiscordLinkMap] = useState<{
-        [key: string]: string;
-    }>({});
-    const [toastMessage, setToastMessage] = useState<string>("");
-    const [showToast, setShowToast] = useState<boolean>(false);
 
     // Current user message
     const [currentMessage, setCurrentMessage] = useState<string>("");
@@ -81,7 +73,7 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                     linkMap[comment.name] = comment.user_discord;
                 }
             });
-            setDiscordLinkMap(linkMap);
+            // setDiscordLinkMap(linkMap);
         } catch (err) {
             setError("댓글을 불러오는 데 실패했습니다.");
             console.error("Error fetching comments:", err);
@@ -146,37 +138,6 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
         // More than a year
         const years = Math.floor(secondsDiff / 31536000);
         return `${years}년 전`;
-    };
-
-    // Handle Discord link copy
-    const handleDiscordLinkCopy = (username: string) => {
-        const discordLink = discordLinkMap[username];
-
-        if (discordLink) {
-            navigator.clipboard
-                .writeText(discordLink)
-                .then(() => {
-                    setToastMessage(
-                        `${username}의 디스코드 링크가 복사되었습니다.`
-                    );
-                    setShowToast(true);
-
-                    // Hide toast after 3 seconds
-                    setTimeout(() => {
-                        setShowToast(false);
-                    }, 3000);
-                })
-                .catch((err) => {
-                    console.error("Failed to copy discord link:", err);
-                });
-        } else {
-            setToastMessage(" 이 링크는 더 이상 존재하지 않습니다.");
-            setShowToast(true);
-
-            setTimeout(() => {
-                setShowToast(false);
-            }, 3000);
-        }
     };
 
     // 개행 수를 계산하는 함수
@@ -311,13 +272,6 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
 
     // Handle send message with Discord link check
     const handleSendMessage = async () => {
-        // Check if user has Discord link
-        if (!userProfile?.discord_link) {
-            setToastMessage("디스코드 링크를 먼저 등록해주세요.");
-            setShowToast(true);
-            return;
-        }
-
         if (currentMessage.trim() === "" || isSending) return;
 
         try {
@@ -361,8 +315,8 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
     const getPlaceholderText = () => {
         if (!isUserAuthenticated) {
             return "로그인이 필요합니다";
-        } else if (!canPostComment) {
-            return "프로필 > 디스코드에 링크를 입력해주세요.";
+            // } else if (!canPostComment) {
+            //     return "프로필 > 디스코드에 링크를 입력해주세요.";
         } else {
             return "메시지를 입력하세요.";
         }
@@ -376,9 +330,6 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
         return <div className="p-4 text-center text-red-500">{error}</div>;
     }
 
-    // Check if Discord link is set before rendering comment input
-    const canPostComment = !!userProfile?.discord_link;
-
     return (
         <div className="flex flex-col h-full">
             {/* Message input */}
@@ -390,9 +341,7 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                         value={currentMessage}
                         onChange={handleInputChange}
                         onKeyDown={handleKeyPress}
-                        disabled={
-                            !isUserAuthenticated || !canPostComment || isSending
-                        }
+                        disabled={!isUserAuthenticated || isSending}
                         style={{
                             lineHeight: "24px",
                             alignItems: "center",
@@ -403,7 +352,6 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                     <button
                         className={`mr-2 p-1.5 rounded-full ${
                             !isUserAuthenticated ||
-                            !canPostComment ||
                             currentMessage.trim() === "" ||
                             isSending
                                 ? "bg-gray-200 text-gray-400 cursor-not-allowed"
@@ -412,7 +360,6 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                         onClick={handleSendMessage}
                         disabled={
                             !isUserAuthenticated ||
-                            !canPostComment ||
                             currentMessage.trim() === "" ||
                             isSending
                         }
@@ -454,45 +401,6 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                             {/* Header row with username and actions */}
                             <div className="flex justify-between items-center mb-2">
                                 <div className="flex items-center">
-                                    {/* Discord copy button */}
-                                    <div
-                                        className="flex items-center bg-[#5865F2] bg-opacity-10 hover:bg-opacity-20 rounded-full px-2 py-1 cursor-pointer mr-2"
-                                        onClick={() =>
-                                            handleDiscordLinkCopy(comment.name)
-                                        }
-                                    >
-                                        {/* Discord icon */}
-                                        <img
-                                            src={`${process.env.PUBLIC_URL}/images/discord.png`}
-                                            alt="Discord"
-                                            className="w-4 h-4"
-                                        />
-
-                                        {/* Copy icon */}
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            width="12"
-                                            height="12"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="#5865F2"
-                                            strokeWidth="2"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            className="ml-1"
-                                        >
-                                            <rect
-                                                x="9"
-                                                y="9"
-                                                width="13"
-                                                height="13"
-                                                rx="2"
-                                                ry="2"
-                                            ></rect>
-                                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                                        </svg>
-                                    </div>
-
                                     {/* Username */}
                                     <span className="font-medium text-black font-800 text-sm">
                                         {formatUsername(comment.name)}
@@ -661,8 +569,6 @@ const PartyFindTab: React.FC<PartyFindTabProps> = ({ gameId }) => {
                     ))
                 )}
             </div>
-
-            <ToastMessage message={toastMessage} isVisible={showToast} />
 
             {/* Confirmation Modal */}
             <ConfirmationModal

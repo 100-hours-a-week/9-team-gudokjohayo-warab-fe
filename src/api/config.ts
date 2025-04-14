@@ -1,4 +1,5 @@
 import axios from "axios";
+import * as Sentry from "@sentry/react";
 
 export const kakaoBaseURL = process.env.REACT_APP_KAKAOURL;
 export const GA_ID = process.env.REACT_APP_GA_ID;
@@ -19,6 +20,34 @@ const api = axios.create({
     },
     withCredentials: true, // CORS 요청에 인증 정보를 포함 (쿠키 등)
 });
+
+// 응답 인터셉터 추가
+api.interceptors.response.use(
+    (response) => {
+        return response;
+    },
+    (error) => {
+        // API 에러 발생 시 Sentry에 에러 캡처
+        const requestUrl = error.config?.url || "unknown";
+        const statusCode = error.response?.status;
+        const errorData = error.response?.data;
+
+        Sentry.captureException(error, {
+            tags: {
+                type: "api_error",
+                endpoint: requestUrl,
+                status: statusCode,
+            },
+            extra: {
+                requestURL: requestUrl,
+                requestMethod: error.config?.method,
+                responseData: errorData,
+            },
+        });
+
+        return Promise.reject(error);
+    }
+);
 
 export default api;
 export {};
