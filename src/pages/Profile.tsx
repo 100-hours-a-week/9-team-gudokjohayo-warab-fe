@@ -8,12 +8,12 @@ import { getCategoriesByIds } from "../services/categoryService";
 import {
     getUserProfile,
     checkNicknameDuplication,
-    checkDiscordLinkDuplication,
     updateUserProfile,
     userLogOut,
     checkAuthentication,
 } from "../services/userService";
-import { debounce } from "lodash"; // 디바운스 함수를 위해 lodash 가져오기
+import { debounce } from "lodash";
+import { safeRequest, captureError } from "../sentry/errorHandler";
 
 interface Category {
     category_id: number;
@@ -29,9 +29,7 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
     const [authLoading, setAuthLoading] = useState<boolean>(true);
     const [nickname, setNickname] = useState<string>("");
-    const [discordUrl, setDiscordUrl] = useState<string>("");
     const [originalNickname, setOriginalNickname] = useState<string>("");
-    const [originalDiscordUrl, setOriginalDiscordUrl] = useState<string>("");
     const [showToast, setShowToast] = useState<boolean>(false);
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -40,9 +38,7 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
 
     // 유효성 검사 상태
     const [nicknameHelperText, setNicknameHelperText] = useState<string>("");
-    const [discordHelperText, setDiscordHelperText] = useState<string>("");
     const [isNicknameValid, setIsNicknameValid] = useState<boolean>(true);
-    const [isDiscordValid, setIsDiscordValid] = useState<boolean>(true);
 
     // 카테고리 관련 상태
     const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>(
@@ -68,15 +64,17 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
         const checkUserAuthentication = async () => {
             setAuthLoading(true);
             try {
-                const authResponse = await checkAuthentication();
-                // 인증 성공: data가 null이 아니고, message가 "not_authenticated"가 아닌 경우
+                const authResponse = await safeRequest(
+                    () => checkAuthentication(),
+                    "ProfilePage - checkAuthentication"
+                );
                 if (
                     authResponse &&
                     authResponse.data !== null &&
                     authResponse.message !== "not_authenticated"
                 ) {
                     setIsAuthenticated(true);
-                    await fetchProfileData(); // 인증된 경우에만 프로필 데이터 가져오기
+                    await fetchProfileData();
                 } else {
                     setIsAuthenticated(false);
                 }
@@ -95,18 +93,13 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
     const fetchProfileData = async () => {
         setIsLoading(true);
         try {
-            const profileData = await getUserProfile();
+            const profileData = await safeRequest(
+                () => getUserProfile(),
+                "ProfilePage - getUserProfile"
+            );
+            if (!profileData) return;
             setNickname(profileData.data.nickname);
-            setDiscordUrl(profileData.data.discord_link);
             setOriginalNickname(profileData.data.nickname);
-            setOriginalDiscordUrl(profileData.data.discord_link);
-
-            // 디스코드 링크가 비어있는 경우 헬퍼 텍스트 설정
-            if (!profileData.data.discord_link) {
-                setDiscordHelperText(
-                    "*링크를 등록하지 않으면 게임 상세 페이지 내 댓글 기능 사용이 제한됩니다."
-                );
-            }
 
             // Extract category data from the response
             if (
@@ -140,7 +133,6 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
     useEffect(() => {
         const checkChanges = () => {
             const nicknameChanged = nickname !== originalNickname;
-            const discordChanged = discordUrl !== originalDiscordUrl;
 
             // 카테고리 변경 감지를 위해 배열을 정렬한 후 비교
             const sortedOriginal = [...originalCategoryIds].sort();
@@ -149,20 +141,11 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
                 JSON.stringify(sortedOriginal) !==
                 JSON.stringify(sortedCurrent);
 
-            setHasChanges(
-                nicknameChanged || discordChanged || categoriesChanged
-            );
+            setHasChanges(nicknameChanged || categoriesChanged);
         };
 
         checkChanges();
-    }, [
-        nickname,
-        discordUrl,
-        selectedCategoryIds,
-        originalNickname,
-        originalDiscordUrl,
-        originalCategoryIds,
-    ]);
+    }, [nickname, selectedCategoryIds, originalNickname, originalCategoryIds]);
 
     // 닉네임 중복 확인 (디바운스 적용)
     const checkNickname = debounce(async (value: string) => {
@@ -209,40 +192,6 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
         }
     }, 500);
 
-    // 디스코드 링크 중복 확인 (디바운스 적용)
-    const checkDiscordLink = debounce(async (value: string) => {
-        if (!value) {
-            setDiscordHelperText(
-                "*링크를 등록하지 않으면 게임 상세 페이지 내 댓글 기능 사용이 제한됩니다."
-            );
-            setIsDiscordValid(true); // 비어있어도 유효함
-            return;
-        }
-
-        // 원래 디스코드 링크와 동일하면 중복 체크 스킵
-        if (value === originalDiscordUrl) {
-            setDiscordHelperText("");
-            setIsDiscordValid(true);
-            return;
-        }
-
-        try {
-            const result = await checkDiscordLinkDuplication(value);
-
-            if (result.duplication) {
-                setDiscordHelperText("이미 사용 중인 디스코드 링크입니다.");
-                setIsDiscordValid(false);
-            } else {
-                setDiscordHelperText("사용 가능한 디스코드 링크입니다.");
-                setIsDiscordValid(true);
-            }
-        } catch (error) {
-            console.error("유효한 링크가 아닙니다.:", error);
-            setDiscordHelperText("유효하지 않은 링크입니다.");
-            setIsDiscordValid(false);
-        }
-    }, 500);
-
     // 닉네임 변경 핸들러
     const handleNicknameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
@@ -269,21 +218,6 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
                     setIsNicknameValid(false);
                 }
             }, 1500);
-        }
-    };
-
-    // 디스코드 링크 변경 핸들러
-    const handleDiscordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value;
-        setDiscordUrl(value);
-
-        if (!value) {
-            setDiscordHelperText(
-                "*링크를 등록하지 않으면 게임 상세 페이지 내 댓글 기능 사용이 제한됩니다."
-            );
-            setIsDiscordValid(true); // 비어있어도 유효함
-        } else {
-            checkDiscordLink(value);
         }
     };
 
@@ -362,7 +296,6 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
         if (nickname.includes(" ")) {
             setNicknameHelperText("닉네임에 공백을 포함할 수 없습니다.");
             setIsNicknameValid(false);
-            // 토스트 메시지 제거
             return;
         }
 
@@ -370,7 +303,6 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
         if (specialCharRegex.test(nickname)) {
             setNicknameHelperText("닉네임에 특수문자를 포함할 수 없습니다.");
             setIsNicknameValid(false);
-            // 토스트 메시지 제거
             return;
         }
 
@@ -378,7 +310,6 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
         if (!nickname) {
             setNicknameHelperText("닉네임을 입력해주세요.");
             setIsNicknameValid(false);
-            // 토스트 메시지 제거
             return;
         }
 
@@ -391,7 +322,6 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
                     setNicknameHelperText("이미 사용 중인 닉네임입니다.");
                     setIsNicknameValid(false);
                     setIsSaving(false);
-                    // 토스트 메시지 제거
                     return;
                 }
             } catch (error) {
@@ -399,7 +329,6 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
                 setNicknameHelperText("중복 확인 중 오류가 발생했습니다.");
                 setIsNicknameValid(false);
                 setIsSaving(false);
-                // 토스트 메시지 제거
                 return;
             }
         }
@@ -410,9 +339,9 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
         // 실제 저장 로직 실행
         setIsSaving(true);
         try {
-            await updateUserProfile(nickname, discordUrl, selectedCategoryIds);
+            // 디스코드 URL 매개변수 제거하고 빈 문자열 전달
+            await updateUserProfile(nickname, "", selectedCategoryIds);
             setOriginalNickname(nickname);
-            setOriginalDiscordUrl(discordUrl);
             setOriginalCategoryIds([...selectedCategoryIds]);
             setHasChanges(false);
 
@@ -431,14 +360,6 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
         }
     };
 
-    const handleClearDiscord = () => {
-        setDiscordUrl("");
-        setDiscordHelperText(
-            "*링크를 등록하지 않으면 게임 상세 페이지 내 댓글 기능 사용이 제한됩니다."
-        );
-        setIsDiscordValid(true); // 비어있어도 유효함
-    };
-
     const handleOpenModal = () => {
         setIsModalOpen(true);
     };
@@ -449,6 +370,10 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
 
     const handleConfirmCategories = (categoryIds: number[]) => {
         setSelectedCategoryIds(categoryIds);
+    };
+
+    const handleNavigateToMyServers = () => {
+        navigate("/my-server");
     };
 
     // Cancel button handlers
@@ -483,6 +408,7 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
             navigate("/login"); // Navigate to the login page after logout
         } catch (error) {
             console.error("Logout failed:", error);
+            captureError(error, "ProfilePage - userLogOut");
         }
     };
 
@@ -548,6 +474,12 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
                     ) : (
                         <div className="p-6 flex flex-col h-full">
                             <div className="space-y-6">
+                                {/* 프로필 제목 */}
+                                <h2 className="text-xl font-semibold text-center mb-4">
+                                    내 프로필
+                                </h2>
+
+                                {/* 닉네임 섹션 */}
                                 <div className="space-y-2">
                                     <label
                                         className="block text-sm font-medium"
@@ -577,55 +509,7 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
                                     )}
                                 </div>
 
-                                <div className="space-y-2">
-                                    <label
-                                        className="block text-sm font-medium"
-                                        htmlFor="discord"
-                                    >
-                                        디스코드
-                                    </label>
-                                    <div className="relative">
-                                        <input
-                                            id="discord"
-                                            type="text"
-                                            value={discordUrl}
-                                            onChange={handleDiscordChange}
-                                            className={`w-full px-3 py-2 pr-10 border ${
-                                                isDiscordValid
-                                                    ? "border-gray-300"
-                                                    : "border-red-500"
-                                            } rounded-md`}
-                                        />
-                                        {discordUrl && (
-                                            <button
-                                                type="button"
-                                                onClick={handleClearDiscord}
-                                                className="absolute right-2 top-1/2 transform -translate-y-1/2"
-                                            >
-                                                <svg
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    className="h-5 w-5 text-gray-400"
-                                                    viewBox="0 0 20 20"
-                                                    fill="currentColor"
-                                                >
-                                                    <path
-                                                        fillRule="evenodd"
-                                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                                                        clipRule="evenodd"
-                                                    />
-                                                </svg>
-                                            </button>
-                                        )}
-                                    </div>
-                                    {discordHelperText && (
-                                        <p
-                                            className={`text-xs ${!discordUrl || isDiscordValid ? "text-gray-500" : "text-red-500"}`}
-                                        >
-                                            {discordHelperText}
-                                        </p>
-                                    )}
-                                </div>
-
+                                {/* 선호 카테고리 섹션 */}
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between">
                                         <label className="block text-sm font-medium">
@@ -673,6 +557,51 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
                                             </div>
                                         )
                                     )}
+                                </div>
+
+                                {/* 새로운 섹션: 내 활동 */}
+                                <div className="space-y-4 mt-8">
+                                    <h3 className="text-lg font-medium">
+                                        내 활동
+                                    </h3>
+
+                                    {/* 내 링크 메뉴 */}
+                                    <div
+                                        className="flex items-center justify-between border-b border-gray-200 py-4 cursor-pointer"
+                                        onClick={handleNavigateToMyServers}
+                                    >
+                                        <div className="flex items-center">
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                className="h-6 w-6 text-orange-500 mr-3"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                stroke="currentColor"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={2}
+                                                    d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                                                />
+                                            </svg>
+                                            <span className="text-sm font-medium">
+                                                내 서버
+                                            </span>
+                                        </div>
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            className="h-5 w-5 text-gray-400"
+                                            viewBox="0 0 20 20"
+                                            fill="currentColor"
+                                        >
+                                            <path
+                                                fillRule="evenodd"
+                                                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                                                clipRule="evenodd"
+                                            />
+                                        </svg>
+                                    </div>
                                 </div>
                             </div>
 

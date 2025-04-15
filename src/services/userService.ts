@@ -73,7 +73,7 @@ export const checkDiscordLinkDuplication = async (
 ): Promise<DuplicationResponse> => {
     try {
         const response = await api.get(
-            `/users/check_discord_link?discord_link=${encodeURIComponent(discordLink)}`
+            `/check_discord_link?discord_link=${encodeURIComponent(discordLink)}`
         );
 
         return response.data;

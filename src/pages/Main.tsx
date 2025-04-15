@@ -3,6 +3,7 @@ import Header from "../components/Header";
 import { useNavigate } from "react-router-dom";
 import api from "../api/config";
 import { getUserProfile } from "../services/userService";
+import { safeRequest } from "../sentry/errorHandler";
 
 interface Game {
     game_id: number;
@@ -249,37 +250,31 @@ const MainPage: React.FC = () => {
 
     useEffect(() => {
         const checkUserPreferences = async () => {
-            try {
-                const userProfile = await getUserProfile();
-                // 사용자가 선호 카테고리를 선택했다면 배너를 숨깁니다
-                setShowCategoryBanner(
-                    !userProfile.data.categorys ||
-                        userProfile.data.categorys.length === 0
-                );
-            } catch (error) {
-                console.error("Error fetching user preferences:", error);
+            const profile = await safeRequest(
+                () => getUserProfile(),
+                "MainPage - getUserProfile"
+            );
+            if (profile?.data.categorys && profile.data.categorys.length > 0) {
+                setShowCategoryBanner(false);
+            } else {
                 setShowCategoryBanner(true);
             }
         };
-
         checkUserPreferences();
     }, []);
 
     useEffect(() => {
         const fetchMainPageData = async () => {
             setLoading(true);
-            try {
-                const response = await api.get<MainPageResponse>("/games/main");
-                if (response.data.message === "main_page_inquiry_success") {
-                    setMainPageSections(response.data.data.games);
-                } else {
-                    throw new Error("Failed to fetch main page data");
-                }
-            } catch (error) {
-                console.error("Error fetching main page data:", error);
-            } finally {
-                setLoading(false);
+            const response = await safeRequest(
+                () => api.get<MainPageResponse>("/games/main"),
+                "MainPage - fetchMainPageData"
+            );
+
+            if (response?.data.message === "main_page_inquiry_success") {
+                setMainPageSections(response.data.data.games);
             }
+            setLoading(false);
         };
 
         fetchMainPageData();

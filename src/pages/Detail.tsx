@@ -1,11 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import Header from "../components/Header";
 import PartyFindTab from "../components/PartyFindTab";
-// mvp 기능에서 제외
-// import VideoTab from "../components/VideoTab";
+import VideoTab from "../components/VideoTab";
 import PriceTab from "../components/PriceTab";
-import { getGameDetails } from "../services/gameService";
+import {
+    getGameDetails,
+    getLowestPricePlatform,
+} from "../services/gameService";
+import PartyRegistration from "../components/PartyRegistration";
+import { safeRequest } from "../sentry/errorHandler";
 
 interface GameDetail {
     title: string;
@@ -24,6 +28,11 @@ interface GameDetail {
     updated_at: string;
 }
 
+interface LowestPriceLink {
+    platform: string;
+    store_url: string;
+}
+
 interface DetailPageProps {
     // Add any props if needed
 }
@@ -34,6 +43,8 @@ const DetailPage: React.FC<DetailPageProps> = () => {
     const [gameDetail, setGameDetail] = useState<GameDetail | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
+    const [lowestPriceLink, setLowestPriceLink] =
+        useState<LowestPriceLink | null>(null);
 
     // Category state for accordion
     const [isCategoryExpanded, setIsCategoryExpanded] =
@@ -42,13 +53,50 @@ const DetailPage: React.FC<DetailPageProps> = () => {
     // Tab state
     const [activeTab, setActiveTab] = useState<string>("price-comparison");
 
+    // Tabs scroll reference
+    const tabsContainerRef = useRef<HTMLDivElement>(null);
+    const [isScrollable, setIsScrollable] = useState<boolean>(false);
+
     useEffect(() => {
         const fetchGameDetails = async () => {
             try {
                 setLoading(true);
                 // Use the gameId from URL params, fallback to "1" if not available
-                const data = await getGameDetails(gameId || "1");
+                const data = await safeRequest(
+                    () => getGameDetails(gameId || "1"),
+                    "DetailPage - getGameDetails",
+                    { gameId: gameId || "none" }
+                );
                 setGameDetail(data);
+
+                // Fetch lowest price link
+                if (gameId) {
+                    try {
+                        const lowestPriceData = await safeRequest(
+                            () => getLowestPricePlatform(gameId),
+                            "DetailPage - getLowestPricePlatform",
+                            { gameId }
+                        );
+
+                        if (
+                            lowestPriceData &&
+                            typeof lowestPriceData === "object" &&
+                            "platform" in lowestPriceData &&
+                            "store_url" in lowestPriceData
+                        ) {
+                            setLowestPriceLink(lowestPriceData);
+                        } else {
+                            setLowestPriceLink(null); // 혹시 0이나 잘못된 데이터가 들어오면 null로 처리
+                        }
+                    } catch (linkError) {
+                        console.error(
+                            "Error fetching lowest price link:",
+                            linkError
+                        );
+                        // Don't set error state here to not interrupt the main flow
+                    }
+                }
+
                 setLoading(false);
             } catch (err) {
                 setError("게임 정보를 불러오는 데 실패했습니다.");
@@ -60,12 +108,67 @@ const DetailPage: React.FC<DetailPageProps> = () => {
         fetchGameDetails();
     }, [gameId]);
 
+    // Check if tabs container is scrollable
+    useEffect(() => {
+        const checkScrollable = () => {
+            if (tabsContainerRef.current) {
+                const { scrollWidth, clientWidth } = tabsContainerRef.current;
+                setIsScrollable(scrollWidth > clientWidth);
+            }
+        };
+
+        checkScrollable();
+        window.addEventListener("resize", checkScrollable);
+
+        return () => {
+            window.removeEventListener("resize", checkScrollable);
+        };
+    }, []);
+
+    // SVG redirect icon component
+    const RedirectIcon = ({ className = "" }: { className?: string }) => (
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className={`text-gray-500 hover:text-orange-500 transition-colors ${className}`}
+        >
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+            <polyline points="15 3 21 3 21 9"></polyline>
+            <line x1="10" y1="14" x2="21" y2="3"></line>
+        </svg>
+    );
+
     const toggleCategoryExpansion = () => {
         setIsCategoryExpanded(!isCategoryExpanded);
     };
 
     const handleTabChange = (tabId: string) => {
         setActiveTab(tabId);
+
+        // Scroll tab into view when selected
+        if (tabsContainerRef.current) {
+            const tabElement = document.getElementById(`tab-${tabId}`);
+            if (tabElement) {
+                const containerRect =
+                    tabsContainerRef.current.getBoundingClientRect();
+                const tabRect = tabElement.getBoundingClientRect();
+
+                if (tabRect.right > containerRect.right) {
+                    tabsContainerRef.current.scrollLeft +=
+                        tabRect.right - containerRect.right + 16;
+                } else if (tabRect.left < containerRect.left) {
+                    tabsContainerRef.current.scrollLeft -=
+                        containerRect.left - tabRect.left + 16;
+                }
+            }
+        }
     };
 
     const renderScore = (rating: number) => {
@@ -75,35 +178,41 @@ const DetailPage: React.FC<DetailPageProps> = () => {
 
     // Render stars based on rating
     const renderStars = (rating: number) => {
-        const fullStars = Math.floor(rating / 2);
-        const halfStar = rating % 2 >= 1 ? 1 : 0;
-        const emptyStars = 5 - fullStars - halfStar;
-
         const stars = [];
-        // Full stars
-        for (let i = 0; i < fullStars; i++) {
-            stars.push(
-                <span key={`full-${i}`} className="text-yellow-400">
-                    ★
-                </span>
-            );
+        const convertedRating = (rating / 10) * 5; // 10점 만점을 5점 만점으로 변환
+
+        // 각 별에 대해 순회
+        for (let i = 0; i < 5; i++) {
+            if (convertedRating >= i + 1) {
+                // 꽉 찬 별
+                stars.push(
+                    <span key={`full-${i}`} className="text-yellow-400">
+                        ★
+                    </span>
+                );
+            } else if (convertedRating > i && convertedRating < i + 1) {
+                // 반 별 (0.5)
+                stars.push(
+                    <span key={`half-${i}`} className="relative">
+                        <span
+                            className="absolute text-yellow-400 overflow-hidden"
+                            style={{ width: "50%" }}
+                        >
+                            ★
+                        </span>
+                        <span className="text-gray-300">★</span>
+                    </span>
+                );
+            } else {
+                // 빈 별
+                stars.push(
+                    <span key={`empty-${i}`} className="text-gray-300">
+                        ★
+                    </span>
+                );
+            }
         }
-        // Half star
-        if (halfStar) {
-            stars.push(
-                <span key="half" className="text-yellow-400">
-                    ★
-                </span>
-            );
-        }
-        // Empty stars
-        for (let i = 0; i < emptyStars; i++) {
-            stars.push(
-                <span key={`empty-${i}`} className="text-gray-300">
-                    ★
-                </span>
-            );
-        }
+
         return stars;
     };
 
@@ -120,6 +229,30 @@ const DetailPage: React.FC<DetailPageProps> = () => {
         return text.length > maxLength
             ? `${text.substring(0, maxLength)}...`
             : text;
+    };
+
+    // Function to format price or show "무료" if price is 0
+    const formatPrice = (price: number) => {
+        if (price === 0) {
+            return "무료";
+        }
+        return `₩${price.toLocaleString()}`;
+    };
+
+    // Function to scroll tabs left or right
+    const scrollTabs = (direction: "left" | "right") => {
+        if (tabsContainerRef.current) {
+            const scrollAmount = 100; // Amount to scroll by
+            const newScrollLeft =
+                direction === "left"
+                    ? tabsContainerRef.current.scrollLeft - scrollAmount
+                    : tabsContainerRef.current.scrollLeft + scrollAmount;
+
+            tabsContainerRef.current.scrollTo({
+                left: newScrollLeft,
+                behavior: "smooth",
+            });
+        }
     };
 
     if (loading) {
@@ -196,42 +329,51 @@ const DetailPage: React.FC<DetailPageProps> = () => {
                                     gameDetail.lowest_price ? (
                                         <>
                                             <span className="text-gray-500 line-through">
-                                                ₩
-                                                {gameDetail.price.toLocaleString()}
+                                                {formatPrice(gameDetail.price)}
                                             </span>
                                             <span className="text-orange-500 font-bold text-xl">
-                                                ₩
-                                                {gameDetail.lowest_price.toLocaleString()}
+                                                {formatPrice(
+                                                    gameDetail.lowest_price
+                                                )}
                                             </span>
+
+                                            {/* Lowest price platform link with SVG icon */}
+                                            {lowestPriceLink && (
+                                                <a
+                                                    href={
+                                                        lowestPriceLink.store_url
+                                                    }
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="ml-1 flex items-center"
+                                                    title={`최저가: ${lowestPriceLink.platform}`}
+                                                >
+                                                    <RedirectIcon />
+                                                </a>
+                                            )}
                                         </>
                                     ) : (
-                                        <span className="text-gray-800 font-bold text-xl">
-                                            ₩{gameDetail.price.toLocaleString()}
-                                        </span>
+                                        <>
+                                            <span className="text-gray-800 font-bold text-xl">
+                                                {formatPrice(gameDetail.price)}
+                                            </span>
+
+                                            {/* Regular price platform link with SVG icon */}
+                                            {lowestPriceLink && (
+                                                <a
+                                                    href={
+                                                        lowestPriceLink.store_url
+                                                    }
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="ml-1 flex items-center"
+                                                    title={`구매처: ${lowestPriceLink.platform}`}
+                                                >
+                                                    <RedirectIcon />
+                                                </a>
+                                            )}
+                                        </>
                                     )}
-                                    {/* External link icon remains the same */}
-                                    {/* mvp 기능 제거 */}
-                                    {/* <button className="ml-0">
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            className="h-3 w-3 text-orange-500 -translate-y-1"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            strokeWidth="2"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                        >
-                                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                                            <polyline points="15 3 21 3 21 9" />
-                                            <line
-                                                x1="10"
-                                                y1="14"
-                                                x2="21"
-                                                y2="3"
-                                            />
-                                        </svg>
-                                    </button> */}
                                 </div>
                                 <div className="flex items-center space-x-2 mt-1">
                                     <svg
@@ -288,6 +430,7 @@ const DetailPage: React.FC<DetailPageProps> = () => {
                             </div>
                         </div>
 
+                        {/* 이하 코드는 변경 없음 */}
                         {/* Game description */}
                         <div className="mt-4">
                             <p className="mt-2 text-sm">
@@ -331,43 +474,113 @@ const DetailPage: React.FC<DetailPageProps> = () => {
 
                         {/* Tabs */}
                         <div className="mt-8">
-                            <div className="flex space-x-2">
-                                <button
-                                    className={`px-4 py-2 rounded-full text-sm ${
-                                        activeTab === "price-comparison"
-                                            ? "bg-orange-500 text-white"
-                                            : "bg-gray-100 text-gray-600"
-                                    }`}
-                                    onClick={() =>
-                                        handleTabChange("price-comparison")
-                                    }
+                            <div className="relative">
+                                {/* Arrow indicators for scrollable tabs */}
+                                {isScrollable && (
+                                    <>
+                                        <button
+                                            onClick={() => scrollTabs("left")}
+                                            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-6 h-6 flex items-center justify-center bg-white rounded-full shadow-md text-gray-600"
+                                            style={{ marginLeft: "-12px" }}
+                                        >
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                width="16"
+                                                height="16"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="2"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                            >
+                                                <polyline points="15 18 9 12 15 6"></polyline>
+                                            </svg>
+                                        </button>
+                                        <button
+                                            onClick={() => scrollTabs("right")}
+                                            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-6 h-6 flex items-center justify-center bg-white rounded-full shadow-md text-gray-600"
+                                            style={{ marginRight: "-12px" }}
+                                        >
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                width="16"
+                                                height="16"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="2"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                            >
+                                                <polyline points="9 18 15 12 9 6"></polyline>
+                                            </svg>
+                                        </button>
+                                    </>
+                                )}
+
+                                {/* Tabs scroll container */}
+                                <div
+                                    ref={tabsContainerRef}
+                                    className="flex space-x-2 overflow-x-auto hide-scrollbar"
+                                    style={{
+                                        scrollbarWidth: "none",
+                                        msOverflowStyle: "none",
+                                    }}
                                 >
-                                    가격 비교
-                                </button>
-                                <button
-                                    className={`px-4 py-2 rounded-full text-sm ${
-                                        activeTab === "find-party"
-                                            ? "bg-orange-500 text-white"
-                                            : "bg-gray-100 text-gray-600"
-                                    }`}
-                                    onClick={() =>
-                                        handleTabChange("find-party")
-                                    }
-                                >
-                                    파티 찾기
-                                </button>
-                                <button
-                                    className={`px-4 py-2 rounded-full text-sm ${
-                                        activeTab === "related-videos"
-                                            ? "bg-orange-500 text-white"
-                                            : "bg-gray-100 text-gray-600"
-                                    }`}
-                                    onClick={() =>
-                                        handleTabChange("related-videos")
-                                    }
-                                >
-                                    관련 영상
-                                </button>
+                                    <button
+                                        id="tab-price-comparison"
+                                        className={`px-4 py-2 rounded-full text-sm whitespace-nowrap ${
+                                            activeTab === "price-comparison"
+                                                ? "bg-orange-500 text-white"
+                                                : "bg-gray-100 text-gray-600"
+                                        }`}
+                                        onClick={() =>
+                                            handleTabChange("price-comparison")
+                                        }
+                                    >
+                                        가격 비교
+                                    </button>
+                                    <button
+                                        id="tab-find-party"
+                                        className={`px-4 py-2 rounded-full text-sm whitespace-nowrap ${
+                                            activeTab === "find-party"
+                                                ? "bg-orange-500 text-white"
+                                                : "bg-gray-100 text-gray-600"
+                                        }`}
+                                        onClick={() =>
+                                            handleTabChange("find-party")
+                                        }
+                                    >
+                                        관련 댓글
+                                    </button>
+                                    <button
+                                        id="tab-create-party"
+                                        className={`px-4 py-2 rounded-full text-sm whitespace-nowrap ${
+                                            activeTab === "create-party"
+                                                ? "bg-orange-500 text-white"
+                                                : "bg-gray-100 text-gray-600"
+                                        }`}
+                                        onClick={() =>
+                                            handleTabChange("create-party")
+                                        }
+                                    >
+                                        파티 등록
+                                    </button>
+                                    <button
+                                        id="tab-related-videos"
+                                        className={`px-4 py-2 rounded-full text-sm whitespace-nowrap ${
+                                            activeTab === "related-videos"
+                                                ? "bg-orange-500 text-white"
+                                                : "bg-gray-100 text-gray-600"
+                                        }`}
+                                        onClick={() =>
+                                            handleTabChange("related-videos")
+                                        }
+                                    >
+                                        관련 영상
+                                    </button>
+                                </div>
                             </div>
 
                             {/* Tab content */}
@@ -384,17 +597,17 @@ const DetailPage: React.FC<DetailPageProps> = () => {
                                 )}
                                 {activeTab === "find-party" && gameId && (
                                     <div>
-                                        <div>
-                                            <PartyFindTab gameId={gameId} />
-                                        </div>
+                                        <PartyFindTab gameId={gameId} />
                                     </div>
                                 )}
-                                {activeTab === "related-videos" && (
+                                {activeTab === "create-party" && gameId && (
                                     <div>
-                                        <div className="p-4 text-center text-gray-500">
-                                            Coming Soon!
-                                        </div>
-                                        {/* <VideoTab /> */}
+                                        <PartyRegistration gameId={gameId} />
+                                    </div>
+                                )}
+                                {activeTab === "related-videos" && gameId && (
+                                    <div>
+                                        <VideoTab gameId={gameId} />
                                     </div>
                                 )}
                             </div>
