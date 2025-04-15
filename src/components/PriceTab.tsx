@@ -63,6 +63,11 @@ const PriceTab: React.FC<PriceTabProps> = ({ gameId, currentPrice }) => {
         return `₩${price.toLocaleString()}`;
     };
 
+    const formatPriceWithoutText = (price: number) => {
+        if (price === 0) return "";
+        return `₩${price.toLocaleString()}`;
+    };
+
     // 역대 최저가 대비 현재 가격 비율 계산
     const calculatePriceRatio = () => {
         if (historicalLowestPrice === 0) return 100;
@@ -180,7 +185,7 @@ const PriceTab: React.FC<PriceTabProps> = ({ gameId, currentPrice }) => {
                                         {calculatePriceDifference() > 0
                                             ? "+"
                                             : ""}
-                                        {formatPrice(
+                                        {formatPriceWithoutText(
                                             calculatePriceDifference()
                                         )}
                                     </span>
