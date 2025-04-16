@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import Header from "../components/Header";
 import { useNavigate } from "react-router-dom";
 import api from "../api/config";
-import { getUserProfile } from "../services/userService";
 import { safeRequest } from "../sentry/errorHandler";
+import { useUser } from "../contexts/UserContext";
 
 interface Game {
     game_id: number;
@@ -248,20 +248,17 @@ const MainPage: React.FC = () => {
     const [showCategoryBanner, setShowCategoryBanner] = useState<boolean>(true);
     const navigate = useNavigate();
 
+    // UserContext에서 사용자 정보 가져오기
+    const { userProfile, isLoading: userLoading } = useUser();
+
     useEffect(() => {
-        const checkUserPreferences = async () => {
-            const profile = await safeRequest(
-                () => getUserProfile(),
-                "MainPage - getUserProfile"
+        // 사용자 프로필 로딩이 완료되면 카테고리 배너 표시 여부 결정
+        if (!userLoading && userProfile) {
+            setShowCategoryBanner(
+                !userProfile.categorys || userProfile.categorys.length === 0
             );
-            if (profile?.data.categorys && profile.data.categorys.length > 0) {
-                setShowCategoryBanner(false);
-            } else {
-                setShowCategoryBanner(true);
-            }
-        };
-        checkUserPreferences();
-    }, []);
+        }
+    }, [userProfile, userLoading]);
 
     useEffect(() => {
         const fetchMainPageData = async () => {
