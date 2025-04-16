@@ -10,6 +10,7 @@ import {
 } from "../services/gameService";
 import PartyRegistration from "../components/PartyRegistration";
 import { safeRequest } from "../sentry/errorHandler";
+import { useUser } from "../contexts/UserContext";
 
 interface GameDetail {
     title: string;
@@ -56,6 +57,37 @@ const DetailPage: React.FC<DetailPageProps> = () => {
     // Tabs scroll reference
     const tabsContainerRef = useRef<HTMLDivElement>(null);
     const [isScrollable, setIsScrollable] = useState<boolean>(false);
+
+    const { userProfile } = useUser();
+    const userCategories =
+        userProfile?.categorys.map((cat) => cat.category_name) || [];
+
+    // 카테고리 렌더링 함수 수정
+    const renderCategory = (category: string, index: number) => {
+        // 사용자가 선택한 카테고리인지 확인
+        const isUserCategory = userCategories.includes(category);
+
+        return (
+            <button
+                key={index}
+                type="button"
+                className={`
+                    px-4 py-2 rounded-md text-sm whitespace-nowrap
+                    ${
+                        isUserCategory
+                            ? "bg-orange-200 text-orange-700 border border-orange-300 font-medium shadow-sm"
+                            : "bg-gray-100 text-orange-500"
+                    }
+                    ${isUserCategory && "relative overflow-hidden"}
+                `}
+            >
+                {isUserCategory && (
+                    <span className="absolute inset-0 overflow-hidden flex items-center justify-center opacity-10"></span>
+                )}
+                {category}
+            </button>
+        );
+    };
 
     useEffect(() => {
         const fetchGameDetails = async () => {
@@ -454,20 +486,16 @@ const DetailPage: React.FC<DetailPageProps> = () => {
 
                             {/* Categories - shows only relevant categories */}
                             <div className="overflow-x-auto pb-2 -mx-2 px-2 mt-2">
-                                <div className="flex flex-wrap gap-2">
-                                    {(displayCategories.length > 3 &&
-                                    !isCategoryExpanded
-                                        ? collapsedCategories
-                                        : displayCategories
-                                    ).map((category, index) => (
-                                        <button
-                                            key={index}
-                                            type="button"
-                                            className={`bg-gray-100 px-4 py-2 rounded-md text-sm whitespace-nowrap text-orange-500`}
-                                        >
-                                            {category}
-                                        </button>
-                                    ))}
+                                <div className="overflow-x-auto pb-2 -mx-2 px-2 mt-2">
+                                    <div className="flex flex-wrap gap-2">
+                                        {(displayCategories.length > 3 &&
+                                        !isCategoryExpanded
+                                            ? collapsedCategories
+                                            : displayCategories
+                                        ).map((category, index) =>
+                                            renderCategory(category, index)
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>
