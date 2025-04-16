@@ -12,6 +12,7 @@ import TrackingWrapper from "./components/TrackingWrapper";
 import { GA_ID } from "./api/config";
 import ErrorBoundary from "./sentry/ErrorBoundary";
 import { UserProvider } from "./contexts/UserContext";
+import { CategoryProvider } from "./contexts/CategoryContext";
 
 // GA ID가 있을 경우 초기화
 if (GA_ID) {
@@ -24,16 +25,24 @@ const App: React.FC = () => {
             <TrackingWrapper />
             <ErrorBoundary>
                 <UserProvider>
-                    <Routes>
-                        <Route path="/" element={<LoginPage />} />
-                        <Route path="/login" element={<LoginPage />} />
-                        <Route path="/profile" element={<ProfilePage />} />
-                        <Route path="/main" element={<MainPage />} />
-                        <Route path="/search" element={<SearchPage />} />
-                        <Route path="/games/:gameId" element={<DetailPage />} />
-                        <Route path="/info" element={<FeaturesPage />} />
-                        <Route path="/my-server" element={<MyServerPage />} />
-                    </Routes>
+                    <CategoryProvider>
+                        <Routes>
+                            <Route path="/" element={<LoginPage />} />
+                            <Route path="/login" element={<LoginPage />} />
+                            <Route path="/profile" element={<ProfilePage />} />
+                            <Route path="/main" element={<MainPage />} />
+                            <Route path="/search" element={<SearchPage />} />
+                            <Route
+                                path="/games/:gameId"
+                                element={<DetailPage />}
+                            />
+                            <Route path="/info" element={<FeaturesPage />} />
+                            <Route
+                                path="/my-server"
+                                element={<MyServerPage />}
+                            />
+                        </Routes>
+                    </CategoryProvider>
                 </UserProvider>
             </ErrorBoundary>
         </Router>

@@ -7,10 +7,10 @@ import {
     Game,
     convertFiltersToParams,
 } from "../services/searchService";
-import { getAllCategorys } from "../services/categoryService";
 import { getUserProfile } from "../services/userService";
 import ScrollToTopButton from "../components/ScrollToTopButton";
 import { safeRequest } from "../sentry/errorHandler";
+import { useCategories } from "../contexts/CategoryContext";
 
 // 디바운스 함수 추가
 const useDebounce = (value: string, delay: number) => {
@@ -97,6 +97,8 @@ const SearchPage: React.FC = () => {
         };
     };
 
+    const { categories, isLoading: categorysLoading } = useCategories();
+
     const initialState = initializeStateFromStorage();
 
     const [searchQuery, setSearchQuery] = useState<string>(initialState.query);
@@ -113,10 +115,6 @@ const SearchPage: React.FC = () => {
     const [activeFilters, setActiveFilters] = useState<FilterOptions | null>(
         initialState.activeFilters
     );
-    const [categorys, setCategorys] = useState<
-        { category_id: number; category_name: string }[]
-    >([]);
-    const [categorysLoading, setCategorysLoading] = useState<boolean>(true);
 
     // 새로운 상태: 결과가 있는지 여부 추적
     const [hasResults, setHasResults] = useState<boolean>(true);
@@ -164,20 +162,6 @@ const SearchPage: React.FC = () => {
         };
 
         checkUserPreferences();
-    }, []);
-
-    // Fetch categories when component mounts
-    useEffect(() => {
-        const fetchCategorys = async () => {
-            setCategorysLoading(true);
-            const categoryData = await safeRequest(
-                () => getAllCategorys(),
-                "SearchPage - getAllCategorys"
-            );
-            if (categoryData) setCategorys(categoryData);
-            setCategorysLoading(false);
-        };
-        fetchCategorys();
     }, []);
 
     // 현재 활성화된 요청에 대한 AbortController 참조 추가
@@ -751,7 +735,7 @@ const SearchPage: React.FC = () => {
                 onApply={handleApplyFilters}
                 onReset={handleResetFilters}
                 initialFilters={activeFilters || undefined}
-                categories={categorys}
+                categories={categories}
                 categoriesLoading={categorysLoading}
             />
 

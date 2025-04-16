@@ -1,11 +1,6 @@
 import React, { useState, useEffect } from "react";
 import ToastMessage from "./ToastMessage";
-import { getAllCategorys } from "../services/categoryService";
-
-interface Category {
-    category_id: number;
-    category_name: string;
-}
+import { useCategories } from "../contexts/CategoryContext";
 
 interface CategoryModalProps {
     isOpen: boolean;
@@ -20,40 +15,16 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
     onConfirm,
     initialSelectedCategoryIds,
 }) => {
-    const [categories, setCategories] = useState<Category[]>([]);
+    const { categories, isLoading, error } = useCategories();
     const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>(
         initialSelectedCategoryIds
     );
     const [showToast, setShowToast] = useState<boolean>(false);
-    const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [error, setError] = useState<string | null>(null);
 
     // Reset selected categories when modal opens
     useEffect(() => {
         setSelectedCategoryIds(initialSelectedCategoryIds);
     }, [initialSelectedCategoryIds, isOpen]);
-
-    // Fetch categories from API
-    useEffect(() => {
-        const fetchCategories = async () => {
-            if (!isOpen) return;
-
-            setIsLoading(true);
-            setError(null);
-
-            try {
-                const categoriesData = await getAllCategorys();
-                setCategories(categoriesData);
-            } catch (err) {
-                console.error("Failed to load categories:", err);
-                setError("카테고리를 불러오는데 실패했습니다.");
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchCategories();
-    }, [isOpen]);
 
     const toggleCategory = (categoryId: number) => {
         if (selectedCategoryIds.includes(categoryId)) {
@@ -111,7 +82,9 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
                     </div>
                 ) : error ? (
                     <div className="flex justify-center items-center h-40">
-                        <p className="text-red-500">{error}</p>
+                        <p className="text-red-500">
+                            카테고리를 불러오는데 실패했습니다.
+                        </p>
                     </div>
                 ) : (
                     <div className="flex flex-wrap gap-2 mb-6">
