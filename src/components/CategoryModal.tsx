@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import ToastMessage from "./ToastMessage";
-import { useCategories } from "../contexts/CategoryContext";
+import { useCategoryStore } from "../store/categoryStore";
 
 interface CategoryModalProps {
     isOpen: boolean;
@@ -15,7 +15,8 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
     onConfirm,
     initialSelectedCategoryIds,
 }) => {
-    const { categories, isLoading, error } = useCategories();
+    // Replace useCategories with useCategoryStore
+    const { categories, isLoading, error } = useCategoryStore();
     const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>(
         initialSelectedCategoryIds
     );

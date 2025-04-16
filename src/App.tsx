@@ -13,6 +13,7 @@ import { GA_ID } from "./api/config";
 import ErrorBoundary from "./sentry/ErrorBoundary";
 import { CategoryProvider } from "./contexts/CategoryContext";
 import { useUserStore } from "./store/userStore";
+import { useCategoryStore } from "./store/categoryStore";
 
 // GA ID가 있을 경우 초기화
 if (GA_ID) {
@@ -21,11 +22,15 @@ if (GA_ID) {
 
 const App: React.FC = () => {
     const fetchUserProfile = useUserStore((state) => state.fetchUserProfile);
+    const refreshCategories = useCategoryStore(
+        (state) => state.refreshCategories
+    );
 
     // 컴포넌트 마운트 시 프로필 정보 가져오기
     useEffect(() => {
         fetchUserProfile();
-    }, [fetchUserProfile]);
+        refreshCategories();
+    }, [fetchUserProfile, refreshCategories]);
     return (
         <Router>
             <TrackingWrapper />

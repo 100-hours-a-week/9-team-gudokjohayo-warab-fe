@@ -10,7 +10,7 @@ import {
 import { getUserProfile } from "../services/userService";
 import ScrollToTopButton from "../components/ScrollToTopButton";
 import { safeRequest } from "../sentry/errorHandler";
-import { useCategories } from "../contexts/CategoryContext";
+import { useCategoryStore } from "../store/categoryStore";
 
 // 디바운스 함수 추가
 const useDebounce = (value: string, delay: number) => {
@@ -97,7 +97,7 @@ const SearchPage: React.FC = () => {
         };
     };
 
-    const { categories, isLoading: categorysLoading } = useCategories();
+    const { categories, isLoading: categorysLoading } = useCategoryStore();
 
     const initialState = initializeStateFromStorage();
 
