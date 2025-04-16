@@ -10,7 +10,8 @@ import {
 } from "../services/gameService";
 import PartyRegistration from "../components/PartyRegistration";
 import { safeRequest } from "../sentry/errorHandler";
-import { useUser } from "../contexts/UserContext";
+import { useAppSelector, useAppDispatch } from "../redux/hooks";
+import { fetchUserProfile } from "../redux/userSlice";
 
 interface GameDetail {
     title: string;
@@ -58,7 +59,14 @@ const DetailPage: React.FC<DetailPageProps> = () => {
     const tabsContainerRef = useRef<HTMLDivElement>(null);
     const [isScrollable, setIsScrollable] = useState<boolean>(false);
 
-    const { userProfile } = useUser();
+    // UserContext에서 사용자 정보 가져오기
+    const dispatch = useAppDispatch();
+    const userProfile = useAppSelector((state) => state.user.userProfile);
+
+    useEffect(() => {
+        dispatch(fetchUserProfile());
+    }, [dispatch]);
+
     const userCategories =
         userProfile?.categorys.map((cat) => cat.category_name) || [];
 

@@ -13,7 +13,8 @@ import {
 } from "../services/userService";
 import { debounce } from "lodash";
 import { safeRequest, captureError } from "../sentry/errorHandler";
-import { useUser } from "../contexts/UserContext";
+import { useAppSelector, useAppDispatch } from "../redux/hooks";
+import { fetchUserProfile, updateCategories } from "../redux/userSlice";
 
 interface Category {
     category_id: number;
@@ -58,11 +59,13 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
     const [showLogoutConfirmation, setShowLogoutConfirmation] =
         useState<boolean>(false);
 
-    const {
-        userProfile,
-        isLoading: userProfileLoading,
-        updateCategories,
-    } = useUser();
+    const dispatch = useAppDispatch();
+    const userProfile = useAppSelector((state) => state.user.userProfile);
+    const userProfileLoading = useAppSelector((state) => state.user.isLoading);
+
+    useEffect(() => {
+        dispatch(fetchUserProfile());
+    }, [dispatch]);
 
     // 인증 상태 확인
     useEffect(() => {
@@ -336,7 +339,7 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
             if (userProfile) {
                 const updatedCategories =
                     await getCategoriesByIds(selectedCategoryIds);
-                updateCategories(updatedCategories);
+                dispatch(updateCategories(updatedCategories));
             }
 
             // 저장이 성공했을 때만 토스트 메시지 표시

@@ -3,6 +3,8 @@ import ReactDOM from "react-dom/client";
 import "./index.css";
 import App from "./App";
 import { initSentry } from "./sentry/sentry";
+import { Provider } from "react-redux";
+import { store } from "./redux/store";
 
 initSentry();
 
@@ -11,6 +13,8 @@ const root = ReactDOM.createRoot(
 );
 root.render(
     <React.StrictMode>
-        <App />
+        <Provider store={store}>
+            <App />
+        </Provider>
     </React.StrictMode>
 );

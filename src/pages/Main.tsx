@@ -3,7 +3,8 @@ import Header from "../components/Header";
 import { useNavigate } from "react-router-dom";
 import api from "../api/config";
 import { safeRequest } from "../sentry/errorHandler";
-import { useUser } from "../contexts/UserContext";
+import { useAppSelector, useAppDispatch } from "../redux/hooks";
+import { fetchUserProfile } from "../redux/userSlice";
 
 interface Game {
     game_id: number;
@@ -249,7 +250,13 @@ const MainPage: React.FC = () => {
     const navigate = useNavigate();
 
     // UserContext에서 사용자 정보 가져오기
-    const { userProfile, isLoading: userLoading } = useUser();
+    const dispatch = useAppDispatch();
+    const userProfile = useAppSelector((state) => state.user.userProfile);
+    const userLoading = useAppSelector((state) => state.user.isLoading);
+
+    useEffect(() => {
+        dispatch(fetchUserProfile());
+    }, [dispatch]);
 
     useEffect(() => {
         // 사용자 프로필 로딩이 완료되면 카테고리 배너 표시 여부 결정

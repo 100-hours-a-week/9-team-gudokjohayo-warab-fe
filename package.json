@@ -57,6 +57,7 @@
     "dependencies": {
         "@commitlint/cli": "^19.8.0",
         "@commitlint/config-conventional": "^19.8.0",
+        "@reduxjs/toolkit": "^2.6.1",
         "@sentry/react": "^9.12.0",
         "@sentry/replay": "^7.116.0",
         "@sentry/tracing": "^7.120.3",
@@ -74,8 +75,10 @@
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
         "react-ga4": "^2.1.0",
+        "react-redux": "^9.2.0",
         "react-router-dom": "^7.3.0",
         "react-scripts": "^5.0.1",
+        "redux": "^5.0.1",
         "web-vitals": "^2.1.4"
     }
 }

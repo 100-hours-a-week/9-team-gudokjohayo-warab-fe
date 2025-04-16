@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import ToastMessage from "./ToastMessage";
-import { useCategories } from "../contexts/CategoryContext";
+import { useAppSelector, useAppDispatch } from "../redux/hooks";
+import { fetchCategories } from "../redux/categorySlice";
 
 interface CategoryModalProps {
     isOpen: boolean;
@@ -15,11 +16,23 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
     onConfirm,
     initialSelectedCategoryIds,
 }) => {
-    const { categories, isLoading, error } = useCategories();
+    // Use Redux instead of Context API
+    const { categories, isLoading, error } = useAppSelector(
+        (state) => state.category
+    );
+    const dispatch = useAppDispatch();
+
     const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>(
         initialSelectedCategoryIds
     );
     const [showToast, setShowToast] = useState<boolean>(false);
+
+    // Load categories when component mounts if they're not already loaded
+    useEffect(() => {
+        if (categories.length === 0 && !isLoading) {
+            dispatch(fetchCategories());
+        }
+    }, [categories.length, isLoading, dispatch]);
 
     // Reset selected categories when modal opens
     useEffect(() => {

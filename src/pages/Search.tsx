@@ -10,7 +10,8 @@ import {
 import { getUserProfile } from "../services/userService";
 import ScrollToTopButton from "../components/ScrollToTopButton";
 import { safeRequest } from "../sentry/errorHandler";
-import { useCategories } from "../contexts/CategoryContext";
+import { useAppSelector, useAppDispatch } from "../redux/hooks";
+import { fetchCategories } from "../redux/categorySlice";
 
 // 디바운스 함수 추가
 const useDebounce = (value: string, delay: number) => {
@@ -97,7 +98,16 @@ const SearchPage: React.FC = () => {
         };
     };
 
-    const { categories, isLoading: categorysLoading } = useCategories();
+    const { categories, isLoading: categorysLoading } = useAppSelector(
+        (state) => state.category
+    );
+    const dispatch = useAppDispatch();
+
+    useEffect(() => {
+        if (categories.length === 0 && !categorysLoading) {
+            dispatch(fetchCategories());
+        }
+    }, [categories.length, categorysLoading, dispatch]);
 
     const initialState = initializeStateFromStorage();
 
