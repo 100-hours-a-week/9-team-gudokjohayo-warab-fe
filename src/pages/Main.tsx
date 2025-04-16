@@ -3,7 +3,7 @@ import Header from "../components/Header";
 import { useNavigate } from "react-router-dom";
 import api from "../api/config";
 import { safeRequest } from "../sentry/errorHandler";
-import { useUser } from "../contexts/UserContext";
+import { useUserStore } from "../store/userStore";
 
 interface Game {
     game_id: number;
@@ -249,7 +249,7 @@ const MainPage: React.FC = () => {
     const navigate = useNavigate();
 
     // UserContext에서 사용자 정보 가져오기
-    const { userProfile, isLoading: userLoading } = useUser();
+    const { userProfile, isLoading: userLoading } = useUserStore();
 
     useEffect(() => {
         // 사용자 프로필 로딩이 완료되면 카테고리 배너 표시 여부 결정
@@ -280,12 +280,10 @@ const MainPage: React.FC = () => {
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         if (searchQuery.trim()) {
-            // Add from=main parameter to let Search page know we're coming from Main
             navigate(
                 `/search?query=${encodeURIComponent(searchQuery)}&from=main`
             );
         } else {
-            // Same for empty search
             navigate("/search?from=main");
         }
     };

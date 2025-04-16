@@ -10,7 +10,7 @@ import {
 } from "../services/gameService";
 import PartyRegistration from "../components/PartyRegistration";
 import { safeRequest } from "../sentry/errorHandler";
-import { useUser } from "../contexts/UserContext";
+import { useUserStore } from "../store/userStore";
 
 interface GameDetail {
     title: string;
@@ -58,7 +58,7 @@ const DetailPage: React.FC<DetailPageProps> = () => {
     const tabsContainerRef = useRef<HTMLDivElement>(null);
     const [isScrollable, setIsScrollable] = useState<boolean>(false);
 
-    const { userProfile } = useUser();
+    const { userProfile } = useUserStore();
     const userCategories =
         userProfile?.categorys.map((cat) => cat.category_name) || [];
 

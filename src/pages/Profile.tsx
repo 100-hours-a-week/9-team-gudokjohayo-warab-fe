@@ -7,13 +7,12 @@ import { useNavigate } from "react-router-dom";
 import { getCategoriesByIds } from "../services/categoryService";
 import {
     checkNicknameDuplication,
-    updateUserProfile,
     userLogOut,
     checkAuthentication,
 } from "../services/userService";
 import { debounce } from "lodash";
 import { safeRequest, captureError } from "../sentry/errorHandler";
-import { useUser } from "../contexts/UserContext";
+import { useUserStore } from "../store/userStore";
 
 interface Category {
     category_id: number;
@@ -61,8 +60,8 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
     const {
         userProfile,
         isLoading: userProfileLoading,
-        updateCategories,
-    } = useUser();
+        updateUserProfileData,
+    } = useUserStore();
 
     // 인증 상태 확인
     useEffect(() => {
@@ -324,20 +323,14 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
         setIsNicknameValid(true);
 
         // 실제 저장 로직 실행
-        // 실제 저장 로직 실행
         setIsSaving(true);
         try {
-            await updateUserProfile(nickname, "", selectedCategoryIds);
+            // userStore의 updateUserProfileData 메서드를 사용
+            await updateUserProfileData(nickname, selectedCategoryIds);
+
             setOriginalNickname(nickname);
             setOriginalCategoryIds([...selectedCategoryIds]);
             setHasChanges(false);
-
-            // Context API에서 관리하는 카테고리 정보도 업데이트
-            if (userProfile) {
-                const updatedCategories =
-                    await getCategoriesByIds(selectedCategoryIds);
-                updateCategories(updatedCategories);
-            }
 
             // 저장이 성공했을 때만 토스트 메시지 표시
             setShowToast(true);
