@@ -1,4 +1,4 @@
-import React, { useEffect, Profiler, ProfilerOnRenderCallback } from "react";
+import React, { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import ProfilePage from "../src/pages/Profile";
 import MainPage from "./pages/Main";
@@ -11,7 +11,6 @@ import ReactGA from "react-ga4";
 import TrackingWrapper from "./components/TrackingWrapper";
 import { GA_ID } from "./api/config";
 import ErrorBoundary from "./sentry/ErrorBoundary";
-import { CategoryProvider } from "./contexts/CategoryContext";
 import { useUserStore } from "./store/userStore";
 import { useCategoryStore } from "./store/categoryStore";
 
@@ -21,27 +20,6 @@ if (GA_ID) {
 }
 
 const App: React.FC = () => {
-    const onRenderCallback: ProfilerOnRenderCallback = (
-        id: string,
-        phase: "mount" | "update" | "nested-update",
-        actualDuration: number,
-        baseDuration: number,
-        startTime: number,
-        commitTime: number
-    ) => {
-        // 가독성 있게 콘솔 로그 정리
-        console.log(`
-      Profiler Info for Component: ${id}
-      ---------------------------------------------------
-      Phase: ${phase}
-      Actual Rendering Time: ${actualDuration.toFixed(4)} ms
-      Base Rendering Time: ${baseDuration.toFixed(4)} ms
-      Start Time: ${startTime.toFixed(4)} ms
-      Commit Time: ${commitTime.toFixed(4)} ms
-      ---------------------------------------------------
-    `);
-    };
-
     const fetchUserProfile = useUserStore((state) => state.fetchUserProfile);
     const refreshCategories = useCategoryStore(
         (state) => state.refreshCategories
@@ -57,26 +35,16 @@ const App: React.FC = () => {
         <Router>
             <TrackingWrapper />
             <ErrorBoundary>
-                <CategoryProvider>
-                    <Profiler id="App" onRender={onRenderCallback}>
-                        <Routes>
-                            <Route path="/" element={<LoginPage />} />
-                            <Route path="/login" element={<LoginPage />} />
-                            <Route path="/profile" element={<ProfilePage />} />
-                            <Route path="/main" element={<MainPage />} />
-                            <Route path="/search" element={<SearchPage />} />
-                            <Route
-                                path="/games/:gameId"
-                                element={<DetailPage />}
-                            />
-                            <Route path="/info" element={<FeaturesPage />} />
-                            <Route
-                                path="/my-server"
-                                element={<MyServerPage />}
-                            />
-                        </Routes>
-                    </Profiler>
-                </CategoryProvider>
+                <Routes>
+                    <Route path="/" element={<LoginPage />} />
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/profile" element={<ProfilePage />} />
+                    <Route path="/main" element={<MainPage />} />
+                    <Route path="/search" element={<SearchPage />} />
+                    <Route path="/games/:gameId" element={<DetailPage />} />
+                    <Route path="/info" element={<FeaturesPage />} />
+                    <Route path="/my-server" element={<MyServerPage />} />
+                </Routes>
             </ErrorBoundary>
         </Router>
     );

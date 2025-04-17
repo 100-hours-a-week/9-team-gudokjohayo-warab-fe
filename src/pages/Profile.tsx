@@ -1,4 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, {
+    useState,
+    useEffect,
+    Profiler,
+    ProfilerOnRenderCallback,
+} from "react";
 import Header from "../components/Header";
 import ToastMessage from "../components/ToastMessage";
 import CategoryModal from "../components/CategoryModal";
@@ -62,6 +67,27 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
         isLoading: userProfileLoading,
         updateUserProfileData,
     } = useUserStore();
+
+    const onRenderCallback: ProfilerOnRenderCallback = (
+        id: string,
+        phase: "mount" | "update" | "nested-update",
+        actualDuration: number,
+        baseDuration: number,
+        startTime: number,
+        commitTime: number
+    ) => {
+        // 가독성 있게 콘솔 로그 정리
+        console.log(`
+      Profiler Info for Component: ${id}
+      ---------------------------------------------------
+      Phase: ${phase}
+      Actual Rendering Time: ${actualDuration.toFixed(4)} ms
+      Base Rendering Time: ${baseDuration.toFixed(4)} ms
+      Start Time: ${startTime.toFixed(4)} ms
+      Commit Time: ${commitTime.toFixed(4)} ms
+      ---------------------------------------------------
+    `);
+    };
 
     // 인증 상태 확인
     useEffect(() => {
@@ -430,244 +456,248 @@ const ProfilePage: React.FC<ProfilePageProps> = () => {
     };
 
     return (
-        <div className="flex justify-center items-center min-h-screen bg-white">
-            <div
-                className="relative bg-white"
-                style={{
-                    width: "402px",
-                    height: "auto",
-                    maxWidth: "100vw",
-                    minHeight: "100vh",
-                }}
-            >
-                {/* Fixed Header */}
-                <div className="sticky top-0 z-10 w-full">
-                    <Header />
-                </div>
+        <Profiler id="Profile" onRender={onRenderCallback}>
+            <div className="flex justify-center items-center min-h-screen bg-white">
+                <div
+                    className="relative bg-white"
+                    style={{
+                        width: "402px",
+                        height: "auto",
+                        maxWidth: "100vw",
+                        minHeight: "100vh",
+                    }}
+                >
+                    {/* Fixed Header */}
+                    <div className="sticky top-0 z-10 w-full">
+                        <Header />
+                    </div>
 
-                {/* Scrollable Content */}
-                <div className="flex-1 overflow-auto">
-                    {authLoading ? (
-                        <div className="flex justify-center items-center h-64">
-                            <p>인증 상태를 확인하는 중...</p>
-                        </div>
-                    ) : !isAuthenticated ? (
-                        <UnauthenticatedView />
-                    ) : isCategoryLoading ? (
-                        <div className="flex justify-center items-center h-64">
-                            <p>프로필 정보를 불러오는 중...</p>
-                        </div>
-                    ) : (
-                        <div className="p-6 flex flex-col h-full">
-                            <div className="space-y-6">
-                                {/* 프로필 제목 */}
-                                <h2 className="text-xl font-semibold text-center mb-4">
-                                    내 프로필
-                                </h2>
+                    {/* Scrollable Content */}
+                    <div className="flex-1 overflow-auto">
+                        {authLoading ? (
+                            <div className="flex justify-center items-center h-64">
+                                <p>인증 상태를 확인하는 중...</p>
+                            </div>
+                        ) : !isAuthenticated ? (
+                            <UnauthenticatedView />
+                        ) : isCategoryLoading ? (
+                            <div className="flex justify-center items-center h-64">
+                                <p>프로필 정보를 불러오는 중...</p>
+                            </div>
+                        ) : (
+                            <div className="p-6 flex flex-col h-full">
+                                <div className="space-y-6">
+                                    {/* 프로필 제목 */}
+                                    <h2 className="text-xl font-semibold text-center mb-4">
+                                        내 프로필
+                                    </h2>
 
-                                {/* 닉네임 섹션 */}
-                                <div className="space-y-2">
-                                    <label
-                                        className="block text-sm font-medium"
-                                        htmlFor="nickname"
-                                    >
-                                        닉네임
-                                    </label>
-                                    <input
-                                        id="nickname"
-                                        type="text"
-                                        value={nickname}
-                                        onChange={handleNicknameChange}
-                                        onKeyDown={handleNicknameKeyDown}
-                                        maxLength={12}
-                                        className={`w-full px-3 py-2 border ${
-                                            isNicknameValid
-                                                ? "border-gray-300"
-                                                : "border-red-500"
-                                        } rounded-md`}
-                                    />
-                                    {nicknameHelperText && (
-                                        <p
-                                            className={`text-xs ${isNicknameValid ? "text-green-500" : "text-red-500"}`}
+                                    {/* 닉네임 섹션 */}
+                                    <div className="space-y-2">
+                                        <label
+                                            className="block text-sm font-medium"
+                                            htmlFor="nickname"
                                         >
-                                            {nicknameHelperText}
-                                        </p>
-                                    )}
-                                </div>
-
-                                {/* 선호 카테고리 섹션 */}
-                                <div className="space-y-2">
-                                    <div className="flex items-center justify-between">
-                                        <label className="block text-sm font-medium">
-                                            선호 카테고리
+                                            닉네임
                                         </label>
-                                        <button
-                                            type="button"
-                                            className="bg-orange-500 text-white rounded-full py-2 px-4 text-sm"
-                                            onClick={handleOpenModal}
-                                        >
-                                            선택 하기
-                                        </button>
+                                        <input
+                                            id="nickname"
+                                            type="text"
+                                            value={nickname}
+                                            onChange={handleNicknameChange}
+                                            onKeyDown={handleNicknameKeyDown}
+                                            maxLength={12}
+                                            className={`w-full px-3 py-2 border ${
+                                                isNicknameValid
+                                                    ? "border-gray-300"
+                                                    : "border-red-500"
+                                            } rounded-md`}
+                                        />
+                                        {nicknameHelperText && (
+                                            <p
+                                                className={`text-xs ${isNicknameValid ? "text-green-500" : "text-red-500"}`}
+                                            >
+                                                {nicknameHelperText}
+                                            </p>
+                                        )}
                                     </div>
 
-                                    {categoryDisplayNames.length === 0 && (
-                                        <p className="text-xs text-red-500">
-                                            *선호 카테고리를 등록하지 않으면
-                                            게임 추천 기능이 제한됩니다.
-                                        </p>
-                                    )}
+                                    {/* 선호 카테고리 섹션 */}
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <label className="block text-sm font-medium">
+                                                선호 카테고리
+                                            </label>
+                                            <button
+                                                type="button"
+                                                className="bg-orange-500 text-white rounded-full py-2 px-4 text-sm"
+                                                onClick={handleOpenModal}
+                                            >
+                                                선택 하기
+                                            </button>
+                                        </div>
 
-                                    {isCategoryLoading ? (
-                                        <p className="text-sm text-gray-500">
-                                            카테고리 정보를 불러오는 중...
-                                        </p>
-                                    ) : (
-                                        categoryDisplayNames.length > 0 && (
-                                            <div className="overflow-x-auto pb-2 -mx-2 px-2">
-                                                <div className="flex space-x-2 mt-4 min-w-max">
-                                                    {categoryDisplayNames.map(
-                                                        (
-                                                            categoryName,
-                                                            index
-                                                        ) => (
-                                                            <button
-                                                                key={index}
-                                                                type="button"
-                                                                className="bg-orange-500 text-white px-4 py-2 rounded-md text-sm whitespace-nowrap"
-                                                            >
-                                                                {categoryName}
-                                                            </button>
-                                                        )
-                                                    )}
+                                        {categoryDisplayNames.length === 0 && (
+                                            <p className="text-xs text-red-500">
+                                                *선호 카테고리를 등록하지 않으면
+                                                게임 추천 기능이 제한됩니다.
+                                            </p>
+                                        )}
+
+                                        {isCategoryLoading ? (
+                                            <p className="text-sm text-gray-500">
+                                                카테고리 정보를 불러오는 중...
+                                            </p>
+                                        ) : (
+                                            categoryDisplayNames.length > 0 && (
+                                                <div className="overflow-x-auto pb-2 -mx-2 px-2">
+                                                    <div className="flex space-x-2 mt-4 min-w-max">
+                                                        {categoryDisplayNames.map(
+                                                            (
+                                                                categoryName,
+                                                                index
+                                                            ) => (
+                                                                <button
+                                                                    key={index}
+                                                                    type="button"
+                                                                    className="bg-orange-500 text-white px-4 py-2 rounded-md text-sm whitespace-nowrap"
+                                                                >
+                                                                    {
+                                                                        categoryName
+                                                                    }
+                                                                </button>
+                                                            )
+                                                        )}
+                                                    </div>
                                                 </div>
+                                            )
+                                        )}
+                                    </div>
+
+                                    {/* 새로운 섹션: 내 활동 */}
+                                    <div className="space-y-4 mt-8">
+                                        <h3 className="text-lg font-medium">
+                                            내 활동
+                                        </h3>
+
+                                        {/* 내 링크 메뉴 */}
+                                        <div
+                                            className="flex items-center justify-between border-b border-gray-200 py-4 cursor-pointer"
+                                            onClick={handleNavigateToMyServers}
+                                        >
+                                            <div className="flex items-center">
+                                                <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    className="h-6 w-6 text-orange-500 mr-3"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    stroke="currentColor"
+                                                >
+                                                    <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        strokeWidth={2}
+                                                        d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                                                    />
+                                                </svg>
+                                                <span className="text-sm font-medium">
+                                                    내 서버
+                                                </span>
                                             </div>
-                                        )
-                                    )}
-                                </div>
-
-                                {/* 새로운 섹션: 내 활동 */}
-                                <div className="space-y-4 mt-8">
-                                    <h3 className="text-lg font-medium">
-                                        내 활동
-                                    </h3>
-
-                                    {/* 내 링크 메뉴 */}
-                                    <div
-                                        className="flex items-center justify-between border-b border-gray-200 py-4 cursor-pointer"
-                                        onClick={handleNavigateToMyServers}
-                                    >
-                                        <div className="flex items-center">
                                             <svg
                                                 xmlns="http://www.w3.org/2000/svg"
-                                                className="h-6 w-6 text-orange-500 mr-3"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                stroke="currentColor"
+                                                className="h-5 w-5 text-gray-400"
+                                                viewBox="0 0 20 20"
+                                                fill="currentColor"
                                             >
                                                 <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    strokeWidth={2}
-                                                    d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                                                    fillRule="evenodd"
+                                                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                                                    clipRule="evenodd"
                                                 />
                                             </svg>
-                                            <span className="text-sm font-medium">
-                                                내 서버
-                                            </span>
                                         </div>
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            className="h-5 w-5 text-gray-400"
-                                            viewBox="0 0 20 20"
-                                            fill="currentColor"
+                                    </div>
+                                </div>
+
+                                <div className="fixed bottom-10 left-1/2 transform -translate-x-1/2 mt-auto flex flex-col">
+                                    {/* Logout text with click handler */}
+                                    <p
+                                        className="text-center mb-8 font-medium cursor-pointer"
+                                        onClick={handleLogoutClick}
+                                    >
+                                        로그아웃
+                                    </p>
+
+                                    {/* Fixed height container for toast to prevent layout shifts */}
+                                    <div className="mb-4">
+                                        {showToast && (
+                                            <ToastMessage message="수정 완료" />
+                                        )}
+                                    </div>
+
+                                    <div className="flex justify-center space-x-14">
+                                        <button
+                                            className="px-4 py-2 rounded-full bg-white border border-gray-300 text-sm"
+                                            onClick={handleCancelClick}
                                         >
-                                            <path
-                                                fillRule="evenodd"
-                                                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                                                clipRule="evenodd"
-                                            />
-                                        </svg>
+                                            취소
+                                        </button>
+                                        <button
+                                            className={`px-4 py-2 rounded-full bg-orange-500 text-white text-sm ${
+                                                isSaving ||
+                                                !isNicknameValid ||
+                                                !hasChanges
+                                                    ? "opacity-50 cursor-not-allowed"
+                                                    : ""
+                                            }`}
+                                            onClick={handleSave}
+                                            disabled={
+                                                isSaving ||
+                                                !isNicknameValid ||
+                                                !hasChanges
+                                            }
+                                        >
+                                            {isSaving ? "저장 중..." : "완료"}
+                                        </button>
                                     </div>
                                 </div>
                             </div>
-
-                            <div className="fixed bottom-10 left-1/2 transform -translate-x-1/2 mt-auto flex flex-col">
-                                {/* Logout text with click handler */}
-                                <p
-                                    className="text-center mb-8 font-medium cursor-pointer"
-                                    onClick={handleLogoutClick}
-                                >
-                                    로그아웃
-                                </p>
-
-                                {/* Fixed height container for toast to prevent layout shifts */}
-                                <div className="mb-4">
-                                    {showToast && (
-                                        <ToastMessage message="수정 완료" />
-                                    )}
-                                </div>
-
-                                <div className="flex justify-center space-x-14">
-                                    <button
-                                        className="px-4 py-2 rounded-full bg-white border border-gray-300 text-sm"
-                                        onClick={handleCancelClick}
-                                    >
-                                        취소
-                                    </button>
-                                    <button
-                                        className={`px-4 py-2 rounded-full bg-orange-500 text-white text-sm ${
-                                            isSaving ||
-                                            !isNicknameValid ||
-                                            !hasChanges
-                                                ? "opacity-50 cursor-not-allowed"
-                                                : ""
-                                        }`}
-                                        onClick={handleSave}
-                                        disabled={
-                                            isSaving ||
-                                            !isNicknameValid ||
-                                            !hasChanges
-                                        }
-                                    >
-                                        {isSaving ? "저장 중..." : "완료"}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
+
+                {/* Category Modal */}
+                <CategoryModal
+                    isOpen={isModalOpen}
+                    onClose={handleCloseModal}
+                    onConfirm={handleConfirmCategories}
+                    initialSelectedCategoryIds={selectedCategoryIds}
+                />
+
+                {/* Cancel Confirmation Modal */}
+                <ConfirmationModal
+                    isOpen={showCancelConfirmation}
+                    title="프로필 수정을 취소하시겠습니까?"
+                    message="모든 변경사항이 폐기됩니다."
+                    confirmButtonText="확인"
+                    cancelButtonText="취소"
+                    onConfirm={handleCancelConfirm}
+                    onCancel={handleCancelDismiss}
+                />
+
+                {/* Logout Confirmation Modal */}
+                <ConfirmationModal
+                    isOpen={showLogoutConfirmation}
+                    title="로그아웃 하시겠습니까?"
+                    message="로그인 페이지로 이동합니다."
+                    confirmButtonText="확인"
+                    cancelButtonText="취소"
+                    onConfirm={handleLogoutConfirm}
+                    onCancel={handleLogoutDismiss}
+                />
             </div>
-
-            {/* Category Modal */}
-            <CategoryModal
-                isOpen={isModalOpen}
-                onClose={handleCloseModal}
-                onConfirm={handleConfirmCategories}
-                initialSelectedCategoryIds={selectedCategoryIds}
-            />
-
-            {/* Cancel Confirmation Modal */}
-            <ConfirmationModal
-                isOpen={showCancelConfirmation}
-                title="프로필 수정을 취소하시겠습니까?"
-                message="모든 변경사항이 폐기됩니다."
-                confirmButtonText="확인"
-                cancelButtonText="취소"
-                onConfirm={handleCancelConfirm}
-                onCancel={handleCancelDismiss}
-            />
-
-            {/* Logout Confirmation Modal */}
-            <ConfirmationModal
-                isOpen={showLogoutConfirmation}
-                title="로그아웃 하시겠습니까?"
-                message="로그인 페이지로 이동합니다."
-                confirmButtonText="확인"
-                cancelButtonText="취소"
-                onConfirm={handleLogoutConfirm}
-                onCancel={handleLogoutDismiss}
-            />
-        </div>
+        </Profiler>
     );
 };
 

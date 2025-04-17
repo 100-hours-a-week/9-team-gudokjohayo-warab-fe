@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, {
+    useState,
+    useEffect,
+    useRef,
+    Profiler,
+    ProfilerOnRenderCallback,
+} from "react";
 import Header from "../components/Header";
 import { useNavigate } from "react-router-dom";
 import api from "../api/config";
@@ -50,6 +56,27 @@ const GameSlider: React.FC<GameSliderProps> = ({
 
     const maxIndex = Math.max(0, games.length - itemsPerView);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+    const onRenderCallback: ProfilerOnRenderCallback = (
+        id: string,
+        phase: "mount" | "update" | "nested-update",
+        actualDuration: number,
+        baseDuration: number,
+        startTime: number,
+        commitTime: number
+    ) => {
+        // 가독성 있게 콘솔 로그 정리
+        console.log(`
+      Profiler Info for Component: ${id}
+      ---------------------------------------------------
+      Phase: ${phase}
+      Actual Rendering Time: ${actualDuration.toFixed(4)} ms
+      Base Rendering Time: ${baseDuration.toFixed(4)} ms
+      Start Time: ${startTime.toFixed(4)} ms
+      Commit Time: ${commitTime.toFixed(4)} ms
+      ---------------------------------------------------
+    `);
+    };
 
     useEffect(() => {
         if (autoSlideInterval > 0) {
@@ -118,124 +145,128 @@ const GameSlider: React.FC<GameSliderProps> = ({
     };
 
     return (
-        <div
-            className="relative"
-            onMouseEnter={() => setShowControls(true)}
-            onMouseLeave={() => setShowControls(false)}
-            ref={sliderRef}
-        >
-            {(title || subtitle) && (
-                <div className="mb-2">
-                    {title && <h2 className="text-lg font-medium">{title}</h2>}
-                    {subtitle && (
-                        <p className="text-sm text-gray-500">{subtitle}</p>
+        <Profiler id="Main" onRender={onRenderCallback}>
+            <div
+                className="relative"
+                onMouseEnter={() => setShowControls(true)}
+                onMouseLeave={() => setShowControls(false)}
+                ref={sliderRef}
+            >
+                {(title || subtitle) && (
+                    <div className="mb-2">
+                        {title && (
+                            <h2 className="text-lg font-medium">{title}</h2>
+                        )}
+                        {subtitle && (
+                            <p className="text-sm text-gray-500">{subtitle}</p>
+                        )}
+                    </div>
+                )}
+                <div
+                    className="relative overflow-hidden"
+                    onTouchStart={handleTouchStart}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={handleTouchEnd}
+                >
+                    <div
+                        className="flex transition-transform duration-300 ease-in-out"
+                        style={{
+                            transform: `translateX(-${currentIndex * (100 / games.length)}%)`,
+                            width: `${(games.length / itemsPerView) * 100}%`,
+                        }}
+                    >
+                        {games.map((game) => (
+                            <div
+                                key={game.game_id}
+                                className="flex-shrink-0 cursor-pointer"
+                                style={{ width: `${100 / games.length}%` }}
+                                onClick={() => onGameClick(game.game_id)}
+                            >
+                                <div className="aspect-w-16 aspect-h-9 bg-gray-200 rounded-md overflow-hidden mx-1 relative">
+                                    <img
+                                        src={game.thumbnail}
+                                        alt={`${game.title} thumbnail`}
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                            (e.target as HTMLImageElement).src =
+                                                "/default-game-image.jpg";
+                                        }}
+                                    />
+                                    {calculateDiscountRate(game) > 0 && (
+                                        <div className="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold p-1 m-1 rounded">
+                                            {calculateDiscountRate(game)}% OFF
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="mt-1 px-1 truncate text-sm font-medium">
+                                    {game.title}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Navigation arrows - 항상 표시 */}
+                    {showControls && (
+                        <>
+                            <button
+                                onClick={handlePrev}
+                                className="absolute left-0 top-[calc(50%-1rem)] transform -translate-y-1/2"
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-8 w-8 text-white drop-shadow-lg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M15 19l-7-7 7-7"
+                                    />
+                                </svg>
+                            </button>
+
+                            <button
+                                onClick={handleNext}
+                                className="absolute right-0 top-[calc(50%-1rem)] transform -translate-y-1/2"
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-8 w-8 text-white drop-shadow-lg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M9 5l7 7-7 7"
+                                    />
+                                </svg>
+                            </button>
+                        </>
                     )}
                 </div>
-            )}
-            <div
-                className="relative overflow-hidden"
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
-            >
-                <div
-                    className="flex transition-transform duration-300 ease-in-out"
-                    style={{
-                        transform: `translateX(-${currentIndex * (100 / games.length)}%)`,
-                        width: `${(games.length / itemsPerView) * 100}%`,
-                    }}
-                >
-                    {games.map((game) => (
-                        <div
-                            key={game.game_id}
-                            className="flex-shrink-0 cursor-pointer"
-                            style={{ width: `${100 / games.length}%` }}
-                            onClick={() => onGameClick(game.game_id)}
-                        >
-                            <div className="aspect-w-16 aspect-h-9 bg-gray-200 rounded-md overflow-hidden mx-1 relative">
-                                <img
-                                    src={game.thumbnail}
-                                    alt={`${game.title} thumbnail`}
-                                    className="w-full h-full object-cover"
-                                    onError={(e) => {
-                                        (e.target as HTMLImageElement).src =
-                                            "/default-game-image.jpg";
-                                    }}
-                                />
-                                {calculateDiscountRate(game) > 0 && (
-                                    <div className="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold p-1 m-1 rounded">
-                                        {calculateDiscountRate(game)}% OFF
-                                    </div>
-                                )}
-                            </div>
-                            <div className="mt-1 px-1 truncate text-sm font-medium">
-                                {game.title}
-                            </div>
-                        </div>
+
+                {/* Pagination indicators */}
+                <div className="flex justify-center mt-2">
+                    {Array.from({ length: maxIndex + 1 }).map((_, i) => (
+                        <button
+                            key={i}
+                            onClick={() => setCurrentIndex(i)}
+                            className={`h-1.5 mx-0.5 rounded-full transition-all ${
+                                i === currentIndex
+                                    ? "w-4 bg-orange-500"
+                                    : "w-1.5 bg-gray-300"
+                            }`}
+                        />
                     ))}
                 </div>
-
-                {/* Navigation arrows - 항상 표시 */}
-                {showControls && (
-                    <>
-                        <button
-                            onClick={handlePrev}
-                            className="absolute left-0 top-[calc(50%-1rem)] transform -translate-y-1/2"
-                        >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-8 w-8 text-white drop-shadow-lg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M15 19l-7-7 7-7"
-                                />
-                            </svg>
-                        </button>
-
-                        <button
-                            onClick={handleNext}
-                            className="absolute right-0 top-[calc(50%-1rem)] transform -translate-y-1/2"
-                        >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-8 w-8 text-white drop-shadow-lg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M9 5l7 7-7 7"
-                                />
-                            </svg>
-                        </button>
-                    </>
-                )}
             </div>
-
-            {/* Pagination indicators */}
-            <div className="flex justify-center mt-2">
-                {Array.from({ length: maxIndex + 1 }).map((_, i) => (
-                    <button
-                        key={i}
-                        onClick={() => setCurrentIndex(i)}
-                        className={`h-1.5 mx-0.5 rounded-full transition-all ${
-                            i === currentIndex
-                                ? "w-4 bg-orange-500"
-                                : "w-1.5 bg-gray-300"
-                        }`}
-                    />
-                ))}
-            </div>
-        </div>
+        </Profiler>
     );
 };
 

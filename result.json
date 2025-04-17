@@ -1,0 +1,989 @@
+{
+  "results": [
+    {
+      "bundleName": "build/static/js/main.dcb804da.js",
+      "totalBytes": 696249,
+      "mappedBytes": 696098,
+      "unmappedBytes": 108,
+      "eolBytes": 2,
+      "sourceMapCommentBytes": 41,
+      "files": {
+        "../node_modules/react-dom/cjs/react-dom-client.production.js": {
+          "size": 167648
+        },
+        "../node_modules/react/index.js": {
+          "size": 43
+        },
+        "../node_modules/react-ga4/dist/gtag.js": {
+          "size": 389
+        },
+        "../node_modules/cookie/src/index.ts": {
+          "size": 622
+        },
+        "../node_modules/react-ga4/dist/index.js": {
+          "size": 882
+        },
+        "../node_modules/react/cjs/react.production.js": {
+          "size": 7356
+        },
+        "../node_modules/react-ga4/dist/format.js": {
+          "size": 939
+        },
+        "../node_modules/react-dom/client.js": {
+          "size": 242
+        },
+        "../node_modules/lodash/lodash.js": {
+          "size": 71588
+        },
+        "../node_modules/react/jsx-runtime.js": {
+          "size": 45
+        },
+        "../node_modules/react-dom/cjs/react-dom.production.js": {
+          "size": 3297
+        },
+        "../node_modules/react/cjs/react-jsx-runtime.production.js": {
+          "size": 351
+        },
+        "../node_modules/scheduler/index.js": {
+          "size": 43
+        },
+        "../node_modules/scheduler/cjs/scheduler.production.js": {
+          "size": 3645
+        },
+        "../node_modules/react-dom/index.js": {
+          "size": 251
+        },
+        "../node_modules/react-ga4/dist/ga4.js": {
+          "size": 10043
+        },
+        "../webpack/bootstrap": {
+          "size": 164
+        },
+        "../webpack/runtime/define property getters": {
+          "size": 101
+        },
+        "../webpack/runtime/global": {
+          "size": 167
+        },
+        "../webpack/runtime/hasOwnProperty shorthand": {
+          "size": 53
+        },
+        "../webpack/runtime/make namespace object": {
+          "size": 168
+        },
+        "../webpack/runtime/node module decorator": {
+          "size": 236
+        },
+        "../node_modules/react-router/dist/development/chunk-K6CSEXPM.mjs": {
+          "size": 37892
+        },
+        "components/Header.tsx": {
+          "size": 1275
+        },
+        "components/ToastMessage.tsx": {
+          "size": 318
+        },
+        "../node_modules/zustand/esm/vanilla.mjs": {
+          "size": 333
+        },
+        "../node_modules/zustand/esm/react.mjs": {
+          "size": 289
+        },
+        "../node_modules/axios/lib/helpers/bind.js": {
+          "size": 64
+        },
+        "../node_modules/axios/lib/utils.js": {
+          "size": 5534
+        },
+        "../node_modules/axios/lib/core/AxiosError.js": {
+          "size": 1186
+        },
+        "../node_modules/axios/lib/helpers/toFormData.js": {
+          "size": 1836
+        },
+        "../node_modules/axios/lib/helpers/AxiosURLSearchParams.js": {
+          "size": 466
+        },
+        "../node_modules/axios/lib/helpers/buildURL.js": {
+          "size": 461
+        },
+        "../node_modules/axios/lib/core/InterceptorManager.js": {
+          "size": 350
+        },
+        "../node_modules/axios/lib/defaults/transitional.js": {
+          "size": 70
+        },
+        "../node_modules/axios/lib/platform/browser/index.js": {
+          "size": 111
+        },
+        "../node_modules/axios/lib/platform/browser/classes/URLSearchParams.js": {
+          "size": 56
+        },
+        "../node_modules/axios/lib/platform/browser/classes/FormData.js": {
+          "size": 44
+        },
+        "../node_modules/axios/lib/platform/browser/classes/Blob.js": {
+          "size": 37
+        },
+        "../node_modules/axios/lib/platform/common/utils.js": {
+          "size": 349
+        },
+        "../node_modules/axios/lib/platform/index.js": {
+          "size": 16
+        },
+        "../node_modules/axios/lib/helpers/formDataToJSON.js": {
+          "size": 622
+        },
+        "../node_modules/axios/lib/defaults/index.js": {
+          "size": 1826
+        },
+        "../node_modules/axios/lib/helpers/toURLEncodedForm.js": {
+          "size": 217
+        },
+        "../node_modules/axios/lib/helpers/parseHeaders.js": {
+          "size": 496
+        },
+        "../node_modules/axios/lib/core/AxiosHeaders.js": {
+          "size": 3271
+        },
+        "../node_modules/axios/lib/core/transformData.js": {
+          "size": 173
+        },
+        "../node_modules/axios/lib/cancel/isCancel.js": {
+          "size": 42
+        },
+        "../node_modules/axios/lib/cancel/CanceledError.js": {
+          "size": 147
+        },
+        "../node_modules/axios/lib/core/settle.js": {
+          "size": 227
+        },
+        "../node_modules/axios/lib/helpers/speedometer.js": {
+          "size": 305
+        },
+        "../node_modules/axios/lib/helpers/throttle.js": {
+          "size": 382
+        },
+        "../node_modules/axios/lib/helpers/progressEventReducer.js": {
+          "size": 565
+        },
+        "../node_modules/axios/lib/helpers/isURLSameOrigin.js": {
+          "size": 216
+        },
+        "../node_modules/axios/lib/helpers/cookies.js": {
+          "size": 473
+        },
+        "../node_modules/axios/lib/core/buildFullPath.js": {
+          "size": 55
+        },
+        "../node_modules/axios/lib/helpers/isAbsoluteURL.js": {
+          "size": 35
+        },
+        "../node_modules/axios/lib/helpers/combineURLs.js": {
+          "size": 73
+        },
+        "../node_modules/axios/lib/core/mergeConfig.js": {
+          "size": 1144
+        },
+        "../node_modules/axios/lib/helpers/resolveConfig.js": {
+          "size": 739
+        },
+        "../node_modules/axios/lib/adapters/xhr.js": {
+          "size": 2024
+        },
+        "../node_modules/axios/lib/helpers/parseProtocol.js": {
+          "size": 75
+        },
+        "../node_modules/axios/lib/helpers/composeSignals.js": {
+          "size": 564
+        },
+        "../node_modules/axios/lib/helpers/trackStream.js": {
+          "size": 689
+        },
+        "../node_modules/axios/lib/adapters/fetch.js": {
+          "size": 2807
+        },
+        "../node_modules/axios/lib/adapters/adapters.js": {
+          "size": 801
+        },
+        "../node_modules/axios/lib/helpers/null.js": {
+          "size": 5
+        },
+        "../node_modules/axios/lib/core/dispatchRequest.js": {
+          "size": 631
+        },
+        "../node_modules/axios/lib/env/data.js": {
+          "size": 17
+        },
+        "../node_modules/axios/lib/helpers/validator.js": {
+          "size": 1007
+        },
+        "../node_modules/axios/lib/core/Axios.js": {
+          "size": 2505
+        },
+        "../node_modules/axios/lib/cancel/CancelToken.js": {
+          "size": 982
+        },
+        "../node_modules/axios/lib/helpers/HttpStatusCode.js": {
+          "size": 1270
+        },
+        "../node_modules/axios/lib/axios.js": {
+          "size": 569
+        },
+        "../node_modules/axios/lib/helpers/spread.js": {
+          "size": 56
+        },
+        "../node_modules/axios/lib/helpers/isAxiosError.js": {
+          "size": 56
+        },
+        "../node_modules/@sentry/core/src/utils-hoist/version.ts": {
+          "size": 12
+        },
+        "../node_modules/@sentry/core/src/utils-hoist/worldwide.ts": {
+          "size": 14
+        },
+        "../node_modules/@sentry/core/src/carrier.ts": {
+          "size": 292
+        },
+        "../node_modules/@sentry/core/src/utils-hoist/time.ts": {
+          "size": 546
+        },
+        "../node_modules/@sentry/core/src/utils-hoist/is.ts": {
+          "size": 1113
+        },
+        "../node_modules/@sentry/core/src/utils-hoist/browser.ts": {
+          "size": 1443
+        },
+        "../node_modules/@sentry/core/src/utils-hoist/debug-build.ts": {
+          "size": 65
+        },
+        "../node_modules/@sentry/core/src/utils-hoist/logger.ts": {
+          "size": 572
+        },
+        "../node_modules/@sentry/core/src/utils-hoist/string.ts": {
+          "size": 671
+        },
+        "../node_modules/@sentry/core/src/utils-hoist/object.ts": {
+          "size": 1351
+        },
+        "../node_modules/@sentry/core/src/utils-hoist/misc.ts": {
+          "size": 1080
+        },
+        "../node_modules/@sentry/core/src/session.ts": {
+          "size": 1588
+        },
+        "../node_modules/@sentry/core/src/utils-hoist/propagationContext.ts": {
+          "size": 66
+        },
+        "../node_modules/@sentry/core/src/utils/merge.ts": {
+          "size": 272
+        },
+        "../node_modules/@sentry/core/src/utils/spanOnScope.ts": {
+          "size": 94
+        },
+        "../node_modules/@sentry/core/src/scope.ts": {
+          "size": 5127
+        },
+        "../node_modules/@sentry/core/src/asyncContext/stackStrategy.ts": {
+          "size": 1091
+        },
+        "../node_modules/@sentry/core/src/defaultScopes.ts": {
+          "size": 80
+        },
+        "../node_modules/@sentry/core/src/asyncContext/index.ts": {
+          "size": 49
+        },
+        "../node_modules/@sentry/core/src/currentScopes.ts": {
+          "size": 531
+        },
+        "../node_modules/@sentry/core/src/constants.ts": {
+          "size": 22
+        },
+        "../node_modules/@sentry/core/src/debug-build.ts": {
+          "size": 59
+        },
+        "../node_modules/@sentry/core/src/utils-hoist/syncpromise.ts": {
+          "size": 1077
+        },
+        "../node_modules/@sentry/core/src/eventProcessors.ts": {
+          "size": 346
+        },
+        "../node_modules/@sentry/core/src/utils-hoist/debug-ids.ts": {
+          "size": 335
+        },
+        "../node_modules/@sentry/core/src/utils-hoist/stacktrace.ts": {
+          "size": 1247
+        },
+        "../node_modules/@sentry/core/src/utils-hoist/normalize.ts": {
+          "size": 2335
+        },
+        "../node_modules/@sentry/core/src/semanticAttributes.ts": {
+          "size": 279
+        },
+        "../node_modules/@sentry/core/src/utils-hoist/baggage.ts": {
+          "size": 995
+        },
+        "../node_modules/@sentry/core/src/utils/hasSpansEnabled.ts": {
+          "size": 173
+        },
+        "../node_modules/@sentry/core/src/tracing/spanstatus.ts": {
+          "size": 864
+        },
+        "../node_modules/@sentry/core/src/tracing/utils.ts": {
+          "size": 150
+        },
+        "../node_modules/@sentry/core/src/utils/parseSampleRate.ts": {
+          "size": 155
+        },
+        "../node_modules/@sentry/core/src/utils-hoist/tracing.ts": {
+          "size": 929
+        },
+        "../node_modules/@sentry/core/src/utils/spanUtils.ts": {
+          "size": 2153
+        },
+        "../node_modules/@sentry/core/src/tracing/dynamicSamplingContext.ts": {
+          "size": 889
+        },
+        "../node_modules/@sentry/core/src/utils/applyScopeDataToEvent.ts": {
+          "size": 1710
+        },
+        "../node_modules/@sentry/core/src/utils/prepareEvent.ts": {
+          "size": 2430
+        },
+        "../node_modules/@sentry/core/src/exports.ts": {
+          "size": 737
+        },
+        "api/config.ts": {
+          "size": 565
+        },
+        "services/categoryService.ts": {
+          "size": 405
+        },
+        "sentry/errorHandler.ts": {
+          "size": 142
+        },
+        "store/categoryStore.ts": {
+          "size": 434
+        },
+        "components/CategoryModal.tsx": {
+          "size": 2016
+        },
+        "components/ConfirmationModal.tsx": {
+          "size": 875
+        },
+        "services/userService.ts": {
+          "size": 1366
+        },
+        "store/userStore.ts": {
+          "size": 789
+        },
+        "pages/Profile.tsx": {
+          "size": 10561
+        },
+        "pages/Main.tsx": {
+          "size": 6854
+        },
+        "pages/Login.tsx": {
+          "size": 2045
+        },
+        "components/RangeSlider.tsx": {
+          "size": 3487
+        },
+        "components/FilterModal.tsx": {
+          "size": 9387
+        },
+        "services/searchService.ts": {
+          "size": 1840
+        },
+        "components/ScrollToTopButton.tsx": {
+          "size": 1154
+        },
+        "pages/Search.tsx": {
+          "size": 9362
+        },
+        "components/PartyFindTab.tsx": {
+          "size": 7515
+        },
+        "services/commentService.ts": {
+          "size": 696
+        },
+        "components/VideoTab.tsx": {
+          "size": 2545
+        },
+        "services/videoService.ts": {
+          "size": 701
+        },
+        "services/gameService.ts": {
+          "size": 1295
+        },
+        "components/PriceTab.tsx": {
+          "size": 5176
+        },
+        "components/AddServerModal.tsx": {
+          "size": 3855
+        },
+        "services/serverService.ts": {
+          "size": 548
+        },
+        "components/PartyRegistration.tsx": {
+          "size": 6106
+        },
+        "pages/Detail.tsx": {
+          "size": 10360
+        },
+        "../node_modules/shared/src/utils.ts": {
+          "size": 387
+        },
+        "../node_modules/lucide-react/src/defaultAttributes.ts": {
+          "size": 176
+        },
+        "../node_modules/lucide-react/src/Icon.ts": {
+          "size": 387
+        },
+        "../node_modules/lucide-react/src/createLucideIcon.ts": {
+          "size": 203
+        },
+        "../node_modules/lucide-react/src/icons/message-square.ts": {
+          "size": 116
+        },
+        "../node_modules/lucide-react/src/icons/circle-check-big.ts": {
+          "size": 131
+        },
+        "../node_modules/lucide-react/src/icons/tag.ts": {
+          "size": 263
+        },
+        "pages/info.tsx": {
+          "size": 4584
+        },
+        "pages/MyServer.tsx": {
+          "size": 6582
+        },
+        "api/usePageTracking.ts": {
+          "size": 105
+        },
+        "components/TrackingWrapper.tsx": {
+          "size": 19
+        },
+        "../node_modules/@sentry/core/src/integration.ts": {
+          "size": 1093
+        },
+        "../node_modules/@sentry/core/src/utils/eventUtils.ts": {
+          "size": 203
+        },
+        "../node_modules/@sentry/core/src/integrations/eventFilters.ts": {
+          "size": 3063
+        },
+        "../node_modules/@sentry/core/src/integrations/functiontostring.ts": {
+          "size": 326
+        },
+        "../node_modules/@sentry/core/src/integrations/dedupe.ts": {
+          "size": 1076
+        },
+        "../node_modules/@sentry/core/src/utils-hoist/supports.ts": {
+          "size": 705
+        },
+        "../node_modules/@sentry/core/src/sdk.ts": {
+          "size": 250
+        },
+        "../node_modules/@sentry/core/src/utils-hoist/dsn.ts": {
+          "size": 1325
+        },
+        "../node_modules/@sentry/core/src/api.ts": {
+          "size": 784
+        },
+        "../node_modules/@sentry/core/src/utils-hoist/envelope.ts": {
+          "size": 1708
+        },
+        "../node_modules/@sentry/core/src/client.ts": {
+          "size": 8163
+        },
+        "../node_modules/@sentry/core/src/envelope.ts": {
+          "size": 932
+        },
+        "../node_modules/@sentry/core/src/utils/transactionEvent.ts": {
+          "size": 733
+        },
+        "../node_modules/@sentry/core/src/utils-hoist/clientreport.ts": {
+          "size": 97
+        },
+        "../node_modules/@sentry/core/src/utils/sdkMetadata.ts": {
+          "size": 302
+        },
+        "../node_modules/@sentry/core/src/logs/envelope.ts": {
+          "size": 171
+        },
+        "../node_modules/@sentry/core/src/logs/exports.ts": {
+          "size": 196
+        },
+        "../node_modules/@sentry/core/src/utils/ipAddress.ts": {
+          "size": 241
+        },
+        "../node_modules/@sentry/browser/src/eventbuilder.ts": {
+          "size": 3037
+        },
+        "../node_modules/@sentry/browser/src/helpers.ts": {
+          "size": 863
+        },
+        "../node_modules/@sentry/browser/src/client.ts": {
+          "size": 1008
+        },
+        "../node_modules/@sentry/core/src/utils-hoist/env.ts": {
+          "size": 83
+        },
+        "../node_modules/@sentry/browser/src/debug-build.ts": {
+          "size": 65
+        },
+        "../node_modules/@sentry/core/src/utils-hoist/instrument/handlers.ts": {
+          "size": 345
+        },
+        "../node_modules/@sentry-internal/browser-utils/src/types.ts": {
+          "size": 12
+        },
+        "../node_modules/@sentry-internal/browser-utils/src/instrument/dom.ts": {
+          "size": 1703
+        },
+        "../node_modules/@sentry-internal/browser-utils/src/instrument/xhr.ts": {
+          "size": 1179
+        },
+        "../node_modules/@sentry-internal/browser-utils/src/instrument/history.ts": {
+          "size": 505
+        },
+        "../node_modules/@sentry/core/src/utils-hoist/instrument/console.ts": {
+          "size": 320
+        },
+        "../node_modules/@sentry/core/src/utils-hoist/instrument/fetch.ts": {
+          "size": 2011
+        },
+        "../node_modules/@sentry/core/src/breadcrumbs.ts": {
+          "size": 272
+        },
+        "../node_modules/@sentry/core/src/utils-hoist/severity.ts": {
+          "size": 111
+        },
+        "../node_modules/@sentry/core/src/utils-hoist/breadcrumb-log-level.ts": {
+          "size": 86
+        },
+        "../node_modules/@sentry/core/src/utils-hoist/url.ts": {
+          "size": 745
+        },
+        "../node_modules/@sentry/browser/src/integrations/breadcrumbs.ts": {
+          "size": 2890
+        },
+        "../node_modules/@sentry/browser/src/integrations/browserapierrors.ts": {
+          "size": 2412
+        },
+        "../node_modules/@sentry/browser/src/integrations/browsersession.ts": {
+          "size": 289
+        },
+        "../node_modules/@sentry/core/src/utils-hoist/instrument/globalError.ts": {
+          "size": 246
+        },
+        "../node_modules/@sentry/core/src/utils-hoist/instrument/globalUnhandledRejection.ts": {
+          "size": 266
+        },
+        "../node_modules/@sentry/browser/src/integrations/globalhandlers.ts": {
+          "size": 1464
+        },
+        "../node_modules/@sentry/browser/src/integrations/httpcontext.ts": {
+          "size": 311
+        },
+        "../node_modules/@sentry/core/src/utils-hoist/aggregate-errors.ts": {
+          "size": 920
+        },
+        "../node_modules/@sentry/browser/src/integrations/linkederrors.ts": {
+          "size": 215
+        },
+        "../node_modules/@sentry/browser/src/stack-parsers.ts": {
+          "size": 1284
+        },
+        "../node_modules/@sentry-internal/browser-utils/src/debug-build.ts": {
+          "size": 59
+        },
+        "../node_modules/@sentry-internal/browser-utils/src/getNativeImplementation.ts": {
+          "size": 500
+        },
+        "../node_modules/@sentry/core/src/utils-hoist/promisebuffer.ts": {
+          "size": 519
+        },
+        "../node_modules/@sentry/core/src/utils-hoist/ratelimit.ts": {
+          "size": 790
+        },
+        "../node_modules/@sentry/browser/src/transports/fetch.ts": {
+          "size": 570
+        },
+        "../node_modules/@sentry/core/src/transports/base.ts": {
+          "size": 788
+        },
+        "../node_modules/@sentry/browser/src/sdk.ts": {
+          "size": 2091
+        },
+        "../node_modules/@sentry/react/src/debug-build.ts": {
+          "size": 65
+        },
+        "../node_modules/@sentry/react/src/error.ts": {
+          "size": 421
+        },
+        "../node_modules/@sentry/react/src/errorboundary.tsx": {
+          "size": 1550
+        },
+        "sentry/ErrorBoundary.tsx": {
+          "size": 240
+        },
+        "App.tsx": {
+          "size": 718
+        },
+        "../node_modules/@sentry/core/src/utils/isSentryRequestUrl.ts": {
+          "size": 233
+        },
+        "../node_modules/@sentry/core/src/utils-hoist/node.ts": {
+          "size": 114
+        },
+        "../node_modules/@sentry/core/src/utils-hoist/isBrowser.ts": {
+          "size": 118
+        },
+        "../node_modules/@sentry-internal/browser-utils/src/metrics/web-vitals/lib/bindReporter.ts": {
+          "size": 202
+        },
+        "../node_modules/@sentry-internal/browser-utils/src/metrics/web-vitals/lib/getNavigationEntry.ts": {
+          "size": 212
+        },
+        "../node_modules/@sentry-internal/browser-utils/src/metrics/web-vitals/lib/getActivationStart.ts": {
+          "size": 51
+        },
+        "../node_modules/@sentry-internal/browser-utils/src/metrics/web-vitals/lib/initMetric.ts": {
+          "size": 272
+        },
+        "../node_modules/@sentry-internal/browser-utils/src/metrics/web-vitals/lib/generateUniqueID.ts": {
+          "size": 67
+        },
+        "../node_modules/@sentry-internal/browser-utils/src/metrics/web-vitals/lib/observe.ts": {
+          "size": 239
+        },
+        "../node_modules/@sentry-internal/browser-utils/src/metrics/web-vitals/lib/onHidden.ts": {
+          "size": 179
+        },
+        "../node_modules/@sentry-internal/browser-utils/src/metrics/web-vitals/lib/runOnce.ts": {
+          "size": 43
+        },
+        "../node_modules/@sentry-internal/browser-utils/src/metrics/web-vitals/lib/getVisibilityWatcher.ts": {
+          "size": 453
+        },
+        "../node_modules/@sentry-internal/browser-utils/src/metrics/web-vitals/lib/whenActivated.ts": {
+          "size": 90
+        },
+        "../node_modules/@sentry-internal/browser-utils/src/metrics/web-vitals/onFCP.ts": {
+          "size": 361
+        },
+        "../node_modules/@sentry-internal/browser-utils/src/metrics/web-vitals/getCLS.ts": {
+          "size": 484
+        },
+        "../node_modules/@sentry-internal/browser-utils/src/metrics/web-vitals/getFID.ts": {
+          "size": 367
+        },
+        "../node_modules/@sentry-internal/browser-utils/src/metrics/web-vitals/lib/polyfills/interactionCountPolyfill.ts": {
+          "size": 322
+        },
+        "../node_modules/@sentry-internal/browser-utils/src/metrics/web-vitals/lib/interactions.ts": {
+          "size": 627
+        },
+        "../node_modules/@sentry-internal/browser-utils/src/metrics/web-vitals/lib/whenIdle.ts": {
+          "size": 139
+        },
+        "../node_modules/@sentry-internal/browser-utils/src/metrics/web-vitals/getINP.ts": {
+          "size": 533
+        },
+        "../node_modules/@sentry-internal/browser-utils/src/metrics/web-vitals/getLCP.ts": {
+          "size": 560
+        },
+        "../node_modules/@sentry-internal/browser-utils/src/metrics/web-vitals/onTTFB.ts": {
+          "size": 375
+        },
+        "../node_modules/@sentry-internal/browser-utils/src/metrics/instrument.ts": {
+          "size": 1346
+        },
+        "../node_modules/@sentry-internal/browser-utils/src/networkUtils.ts": {
+          "size": 607
+        },
+        "../node_modules/@sentry-internal/replay/src/constants.ts": {
+          "size": 167
+        },
+        "../node_modules/node_modules/@sentry-internal/rrweb/dist/rrweb.js": {
+          "size": 62481
+        },
+        "../node_modules/@sentry-internal/replay/src/util/timestamp.ts": {
+          "size": 86
+        },
+        "../node_modules/@sentry-internal/replay/src/coreHandlers/util/addBreadcrumbEvent.ts": {
+          "size": 314
+        },
+        "../node_modules/@sentry-internal/replay/src/coreHandlers/util/domUtils.ts": {
+          "size": 209
+        },
+        "../node_modules/@sentry-internal/replay/src/coreHandlers/util/onWindowOpen.ts": {
+          "size": 290
+        },
+        "../node_modules/@sentry-internal/replay/src/coreHandlers/handleClick.ts": {
+          "size": 3667
+        },
+        "../node_modules/@sentry-internal/replay/src/types/rrweb.ts": {
+          "size": 6
+        },
+        "../node_modules/@sentry-internal/replay/src/util/createBreadcrumb.ts": {
+          "size": 68
+        },
+        "../node_modules/node_modules/@sentry-internal/rrweb-snapshot/dist/rrweb-snapshot.js": {
+          "size": 176
+        },
+        "../node_modules/@sentry-internal/replay/src/coreHandlers/util/getAttributesToRecord.ts": {
+          "size": 399
+        },
+        "../node_modules/@sentry-internal/replay/src/coreHandlers/handleDom.ts": {
+          "size": 865
+        },
+        "../node_modules/@sentry-internal/replay/src/coreHandlers/handleKeyboardEvent.ts": {
+          "size": 493
+        },
+        "../node_modules/@sentry-internal/replay/src/util/createPerformanceEntries.ts": {
+          "size": 2110
+        },
+        "../node_modules/@sentry-internal/replay/src/debug-build.ts": {
+          "size": 65
+        },
+        "../node_modules/@sentry-internal/replay/src/util/logger.ts": {
+          "size": 879
+        },
+        "../node_modules/@sentry-internal/replay/src/eventBuffer/error.ts": {
+          "size": 95
+        },
+        "../node_modules/@sentry-internal/replay/src/eventBuffer/EventBufferArray.ts": {
+          "size": 565
+        },
+        "../node_modules/@sentry-internal/replay/src/eventBuffer/WorkerHandler.ts": {
+          "size": 869
+        },
+        "../node_modules/@sentry-internal/replay/src/eventBuffer/EventBufferCompressionWorker.ts": {
+          "size": 1021
+        },
+        "../node_modules/@sentry-internal/replay/src/eventBuffer/EventBufferProxy.ts": {
+          "size": 1390
+        },
+        "../node_modules/@sentry-internal/replay/src/eventBuffer/index.ts": {
+          "size": 479
+        },
+        "../node_modules/@sentry-internal/replay-worker/build/esm/index.js": {
+          "size": 59
+        },
+        "../node_modules/@sentry-internal/replay-worker/build/esm/worker.ts": {
+          "size": 10371
+        },
+        "../node_modules/@sentry-internal/replay/src/util/hasSessionStorage.ts": {
+          "size": 83
+        },
+        "../node_modules/@sentry-internal/replay/src/session/clearSession.ts": {
+          "size": 108
+        },
+        "../node_modules/@sentry-internal/replay/src/util/isSampled.ts": {
+          "size": 50
+        },
+        "../node_modules/@sentry-internal/replay/src/session/Session.ts": {
+          "size": 189
+        },
+        "../node_modules/@sentry-internal/replay/src/session/saveSession.ts": {
+          "size": 83
+        },
+        "../node_modules/@sentry-internal/replay/src/session/createSession.ts": {
+          "size": 279
+        },
+        "../node_modules/@sentry-internal/replay/src/util/isExpired.ts": {
+          "size": 136
+        },
+        "../node_modules/@sentry-internal/replay/src/util/isSessionExpired.ts": {
+          "size": 137
+        },
+        "../node_modules/@sentry-internal/replay/src/session/shouldRefreshSession.ts": {
+          "size": 161
+        },
+        "../node_modules/@sentry-internal/replay/src/session/loadOrCreateSession.ts": {
+          "size": 351
+        },
+        "../node_modules/@sentry-internal/replay/src/session/fetchSession.ts": {
+          "size": 190
+        },
+        "../node_modules/@sentry-internal/replay/src/util/addEvent.ts": {
+          "size": 1184
+        },
+        "../node_modules/@sentry-internal/replay/src/util/eventUtils.ts": {
+          "size": 156
+        },
+        "../node_modules/@sentry-internal/replay/src/coreHandlers/handleAfterSendEvent.ts": {
+          "size": 595
+        },
+        "../node_modules/@sentry-internal/replay/src/coreHandlers/handleBeforeSendEvent.ts": {
+          "size": 387
+        },
+        "../node_modules/@sentry-internal/replay/src/coreHandlers/handleBreadcrumbs.ts": {
+          "size": 821
+        },
+        "../node_modules/@sentry-internal/replay/src/util/resetReplayIdOnDynamicSamplingContext.ts": {
+          "size": 120
+        },
+        "../node_modules/@sentry-internal/replay/src/coreHandlers/handleGlobalEvent.ts": {
+          "size": 531
+        },
+        "../node_modules/@sentry-internal/replay/src/coreHandlers/util/addFeedbackBreadcrumb.ts": {
+          "size": 267
+        },
+        "../node_modules/@sentry-internal/replay/src/util/isRrwebError.ts": {
+          "size": 127
+        },
+        "../node_modules/@sentry-internal/replay/src/coreHandlers/util/shouldSampleForBufferEvent.ts": {
+          "size": 124
+        },
+        "../node_modules/@sentry-internal/replay/src/util/createPerformanceSpans.ts": {
+          "size": 285
+        },
+        "../node_modules/@sentry-internal/replay/src/coreHandlers/handleHistory.ts": {
+          "size": 287
+        },
+        "../node_modules/@sentry-internal/replay/src/coreHandlers/util/addNetworkBreadcrumb.ts": {
+          "size": 90
+        },
+        "../node_modules/@sentry-internal/replay/src/util/shouldFilterRequest.ts": {
+          "size": 83
+        },
+        "../node_modules/@sentry-internal/replay/src/coreHandlers/util/networkUtils.ts": {
+          "size": 1932
+        },
+        "../node_modules/@sentry-internal/replay/src/coreHandlers/util/fetchUtils.ts": {
+          "size": 2456
+        },
+        "../node_modules/@sentry-internal/replay/src/coreHandlers/util/xhrUtils.ts": {
+          "size": 1930
+        },
+        "../node_modules/@sentry-internal/replay/src/coreHandlers/handleNetworkBreadcrumbs.ts": {
+          "size": 671
+        },
+        "../node_modules/@sentry-internal/replay/src/util/addGlobalListeners.ts": {
+          "size": 682
+        },
+        "../node_modules/@sentry-internal/replay/src/util/addMemoryEntry.ts": {
+          "size": 308
+        },
+        "../node_modules/@sentry-internal/replay/src/util/getRecordingSamplingOptions.ts": {
+          "size": 175
+        },
+        "../node_modules/@sentry-internal/replay/src/util/handleRecordingEmit.ts": {
+          "size": 1351
+        },
+        "../node_modules/@sentry-internal/replay/src/util/sendReplayRequest.ts": {
+          "size": 1106
+        },
+        "../node_modules/@sentry-internal/replay/src/util/prepareRecordingData.ts": {
+          "size": 230
+        },
+        "../node_modules/@sentry-internal/replay/src/util/prepareReplayEvent.ts": {
+          "size": 520
+        },
+        "../node_modules/@sentry-internal/replay/src/util/createReplayEnvelope.ts": {
+          "size": 174
+        },
+        "../node_modules/@sentry-internal/replay/src/util/sendReplay.ts": {
+          "size": 489
+        },
+        "../node_modules/@sentry-internal/replay/src/util/throttle.ts": {
+          "size": 328
+        },
+        "../node_modules/@sentry-internal/replay/src/replay.ts": {
+          "size": 12282
+        },
+        "../node_modules/@sentry-internal/replay/src/util/debounce.ts": {
+          "size": 335
+        },
+        "../node_modules/@sentry-internal/replay/src/coreHandlers/performanceObserver.ts": {
+          "size": 302
+        },
+        "../node_modules/@sentry-internal/replay/src/util/getPrivacyOptions.ts": {
+          "size": 408
+        },
+        "../node_modules/@sentry-internal/replay/src/integration.ts": {
+          "size": 3618
+        },
+        "../node_modules/@sentry-internal/replay/src/util/maskAttribute.ts": {
+          "size": 284
+        },
+        "../node_modules/@sentry/core/src/tracing/measurement.ts": {
+          "size": 405
+        },
+        "../node_modules/@sentry/core/src/tracing/sentryNonRecordingSpan.ts": {
+          "size": 459
+        },
+        "../node_modules/@sentry/core/src/tracing/sentrySpan.ts": {
+          "size": 3719
+        },
+        "../node_modules/@sentry/core/src/tracing/logSpans.ts": {
+          "size": 693
+        },
+        "../node_modules/@sentry/core/src/tracing/trace.ts": {
+          "size": 2153
+        },
+        "../node_modules/@sentry/core/src/tracing/sampling.ts": {
+          "size": 989
+        },
+        "../node_modules/@sentry-internal/browser-utils/src/metrics/utils.ts": {
+          "size": 1150
+        },
+        "../node_modules/@sentry-internal/browser-utils/src/metrics/cls.ts": {
+          "size": 862
+        },
+        "../node_modules/@sentry-internal/browser-utils/src/metrics/browserMetrics.ts": {
+          "size": 6268
+        },
+        "../node_modules/@sentry-internal/browser-utils/src/metrics/inp.ts": {
+          "size": 1322
+        },
+        "../node_modules/@sentry/core/src/tracing/idleSpan.ts": {
+          "size": 2420
+        },
+        "../node_modules/@sentry/core/src/tracing/errors.ts": {
+          "size": 238
+        },
+        "../node_modules/@sentry/core/src/utils/traceData.ts": {
+          "size": 452
+        },
+        "../node_modules/@sentry/core/src/fetch.ts": {
+          "size": 2233
+        },
+        "../node_modules/@sentry/browser/src/tracing/request.ts": {
+          "size": 3436
+        },
+        "../node_modules/@sentry/browser/src/tracing/previousTrace.ts": {
+          "size": 774
+        },
+        "../node_modules/@sentry/browser/src/tracing/browserTracingIntegration.ts": {
+          "size": 3837
+        },
+        "../node_modules/@sentry/browser/src/tracing/backgroundtab.ts": {
+          "size": 470
+        },
+        "sentry/sentry.ts": {
+          "size": 176
+        },
+        "../node_modules/@sentry/react/src/sdk.ts": {
+          "size": 79
+        },
+        "index.tsx": {
+          "size": 119
+        },
+        "[sourceMappingURL]": {
+          "size": 41
+        },
+        "[unmapped]": {
+          "size": 108
+        },
+        "[EOLs]": {
+          "size": 2
+        }
+      }
+    }
+  ]
+}
