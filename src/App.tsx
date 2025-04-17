@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Profiler, ProfilerOnRenderCallback } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import ProfilePage from "../src/pages/Profile";
 import MainPage from "./pages/Main";
@@ -19,21 +19,49 @@ if (GA_ID) {
 }
 
 const App: React.FC = () => {
+    const onRenderCallback: ProfilerOnRenderCallback = (
+        id: string,
+        phase: "mount" | "update" | "nested-update",
+        actualDuration: number,
+        baseDuration: number,
+        startTime: number,
+        commitTime: number
+    ) => {
+        // 가독성 있게 콘솔 로그 정리
+        console.log(`
+      Profiler Info for Component: ${id}
+      ---------------------------------------------------
+      Phase: ${phase}
+      Actual Rendering Time: ${actualDuration.toFixed(4)} ms
+      Base Rendering Time: ${baseDuration.toFixed(4)} ms
+      Start Time: ${startTime.toFixed(4)} ms
+      Commit Time: ${commitTime.toFixed(4)} ms
+      ---------------------------------------------------
+    `);
+    };
     return (
         <Router>
             <TrackingWrapper />
             <ErrorBoundary>
                 <CategoryProvider>
-                    <Routes>
-                        <Route path="/" element={<LoginPage />} />
-                        <Route path="/login" element={<LoginPage />} />
-                        <Route path="/profile" element={<ProfilePage />} />
-                        <Route path="/main" element={<MainPage />} />
-                        <Route path="/search" element={<SearchPage />} />
-                        <Route path="/games/:gameId" element={<DetailPage />} />
-                        <Route path="/info" element={<FeaturesPage />} />
-                        <Route path="/my-server" element={<MyServerPage />} />
-                    </Routes>
+                    <Profiler id="App" onRender={onRenderCallback}>
+                        <Routes>
+                            <Route path="/" element={<LoginPage />} />
+                            <Route path="/login" element={<LoginPage />} />
+                            <Route path="/profile" element={<ProfilePage />} />
+                            <Route path="/main" element={<MainPage />} />
+                            <Route path="/search" element={<SearchPage />} />
+                            <Route
+                                path="/games/:gameId"
+                                element={<DetailPage />}
+                            />
+                            <Route path="/info" element={<FeaturesPage />} />
+                            <Route
+                                path="/my-server"
+                                element={<MyServerPage />}
+                            />
+                        </Routes>
+                    </Profiler>
                 </CategoryProvider>
             </ErrorBoundary>
         </Router>
